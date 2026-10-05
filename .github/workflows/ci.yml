@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Typecheck, lint, unit/API tests, Expo config
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: nano
+          POSTGRES_PASSWORD: ci_only
+          POSTGRES_DB: nano_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U nano -d nano_test"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - name: Tests (API on in-process PGlite, mobile on jest-expo)
+        run: npm test
+      - name: API tests against real Postgres
+        run: npm test -w @nano/api
+        env:
+          TEST_DATABASE_URL: postgres://nano:ci_only@localhost:5432/nano_test
+      - name: Expo config for every variant and EAS profile
+        run: npm run config:check -w @nano/mobile
+      - name: Expo dependency health
+        run: npx expo-doctor
+        working-directory: apps/mobile
+      - name: Mobile JS bundle compiles (Android + iOS)
+        run: npx expo export --platform android --platform ios --output-dir ../../.ci-export
+        working-directory: apps/mobile
+      - name: API production build
+        run: npm run build -w @nano/api

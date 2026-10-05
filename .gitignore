@@ -67,29 +67,12 @@ pnpm-debug.log*
 /docs/discovery/
 /docs/quality/
 
-# tests and test-only fixtures
-/apps/api/test/
-/apps/api/vitest.config.ts
-/apps/api/vitest.e2e.config.ts
-/apps/api/tsconfig.test.json
-/apps/api/src/excel/testing/
-**/*.spec.ts
-**/*.test.ts
-**/*.test.tsx
-/apps/web/src/test/
-/e2e/
-/playwright.config.ts
-
-# lint / format / editor config. Git plumbing (.gitignore, .gitattributes,
-# .github/) stays tracked.
-/eslint.config.mjs
-/.prettierrc.json
-/.prettierignore
-/.editorconfig
-
 # dev-only scripts and stacks
 /compose.dev.yaml
 /apps/api/src/scripts/verify-projection.ts
 /apps/api/src/scripts/verify-reference-inputs.ts
 /docker/make-self-signed-cert.sh
 /docker/rehearse-restore.sh
+# Expo / build output
+.expo/
+.ci-export/

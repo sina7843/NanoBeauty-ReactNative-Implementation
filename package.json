@@ -1,0 +1,35 @@
+{
+  "name": "nano-beauty",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Nano Beauty customer + role-gated staff app (Expo) and clinic API (Fastify).",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run config:check -w @nano/mobile",
+    "api:dev": "npm run dev -w @nano/api",
+    "api:migrate": "npm run migrate -w @nano/api",
+    "mobile:start": "npm run start -w @nano/mobile",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose stop postgres"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "eslint": "^9.39.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.1",
+    "vitest": "^4.0.0"
+  },
+  "overrides": {
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  }
+}

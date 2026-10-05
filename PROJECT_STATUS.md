@@ -3,7 +3,7 @@
 Mark a prompt complete only after implementation is reviewed, relevant checks pass, and the status change is committed with that prompt.
 
 ## Implementation prompts
-- [ ] NANO-00
+- [x] NANO-00
 - [ ] NANO-01
 - [ ] NANO-02
 - [ ] NANO-03
@@ -17,6 +17,6 @@ Mark a prompt complete only after implementation is reviewed, relevant checks pa
 - [ ] NANO-11
 
 ## Current work
-- Active item: `NANO-00`
-- Last completed item: none
-- Blockers: none
+- Active item: `NANO-01`
+- Last completed item: `NANO-00` (2026-10-06; independent review: approve with notes, fixes applied)
+- Blockers: none for NANO-01. Open placeholders: client-owned bundle ID/package name, API hosting URLs, EAS project/account (see DECISIONS.md, docs/eas-builds.md).

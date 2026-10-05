@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cancel visit</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 20px; background: var(--scrim); color: var(--ink); font-family: var(--font-sans);">
+<x-import component-from-global-scope="NanoBeauty.Dialog" title="Cancel this visit?" confirm-label="Cancel visit" cancel-label="Keep it" destructive="{{yes}}"><sc-if value="{{money_refund}}" hint-placeholder-val="{{true}}">
+<p class="body" style="margin: 0; color: var(--ink-muted);">12D HIFU on Thu 16 Oct at 2:30 pm. It’s more than 48 hours away, so your $50 deposit goes back to Visa •••• 4242 within 5 business days.</p>
+</sc-if>
+<sc-if value="{{money_package}}" hint-placeholder-val="{{true}}">
+<p class="body" style="margin: 0; color: var(--ink-muted);">12D HIFU on Thu 16 Oct at 2:30 pm. It’s more than 48 hours away, so the session goes back to your package (4 left).</p>
+</sc-if></x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "money": {"editor": "enum", "options": ["refund", "package"], "default": "refund"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const money = this.props.money ?? 'refund';
+return { theme: this.props.theme ?? 'light', yes: true, money, money_refund: money === 'refund', money_package: money === 'package' };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>STF-25 Counter redemption</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Redeem at the desk" role="{{roleLabel}}" env="Production"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 16px 20px 16px;">
+<a href="STF-01.dc.html" class="caption" style="color: var(--primary); font-weight: 600; text-decoration: none; white-space: nowrap;">‹ Staff home</a>
+<x-import component-from-global-scope="NanoBeauty.SearchField" value="Leila K. · (604) 555-0199"></x-import>
+<x-import component-from-global-scope="NanoBeauty.ListGroup" header="Choose what to use"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="package" title="SQT, 4 sessions" subtitle="2 of 4 left · expires Mar 2027" value="Use 1"></x-import><x-import component-from-global-scope="NanoBeauty.ListRow" icon="gift" title="Gift card NB-7K2Q" subtitle="{{giftSub}}" value="{{giftVal}}"></x-import></x-import>
+<sc-if value="{{state_found}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.BookingSummary" rows="{{rows}}" policy="The client sees this in Wallet right away."></x-import>
+</sc-if>
+<sc-if value="{{state_notenough}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="warning" title="Not enough on the card">The gift card has $40. Take $40 from it and the other $170 by card at the desk.</x-import>
+</sc-if>
+<sc-if value="{{state_done}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.AsyncStatus" state="success" title="Session used" reference="RED-2041">Leila has 1 SQT session left. Receipt sent by text.</x-import>
+</sc-if>
+</div>
+<sc-if value="{{not_state_done}}" hint-placeholder-val="{{true}}">
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="NanoBeauty.Button" full-width="{{yes}}">{{cta}}</x-import>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</sc-if><sc-if value="{{state_done}}" hint-placeholder-val="{{true}}">
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<a href="STF-25.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" full-width="{{yes}}">Next client</x-import></a>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "state": {"editor": "enum", "options": ["found", "notenough", "done"], "default": "found"}, "role": {"editor": "enum", "options": ["Front desk", "Owner"], "default": "Front desk"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'found';
+const role = this.props.role ?? 'Front desk';
+return { theme: this.props.theme ?? 'light', yes: true, state, state_found: state === 'found', not_state_found: state !== 'found', state_notenough: state === 'notenough', not_state_notenough: state !== 'notenough', state_done: state === 'done', not_state_done: state !== 'done', role, role_front_desk: role === 'Front desk', not_role_front_desk: role !== 'Front desk', role_owner: role === 'Owner', not_role_owner: role !== 'Owner', roleLabel: ({Owner: 'Owner', Editor: 'Editor', 'Front desk': 'Front desk'})[this.props.role ?? 'Owner'] || 'Owner', no: false, two: 2, rows: [{label: 'Using', value: '1 SQT session'}, {label: 'Left after', value: '1 of 4'}], giftSub: (this.props.state ?? 'found') === 'notenough' ? 'Balance $40 · needed $210' : 'Balance $100', giftVal: (this.props.state ?? 'found') === 'notenough' ? 'Use $40' : 'Use amount', cta: (this.props.state ?? 'found') === 'notenough' ? 'Use $40 and take the rest' : 'Use 1 session' };
+}
+}
+</script>
+</body>
+</html>

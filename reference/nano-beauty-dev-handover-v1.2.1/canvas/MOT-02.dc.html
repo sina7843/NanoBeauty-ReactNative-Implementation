@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Motion: slot selection</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<x-import component-from-global-scope="NanoBeauty.TopBar" title="Book" back-label="Professional" platform="{{platform}}"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 16px; padding: 8px 20px 16px;">
+<div style="display: flex; justify-content: space-between; align-items: center;"><span class="overline" style="color: var(--ink-muted);">Motion · Slot selection and slot loss</span><x-import component-from-global-scope="NanoBeauty.Badge" tone="neutral" icon="info">{{modeLabel}}</x-import></div>
+<p class="headline" style="margin: 0;">Thursday 16 October</p>
+<div class="nb-slots__grid" role="radiogroup" aria-label="Times on Thursday 16 October"><sc-for list="{{slots}}" as="s" hint-placeholder-count="6"><button type="button" role="radio" aria-checked="{{s.on}}" class="{{s.cls}}" disabled="{{s.off}}" onClick="{{s.pick}}" style="transition: {{slotTr}};">{{s.time}}</button></sc-for></div>
+<sc-if value="{{checking}}" hint-placeholder-val="{{true}}">
+<p class="body" role="status" style="margin: 0; color: var(--ink-muted);">Checking availability…</p>
+</sc-if>
+<sc-if value="{{held}}" hint-placeholder-val="{{true}}">
+<div style="{{noteStyle}}"><p class="caption" style="margin: 0; display: flex; gap: 6px; align-items: center; color: var(--ink-muted);"><x-import component-from-global-scope="NanoBeauty.Icon" name="clock" size="{{s16}}"></x-import>{{heldLabel}}</p></div>
+</sc-if>
+<sc-if value="{{taken}}" hint-placeholder-val="{{true}}">
+<div style="{{noteStyle}}"><x-import component-from-global-scope="NanoBeauty.Banner" tone="warning" title="That time was just taken">We’ve refreshed the list. Pick another time; nothing has been charged.</x-import></div>
+</sc-if>
+<div style="display: flex; gap: 8px; align-items: center;"><x-import component-from-global-scope="NanoBeauty.Chip" selected="{{sim}}" on-click="{{toggleSim}}" icon="user-circle">Simulate: someone books it first</x-import></div>
+</div>
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="NanoBeauty.Button" size="lg" full-width="{{yes}}" loading="{{busy}}" loading-label="Checking…" disabled="{{noPick}}" on-click="{{go}}">{{cta}}</x-import>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "motion": {"editor": "enum", "options": ["normal", "reduced"], "default": "normal"}, "platform": {"editor": "enum", "options": ["ios", "android"], "default": "ios"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+
+  componentWillUnmount() { (this._t || []).forEach(clearTimeout); if (this._i) clearInterval(this._i); }
+  later(fn, ms) { this._t = this._t || []; this._t.push(setTimeout(fn, ms)); }
+  reduced() { return (this.props.motion ?? 'normal') === 'reduced'; }
+  // enter transition for a block that just appeared: start hidden, then settle
+  reveal(key) { this.setState({ [key]: false }); this.later(() => this.setState({ [key]: true }), 30); }
+  enterStyle(on, dur) {
+    const r = this.reduced();
+    const tr = r ? 'opacity var(--duration-reduced) linear' : `opacity var(--duration-${dur || 'reveal'}) var(--ease-enter), transform var(--duration-${dur || 'reveal'}) var(--ease-enter)`;
+    const tf = r || on ? 'none' : 'translateY(8px)';
+    return `opacity: ${on ? 1 : 0}; transform: ${tf}; transition: ${tr};`;
+  }
+  base() { return { theme: this.props.theme ?? 'light', platform: this.props.platform ?? 'ios', yes: true, no: false, s16: 16, modeLabel: this.reduced() ? 'Reduce Motion on' : 'Normal motion' }; }
+
+  constructor(props) { super(props); this.state = { pick: null, status: 'idle', sim: false, taken: [], noteOn: true }; }
+  renderVals() {
+    const times = ['10:00 am', '11:00 am', '11:30 am', '1:00 pm', '2:30 pm', '3:00 pm'];
+    const gone = ['10:00 am', '1:00 pm', ...this.state.taken];
+    const st = this.state.status;
+    return { ...this.base(), sim: this.state.sim, busy: st === 'checking', noPick: !this.state.pick || st === 'checking',
+      checking: st === 'checking', held: st === 'held', taken: st === 'taken',
+      heldLabel: 'Held for you until 2:40 pm. Finish the next steps to book.',
+      cta: st === 'held' ? 'Continue to details' : 'Continue',
+      slotTr: this.reduced() ? 'none' : 'background-color var(--duration-feedback) var(--ease-state), color var(--duration-feedback) var(--ease-state), border-color var(--duration-feedback) var(--ease-state)',
+      noteStyle: this.enterStyle(this.state.noteOn),
+      toggleSim: () => this.setState({ sim: !this.state.sim }),
+      slots: times.map((t) => { const off = gone.includes(t); const on = this.state.pick === t;
+        return { time: t, off, on, cls: 'nb-slot ' + (off ? 'is-unavailable' : on ? 'is-selected' : 'is-available'),
+          pick: () => { if (!off && st !== 'checking') this.setState({ pick: t, status: 'idle' }); } }; }),
+      go: () => { if (st === 'held') return; this.setState({ status: 'checking' });
+        this.later(() => { if (this.state.sim) { this.setState({ status: 'taken', taken: [...this.state.taken, this.state.pick], pick: null }); }
+          else { this.setState({ status: 'held' }); } this.reveal('noteOn'); }, 1100); } };
+  }
+}
+</script>
+</body>
+</html>

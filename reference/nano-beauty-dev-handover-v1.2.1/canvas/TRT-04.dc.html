@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Search, no results</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 8px; padding: 8px 20px 24px;">
+<div style="display: flex; gap: 8px; align-items: center;">
+<div style="flex-grow: 1; min-width: 0;"><x-import component-from-global-scope="NanoBeauty.SearchField" value="{{query}}"></x-import></div>
+<a href="TRT-01.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" variant="tertiary" size="sm">Cancel</x-import></a>
+</div>
+<sc-if value="{{state_noresults}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.EmptyState" icon="magnifying-glass" title="No match for “botoxx”">Check the spelling, or try a concern instead.</x-import>
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<p class="body" style="margin: 0;">Did you mean <a href="TRT-05.dc.html" style="color: var(--primary); font-weight: 600;">Botox</a>?</p>
+<p class="overline" style="margin: 0; color: var(--ink-muted);">Browse by concern</p>
+<div style="display: flex; flex-wrap: wrap; gap: 8px;">
+<a href="TRT-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Chip">Fine lines</x-import></a>
+<a href="TRT-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Chip">Loose skin</x-import></a>
+<a href="TRT-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Chip">Pigmentation</x-import></a>
+</div>
+<a href="SUP-03.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" icon="chat-circle-text" full-width="{{yes}}">Ask the clinic</x-import></a>
+</div>
+</sc-if>
+<sc-if value="{{state_typing}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.ListGroup" header="Suggestions"><a href="TRT-05.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="magnifying-glass" title="12D HIFU" subtitle="Treatment · Skin tightening"></x-import></a>
+<a href="TRT-02.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="compass" title="HIFU treatments" subtitle="3 results"></x-import></a></x-import>
+</sc-if>
+<sc-if value="{{state_results}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="info" title="Showing results for anti-wrinkle injections">Botox is listed as “Anti-wrinkle injections”, the name the clinic uses.</x-import>
+<x-import component-from-global-scope="NanoBeauty.ListGroup"><a href="TRT-05.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" title="Anti-wrinkle injections" subtitle="Consultation required" value="Consult"></x-import></a>
+<a href="TRT-05.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" title="Dermal fillers" subtitle="Consultation required" value="Consult"></x-import></a></x-import>
+</sc-if>
+</div>
+<div style="height: 34px; flex-shrink: 0;"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"state":{"editor": "enum", "options": ["noresults", "typing", "results"], "default": "noresults"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'noresults';
+return { theme: this.props.theme ?? 'light', yes: true, state, state_noresults: state === 'noresults', state_typing: state === 'typing', state_results: state === 'results', query: state === 'typing' ? 'hif' : (state === 'results' ? 'botox' : 'botoxx') };
+}
+}
+</script>
+</body>
+</html>

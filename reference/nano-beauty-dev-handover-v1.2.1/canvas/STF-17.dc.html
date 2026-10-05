@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>STF-17 Gift-card settings</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Gift cards" role="{{roleLabel}}" env="Production"></x-import>
+<div style="flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 12px 20px 20px;">
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 32px;">
+<a href="STF-01.dc.html" class="caption" style="color: var(--primary); font-weight: 600; text-decoration: none; white-space: nowrap;">‹ Staff home</a>
+<div style="display: flex; gap: 6px; align-items: center;"><x-import component-from-global-scope="NanoBeauty.PublishState" state="live" detail="Owner only"></x-import><a href="WAL-08.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="eye" label="Preview as a customer" variant="outline"></x-import></a></div>
+</div>
+<sc-if value="{{state_conflict}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.EditConflict" who="Naz" when="2 minutes ago"></x-import>
+</sc-if>
+<sc-if value="{{state_offline}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="offline" title="Offline: read only">You can read this, but changes wait until you’re back online.</x-import>
+</sc-if>
+<sc-if value="{{state_savefailed}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="danger" title="Couldn’t save the draft">Your edits are kept on this phone. Try again; nothing was published.</x-import>
+</sc-if>
+<sc-if value="{{state_saved}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="success" title="Saved">New purchases use these settings.</x-import>
+</sc-if>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Preset amounts" open="{{yes}}" complete="{{yes}}"><p class="label" style="margin: 0;">Shown as quick picks on Gift value (WAL-08)</p><div style="display: flex; gap: 6px; flex-wrap: wrap;"><x-import component-from-global-scope="NanoBeauty.Chip" selected="{{yes}}">$50</x-import><x-import component-from-global-scope="NanoBeauty.Chip" selected="{{yes}}">$100</x-import><x-import component-from-global-scope="NanoBeauty.Chip" selected="{{yes}}">$150</x-import><x-import component-from-global-scope="NanoBeauty.Chip" selected="{{yes}}">$200</x-import><x-import component-from-global-scope="NanoBeauty.Chip" icon="plus">Add</x-import></div></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Custom amount" open="{{yes}}" error="{{rangeErr}}"><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Minimum (CAD)" value="25" input-mode="decimal"></x-import>
+<sc-if value="{{not_state_invalid}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Maximum (CAD)" value="500" input-mode="decimal"></x-import>
+</sc-if><sc-if value="{{state_invalid}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Maximum (CAD)" value="20" input-mode="decimal" error="Must be more than the minimum"></x-import>
+</sc-if>
+</div></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Designs" open="{{yes}}"><x-import component-from-global-scope="NanoBeauty.GiftDesignPicker" designs="{{designs}}" selected="thanks"></x-import><p class="caption" style="margin: 0; color: var(--ink-muted);">Customers choose one before the amount (WAL-13). Tap a design to hide it.</p></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Terms" open="{{yes}}"><x-import component-from-global-scope="NanoBeauty.SettingRow" label="Expiry" detail="BC law: gift cards can’t expire" locked="Always off" kind="value"></x-import><x-import component-from-global-scope="NanoBeauty.SettingRow" label="Refund window" detail="Unused cards can be refunded within this time (sample setting)" kind="stepper" value="{{fourteen}}" unit="days"></x-import></x-import>
+</div>
+</div>
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="NanoBeauty.Button" full-width="{{yes}}" disabled="{{readOnly}}">Save settings</x-import>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "state": {"editor": "enum", "options": ["ready", "saved", "invalid", "conflict", "offline", "savefailed"], "default": "ready"}, "role": {"editor": "enum", "options": ["Owner"], "default": "Owner"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'ready';
+const role = this.props.role ?? 'Owner';
+return { theme: this.props.theme ?? 'light', yes: true, state, state_ready: state === 'ready', not_state_ready: state !== 'ready', state_saved: state === 'saved', not_state_saved: state !== 'saved', state_invalid: state === 'invalid', not_state_invalid: state !== 'invalid', state_conflict: state === 'conflict', not_state_conflict: state !== 'conflict', state_offline: state === 'offline', not_state_offline: state !== 'offline', state_savefailed: state === 'savefailed', not_state_savefailed: state !== 'savefailed', role, role_owner: role === 'Owner', not_role_owner: role !== 'Owner', readOnly: (this.props.state ?? 'ready') === 'offline', notConflict: (this.props.state ?? 'ready') !== 'conflict', roleLabel: ({Owner: 'Owner', Editor: 'Editor', 'Front desk': 'Front desk'})[this.props.role ?? 'Owner'] || 'Owner', no: false, two: 2, s20: 20, s16: 16, rangeErr: (this.props.state ?? 'ready') === 'invalid' ? 'Check range' : '', fourteen: 14, designs: [{key: 'thanks', name: 'Thank you'}, {key: 'birthday', name: 'Birthday'}, {key: 'holiday', name: 'Holidays'}, {key: 'love', name: 'With love'}] };
+}
+}
+</script>
+</body>
+</html>

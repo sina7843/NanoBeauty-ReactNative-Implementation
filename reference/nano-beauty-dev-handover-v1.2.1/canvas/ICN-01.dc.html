@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>App icon</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 1180px; height: 480px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 24px; padding: 40px; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="display: flex; align-items: center; gap: 12px;">
+<h1 class="display-md" style="margin: 0; color: var(--ink-display);">App icon</h1>
+<x-import component-from-global-scope="NanoBeauty.Badge" tone="success" icon="check">Approved 25 Sep</x-import>
+</div>
+<p class="body-lg" style="margin: 0; color: var(--ink-muted);">Your master colours, white nano BEAUTY on plum, with the logo at 80% of the width so it sits clear of the iOS corners.</p>
+<div style="display: flex; gap: 32px; align-items: stretch;">
+<div style="display: flex; flex-direction: column; gap: 8px; align-items: center;"><img src="/_blob/bdbd978f20d1db4ff4177107e4ba95b0" alt="Nano Beauty iOS app icon" style="width: 220px; height: 220px; border-radius: 49.2px; display: block; box-shadow: var(--shadow-card);"><span class="caption" style="color: var(--ink-muted);">iOS</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: flex-end;"><img src="/_blob/12f125d7b50a78c441fcb83ae4c9a12e" alt="Nano Beauty Android app icon" style="width: 160px; height: 160px; display: block;"><span class="caption" style="color: var(--ink-muted);">Android</span></div>
+<div style="display: flex; gap: 12px; flex: 1;"><div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-radius: 20px; background: #E9E2D8; flex: 1; min-height: 200px;"><img src="/_blob/bdbd978f20d1db4ff4177107e4ba95b0" alt="" style="width: 60px; height: 60px; border-radius: 13.4px; display: block;"><span style="font: 500 11px/14px var(--font-sans); color: #231D30;">Nano Beauty</span></div><div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-radius: 20px; background: #17131C; flex: 1; min-height: 200px;"><img src="/_blob/bdbd978f20d1db4ff4177107e4ba95b0" alt="" style="width: 60px; height: 60px; border-radius: 13.4px; display: block;"><span style="font: 500 11px/14px var(--font-sans); color: #F5F0EA;">Nano Beauty</span></div></div>
+</div>
+<p class="caption" style="margin: 0; color: var(--ink-muted);">Export set: nano-beauty-app-icon-final.zip (iOS 1024, Android adaptive foreground and background at 432 px, themed icon, Play Store 512, SVG sources).</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "$preview": {"width": 1180, "height": 480}}'>
+class Component extends DCLogic {
+renderVals() {
+return { theme: this.props.theme ?? 'light' };
+}
+}
+</script>
+</body>
+</html>

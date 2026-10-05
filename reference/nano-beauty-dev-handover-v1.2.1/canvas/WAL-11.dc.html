@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Claim a gift card</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<x-import component-from-global-scope="NanoBeauty.TopBar" title="Claim a gift card" back-label="Wallet" platform="{{platform}}"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 16px; padding: 8px 20px 16px;">
+<sc-if value="{{state_valid}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.GiftCard" amount="{{amt}}" recipient="you, from Maria" code="NB-7Q4K"></x-import>
+</sc-if>
+<sc-if value="{{state_valid}}" hint-placeholder-val="{{true}}">
+<p class="body" style="margin: 0; font-family: var(--font-serif); font-style: italic;">“Happy birthday! Treat yourself.”</p>
+</sc-if>
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Gift code" value="{{code}}" error="{{err}}" helper="Find it in the text or email you received."></x-import>
+<sc-if value="{{state_claimed}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="warning" title="Already claimed">This gift card is already in a Wallet. If that wasn’t you, the clinic can check who added it.</x-import>
+</sc-if>
+<sc-if value="{{state_notfound}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="danger" title="We couldn’t find this gift card">The code looks right but we can’t find the gift card. The clinic can look it up with your reference.</x-import>
+</sc-if>
+<sc-if value="{{needHelp}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.SupportContext" topic="a gift card" reference="GC-5520" hours="[Clinic hours to confirm]"></x-import>
+</sc-if>
+</div>
+<sc-if value="{{state_valid}}" hint-placeholder-val="{{true}}">
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<a href="WAL-04.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" size="lg" full-width="{{yes}}">Add to my Wallet</x-import></a>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</sc-if>
+<sc-if value="{{state_invalid}}" hint-placeholder-val="{{true}}">
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="NanoBeauty.Button" size="lg" full-width="{{yes}}">Try again</x-import>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</sc-if>
+<sc-if value="{{needHelp}}" hint-placeholder-val="{{true}}">
+<div style="height: 34px; flex-shrink: 0;"></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "platform": {"editor": "enum", "options": ["ios", "android"], "default": "ios"}, "state": {"editor": "enum", "options": ["valid", "invalid", "claimed", "notfound"], "default": "valid"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'valid';
+return { theme: this.props.theme ?? 'light', platform: this.props.platform ?? 'ios', yes: true, state, state_valid: state === 'valid', state_invalid: state === 'invalid', state_claimed: state === 'claimed', state_notfound: state === 'notfound', amt: 100, needHelp: state === 'claimed' || state === 'notfound', code: state === 'invalid' ? 'NB-7Q4' : 'NB-7Q4K', err: state === 'invalid' ? 'That code is too short. Codes look like NB-7Q4K.' : undefined };
+}
+}
+</script>
+</body>
+</html>

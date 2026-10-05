@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TAB-02 Campaign edit (tablet)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 1194px; height: 834px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Campaign" role="{{roleLabel}}" env="Production" layout="tablet"></x-import>
+<div style="flex-grow: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; padding: 16px 32px 24px;"><div style="overflow-y: auto; min-height: 0;"><div style="display: flex; flex-direction: column; gap: 12px;"><a href="STF-05.dc.html" class="caption" style="color: var(--primary); font-weight: 600; text-decoration: none; white-space: nowrap;">‹ Campaigns</a><x-import component-from-global-scope="NanoBeauty.FormSection" title="Template" open="{{yes}}" complete="{{yes}}"><div style="display: flex; gap: 6px; flex-wrap: wrap;"><x-import component-from-global-scope="NanoBeauty.Chip" selected="{{yes}}">Halloween</x-import><x-import component-from-global-scope="NanoBeauty.Chip">Canada Day</x-import><x-import component-from-global-scope="NanoBeauty.Chip">Black Friday</x-import><x-import component-from-global-scope="NanoBeauty.Chip">Holidays</x-import><x-import component-from-global-scope="NanoBeauty.Chip">Own offer</x-import></div></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Text" open="{{yes}}"><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start;"><x-import component-from-global-scope="NanoBeauty.TextField" label="Title" value="Halloween glow"></x-import><x-import component-from-global-scope="NanoBeauty.TextField" label="Eyebrow" value="Limited time"></x-import></div><x-import component-from-global-scope="NanoBeauty.SimpleTextEditor" label="Body" value="Treat your skin before the holidays: 20% off facials until 1 November." max="{{max}}" rows="{{rows}}"></x-import></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Discount" open="{{yes}}"><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start;"><div style="display: flex; flex-direction: column; gap: 8px;">
+<p class="label" style="margin: 0;">Type</p><x-import component-from-global-scope="NanoBeauty.SegmentedControl" label="Discount type" options="{{dtypes}}" value="Percent"></x-import>
+</div><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start;"><x-import component-from-global-scope="NanoBeauty.TextField" label="Value" value="20" helper="%"></x-import><x-import component-from-global-scope="NanoBeauty.TextField" label="Promo code" value="HALLO26"></x-import></div></div></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Dates" open="{{yes}}"><x-import component-from-global-scope="NanoBeauty.DateTimeRange" start="20 Oct, 9:00" end="1 Nov, 23:59"></x-import></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Eligible items" summary="Facials: OxyGeneo facial, SQT, Signature" open="{{no}}" complete="{{yes}}"></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Audience and placement" summary="Everyone · Home slot 1 · no push" open="{{no}}"></x-import></div></div><div style="display: flex; flex-direction: column; gap: 12px; min-height: 0;"><div style="display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line);"><div style="display: flex; gap: 8px; align-items: center;">
+<x-import component-from-global-scope="NanoBeauty.PublishState" state="draft"></x-import><span style="flex-grow: 1;"></span><a href="OFR-01.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="eye" label="Preview as a customer" variant="outline"></x-import></a>
+</div><x-import component-from-global-scope="NanoBeauty.OfferCard" eyebrow="Limited time" title="Halloween glow" summary="20% off facials" ends-at="Ends 1 Nov" state="live" photo="/_blob/1b219b3acb41d78a93ae40bc87987e0d" cta="See offer"></x-import></div><div style="display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line);"><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;"><x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" full-width="{{yes}}">Save draft</x-import><div><sc-if value="{{role_owner}}" hint-placeholder-val="{{true}}">
+<a href="STF-09.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" full-width="{{yes}}">Publish</x-import></a>
+</sc-if><sc-if value="{{role_editor}}" hint-placeholder-val="{{true}}">
+<a href="STF-08.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" full-width="{{yes}}">Submit</x-import></a>
+</sc-if></div></div></div></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "role": {"editor": "enum", "options": ["Owner", "Editor"], "default": "Owner"}, "$preview": {"width": 1194, "height": 834}}'>
+class Component extends DCLogic {
+renderVals() {
+const role = this.props.role ?? 'Owner';
+return { theme: this.props.theme ?? 'light', yes: true, role, role_owner: role === 'Owner', not_role_owner: role !== 'Owner', role_editor: role === 'Editor', not_role_editor: role !== 'Editor', roleLabel: ({Owner: 'Owner', Editor: 'Editor', 'Front desk': 'Front desk'})[this.props.role ?? 'Owner'] || 'Owner', no: false, two: 2, s20: 20, max: 280, rows: 3, dtypes: ['Percent', 'Amount'] };
+}
+}
+</script>
+</body>
+</html>

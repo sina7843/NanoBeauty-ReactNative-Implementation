@@ -1,0 +1,4596 @@
+[
+  {
+    "id": "ACC-01",
+    "title": "Account",
+    "routes": [
+      "/account"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "ListGroup",
+      "ListRow",
+      "TopBar"
+    ],
+    "linksTo": [
+      "ACC-02",
+      "ACC-03",
+      "ACC-04",
+      "ACC-06",
+      "ACC-11",
+      "Main",
+      "STF-01",
+      "SUP-01"
+    ]
+  },
+  {
+    "id": "ACC-02",
+    "title": "Profile",
+    "routes": [
+      "/account/profile"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "view",
+        "phone",
+        "error"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "TextField",
+      "TopBar"
+    ],
+    "linksTo": [
+      "ACC-01"
+    ]
+  },
+  {
+    "id": "ACC-03",
+    "title": "Notifications",
+    "routes": [
+      "/account/notifications"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "Banner",
+      "Switch",
+      "TopBar"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "ACC-04",
+    "title": "Messages",
+    "routes": [
+      "/account/inbox"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "list",
+        "empty"
+      ]
+    },
+    "components": [
+      "Badge",
+      "EmptyState",
+      "ListGroup",
+      "ListRow",
+      "TopBar"
+    ],
+    "linksTo": [
+      "ACC-05",
+      "OFR-01",
+      "PAY-09",
+      "VIS-02",
+      "WAL-04"
+    ]
+  },
+  {
+    "id": "ACC-05",
+    "title": "Message: visit tomorrow",
+    "routes": [
+      "/account/inbox/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "AppointmentPass",
+      "Button",
+      "TopBar"
+    ],
+    "linksTo": [
+      "CAR-01",
+      "VIS-02"
+    ]
+  },
+  {
+    "id": "ACC-06",
+    "title": "Privacy and data",
+    "routes": [
+      "/account/privacy"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "ListGroup",
+      "ListRow",
+      "TopBar"
+    ],
+    "linksTo": [
+      "ACC-03",
+      "ACC-07",
+      "ACC-08",
+      "ACC-11"
+    ]
+  },
+  {
+    "id": "ACC-07",
+    "title": "Request my data",
+    "routes": [
+      "/account/data-request"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "Banner",
+      "Button",
+      "TextField",
+      "TopBar"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "ACC-08",
+    "title": "Delete account",
+    "routes": [
+      "/account/delete"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "Banner",
+      "Button",
+      "TopBar"
+    ],
+    "linksTo": [
+      "ACC-09",
+      "SUP-03"
+    ]
+  },
+  {
+    "id": "ACC-09",
+    "title": "Confirm deletion",
+    "routes": [
+      "/account/delete"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "Button",
+      "OTPInput",
+      "TopBar"
+    ],
+    "linksTo": [
+      "ACC-06",
+      "ACC-10"
+    ]
+  },
+  {
+    "id": "ACC-10",
+    "title": "Deletion requested",
+    "routes": [
+      "/account/delete"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "requested",
+        "completed"
+      ]
+    },
+    "components": [
+      "AsyncStatus",
+      "Button"
+    ],
+    "linksTo": [
+      "Main"
+    ]
+  },
+  {
+    "id": "ACC-11",
+    "title": "Booking policy",
+    "routes": [
+      "/legal/[doc]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "online",
+        "offline"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "TopBar"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "AUT-01",
+    "title": "Sign in: phone number",
+    "routes": [
+      "/auth/phone"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "filled",
+        "empty",
+        "invalid",
+        "sending",
+        "network"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "IconButton",
+      "Logo",
+      "TextField"
+    ],
+    "linksTo": [
+      "AUT-02"
+    ]
+  },
+  {
+    "id": "AUT-02",
+    "title": "Sign in: verification code",
+    "routes": [
+      "/auth/code"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "entering",
+        "wrong",
+        "expired"
+      ]
+    },
+    "components": [
+      "OTPInput",
+      "TopBar"
+    ],
+    "linksTo": [
+      "AUT-01",
+      "AUT-03"
+    ]
+  },
+  {
+    "id": "AUT-03",
+    "title": "Sign in: consents",
+    "routes": [
+      "/auth/consents"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Button",
+      "ConsentRow",
+      "TopBar"
+    ],
+    "linksTo": [
+      "AUT-04"
+    ]
+  },
+  {
+    "id": "AUT-04",
+    "title": "Sign in: name and email",
+    "routes": [
+      "/auth/profile"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Button",
+      "TextField",
+      "TopBar"
+    ],
+    "linksTo": [
+      "AUT-05"
+    ]
+  },
+  {
+    "id": "AUT-05",
+    "title": "Account matched",
+    "routes": [
+      "/auth/match"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "AccountMatch",
+      "Badge"
+    ],
+    "linksTo": [
+      "HOM-02"
+    ]
+  },
+  {
+    "id": "AUT-06",
+    "title": "Account details don't match",
+    "routes": [
+      "/auth/match"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "AccountMatch"
+    ],
+    "linksTo": [
+      "SUP-03"
+    ]
+  },
+  {
+    "id": "AUT-07",
+    "title": "No past account found",
+    "routes": [
+      "/auth/match"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "AccountMatch"
+    ],
+    "linksTo": [
+      "AUT-03"
+    ]
+  },
+  {
+    "id": "AUT-08",
+    "title": "Session expired",
+    "routes": [
+      "/auth/code"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "expired",
+        "limited"
+      ]
+    },
+    "components": [
+      "Button",
+      "EmptyState"
+    ],
+    "linksTo": [
+      "AUT-01",
+      "SUP-03"
+    ]
+  },
+  {
+    "id": "BKG-01",
+    "title": "BKG-01 Service",
+    "routes": [
+      "/book/service"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "one",
+        "several"
+      ],
+      "mode": [
+        "handoff",
+        "inapp"
+      ]
+    },
+    "components": [
+      "Badge",
+      "BookingStepper",
+      "Button",
+      "Icon",
+      "SearchField",
+      "ServiceBasket",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-02",
+      "BKG-10",
+      "BKG-12",
+      "TRT-01"
+    ]
+  },
+  {
+    "id": "BKG-02",
+    "title": "Book: choose a professional",
+    "routes": [
+      "/book/professional"
+    ],
+    "bookingMode": [
+      "inapp"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "BookingStepper",
+      "Button",
+      "ProviderCard",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-01",
+      "BKG-03"
+    ]
+  },
+  {
+    "id": "BKG-03",
+    "title": "Book: date and time",
+    "routes": [
+      "/book/time"
+    ],
+    "bookingMode": [
+      "inapp"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "ready",
+        "checking",
+        "none",
+        "conflict"
+      ]
+    },
+    "components": [
+      "BookingStepper",
+      "Button",
+      "IconButton",
+      "TimeSlotGrid",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-04"
+    ]
+  },
+  {
+    "id": "BKG-04",
+    "title": "Book: details",
+    "routes": [
+      "/book/details"
+    ],
+    "bookingMode": [
+      "inapp"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "ready",
+        "error"
+      ]
+    },
+    "components": [
+      "BookingStepper",
+      "Button",
+      "ConsentRow",
+      "Icon",
+      "TextField",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-05"
+    ]
+  },
+  {
+    "id": "BKG-05",
+    "title": "Book: review",
+    "routes": [
+      "/book/review"
+    ],
+    "bookingMode": [
+      "inapp"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "deposit",
+        "expiring",
+        "expired",
+        "package"
+      ],
+      "basket": [
+        "one",
+        "several"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "BookingStepper",
+      "BookingSummary",
+      "Button",
+      "ServiceBasket",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-03",
+      "BKG-06",
+      "PAY-01"
+    ]
+  },
+  {
+    "id": "BKG-06",
+    "title": "Booked",
+    "routes": [
+      "/book/result"
+    ],
+    "bookingMode": [
+      "inapp"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "AppointmentPass",
+      "AsyncStatus",
+      "Button",
+      "ListGroup",
+      "ListRow"
+    ],
+    "linksTo": [
+      "CAR-01",
+      "HOM-02"
+    ]
+  },
+  {
+    "id": "BKG-07",
+    "title": "Couldn’t book",
+    "routes": [
+      "/book/result"
+    ],
+    "bookingMode": [
+      "inapp"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "failed",
+        "offline"
+      ]
+    },
+    "components": [
+      "AsyncStatus",
+      "Button",
+      "SupportContext"
+    ],
+    "linksTo": [
+      "BKG-03"
+    ]
+  },
+  {
+    "id": "BKG-08",
+    "title": "BKG-08 Fresha hand-off",
+    "routes": [
+      "/book/fresha"
+    ],
+    "bookingMode": [
+      "handoff"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "mode": [
+        "handoff",
+        "inapp"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "Button",
+      "ListGroup",
+      "ListRow",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-09"
+    ]
+  },
+  {
+    "id": "BKG-09",
+    "title": "Back from Fresha",
+    "routes": [
+      "/book/fresha-return"
+    ],
+    "bookingMode": [
+      "handoff"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "checking",
+        "confirmed",
+        "notyet",
+        "notvisible"
+      ]
+    },
+    "components": [
+      "AsyncStatus",
+      "Button",
+      "SupportContext"
+    ],
+    "linksTo": [
+      "HOM-02",
+      "VIS-01"
+    ]
+  },
+  {
+    "id": "BKG-10",
+    "title": "BKG-10 Choose areas",
+    "routes": [
+      "/book/areas"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "some",
+        "none",
+        "max"
+      ],
+      "set": [
+        "women",
+        "men"
+      ],
+      "mode": [
+        "handoff",
+        "inapp"
+      ]
+    },
+    "components": [
+      "AreaPicker",
+      "Badge",
+      "BookingStepper",
+      "Button",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-11",
+      "BKG-12"
+    ]
+  },
+  {
+    "id": "BKG-11",
+    "title": "BKG-11 Your visit",
+    "routes": [
+      "/book/basket"
+    ],
+    "bookingMode": [
+      "inapp"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "several",
+        "one",
+        "toolong"
+      ]
+    },
+    "components": [
+      "BookingStepper",
+      "Button",
+      "ServiceBasket",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-01",
+      "BKG-02"
+    ]
+  },
+  {
+    "id": "BKG-12",
+    "title": "BKG-12 How booking works",
+    "routes": [
+      "/book/how-it-works"
+    ],
+    "bookingMode": [
+      "handoff"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "first",
+        "dontshow"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Button",
+      "ConsentRow",
+      "Icon",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-08"
+    ]
+  },
+  {
+    "id": "CAR-01",
+    "title": "Preparation and aftercare",
+    "routes": [
+      "/care/[visitId]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "CareTimeline",
+      "Icon",
+      "TopBar"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "ENT-01",
+    "title": "Splash",
+    "routes": [
+      "/"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Logo"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "ENT-02",
+    "title": "Update required",
+    "routes": [
+      "/"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Button",
+      "EmptyState"
+    ],
+    "linksTo": [
+      "SUP-03"
+    ]
+  },
+  {
+    "id": "ENT-03",
+    "title": "Maintenance",
+    "routes": [
+      "/"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Button",
+      "EmptyState"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "ENT-04",
+    "title": "Notification primer",
+    "routes": [
+      "/"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Button",
+      "EmptyState"
+    ],
+    "linksTo": [
+      "Main"
+    ]
+  },
+  {
+    "id": "HOM-02",
+    "title": "Home with next visit",
+    "routes": [
+      "/(tabs)/home"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "ready",
+        "offline"
+      ],
+      "mode": [
+        "handoff",
+        "inapp"
+      ],
+      "sync": [
+        "synced",
+        "notsynced"
+      ]
+    },
+    "components": [
+      "AppointmentPass",
+      "Banner",
+      "Button",
+      "Icon",
+      "IconButton",
+      "ListGroup",
+      "ListRow",
+      "Logo",
+      "TabBar"
+    ],
+    "linksTo": [
+      "ACC-01",
+      "ACC-04",
+      "BKG-01",
+      "BKG-08",
+      "CAR-01",
+      "VIS-02",
+      "WAL-03",
+      "WAL-04"
+    ]
+  },
+  {
+    "id": "HOM-03",
+    "title": "Home without a visit",
+    "routes": [
+      "/(tabs)/home"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "mode": [
+        "handoff",
+        "inapp"
+      ]
+    },
+    "components": [
+      "Button",
+      "IconButton",
+      "Logo",
+      "OfferCard",
+      "TabBar"
+    ],
+    "linksTo": [
+      "ACC-01",
+      "ACC-04",
+      "BKG-03",
+      "BKG-12",
+      "OFR-01"
+    ]
+  },
+  {
+    "id": "ICN-01",
+    "title": "App icon",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "MOT-01",
+    "title": "Motion: tabs and filters",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "motion": [
+        "normal",
+        "reduced"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Chip",
+      "EmptyState",
+      "ServiceCard",
+      "TabBar"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "MOT-02",
+    "title": "Motion: slot selection",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "motion": [
+        "normal",
+        "reduced"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "Button",
+      "Chip",
+      "Icon",
+      "TopBar"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "MOT-03",
+    "title": "Motion: booking confirmation",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "motion": [
+        "normal",
+        "reduced"
+      ]
+    },
+    "components": [
+      "AsyncStatus",
+      "Badge",
+      "BookingSummary",
+      "Button",
+      "Chip"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "MOT-04",
+    "title": "Motion: payment result",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "motion": [
+        "normal",
+        "reduced"
+      ]
+    },
+    "components": [
+      "AsyncStatus",
+      "Badge",
+      "Button",
+      "PaymentMethodRow",
+      "SegmentedControl"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "MOT-05",
+    "title": "Motion: wallet reconciliation",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "motion": [
+        "normal",
+        "reduced"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "Button",
+      "Chip",
+      "CreditRow"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "MOT-06",
+    "title": "Motion: offer expiry",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "motion": [
+        "normal",
+        "reduced"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "Button",
+      "OfferCard"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "MOT-07",
+    "title": "Motion: publish and send back",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "motion": [
+        "normal",
+        "reduced"
+      ]
+    },
+    "components": [
+      "ApprovalItem",
+      "Badge",
+      "Banner",
+      "Button",
+      "PublishState",
+      "StaffBar",
+      "TextField"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "MOT-08",
+    "title": "Motion: sheet dismissal",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "motion": [
+        "normal",
+        "reduced"
+      ]
+    },
+    "components": [
+      "AppointmentPass",
+      "Badge",
+      "Button",
+      "Sheet",
+      "TextField",
+      "TopBar"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "Main",
+    "title": "Guest home",
+    "routes": [
+      "/(tabs)/home"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "ready",
+        "loading",
+        "offline",
+        "oldlink"
+      ],
+      "rating": [
+        "off",
+        "on"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "Chip",
+      "Logo",
+      "PhotoFrame",
+      "RatingSummary",
+      "Skeleton",
+      "TabBar"
+    ],
+    "linksTo": [
+      "AUT-01",
+      "BKG-01",
+      "TRT-01",
+      "TRT-02"
+    ],
+    "aliases": [
+      "HOM-01"
+    ]
+  },
+  {
+    "id": "NTF-01",
+    "title": "NTF-01 Booking confirmed",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Icon"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "NTF-02",
+    "title": "NTF-02 Reminder",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Icon"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "NTF-03",
+    "title": "NTF-03 Visit changed",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Icon"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "NTF-04",
+    "title": "NTF-04 Cancelled, refund or credit",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Icon"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "NTF-05",
+    "title": "NTF-05 Payment receipt",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Icon"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "NTF-06",
+    "title": "NTF-06 Refund status",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Icon"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "NTF-07",
+    "title": "NTF-07 Gift received",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Icon"
+    ],
+    "linksTo": [
+      "WEB-01"
+    ]
+  },
+  {
+    "id": "NTF-08",
+    "title": "NTF-08 Gift scheduled or sent (buyer)",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Icon"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "NTF-09",
+    "title": "NTF-09 Package session used",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Icon"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "NTF-10",
+    "title": "NTF-10 Support reply",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Icon"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "NTF-11",
+    "title": "NTF-11 Staff: request needs you",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Icon"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "NTF-12",
+    "title": "NTF-12 Staff: approval needed",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Icon"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "OFR-01",
+    "title": "Offer",
+    "routes": [
+      "/offers/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "live",
+        "upcoming",
+        "paused",
+        "returning"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "Button",
+      "Icon",
+      "ListGroup",
+      "ListRow",
+      "PhotoFrame",
+      "TopBar"
+    ],
+    "linksTo": [
+      "OFR-02",
+      "OFR-03",
+      "TRT-02",
+      "WAL-07"
+    ]
+  },
+  {
+    "id": "OFR-02",
+    "title": "Offer terms",
+    "routes": [
+      "/offers/[id]/terms"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Button",
+      "Sheet"
+    ],
+    "linksTo": [
+      "ACC-11",
+      "OFR-01"
+    ]
+  },
+  {
+    "id": "OFR-03",
+    "title": "Promo code",
+    "routes": [
+      "/promo"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "ended",
+        "invalid",
+        "usedup",
+        "noteligible",
+        "alreadyused",
+        "valid"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "TextField",
+      "TopBar"
+    ],
+    "linksTo": [
+      "OFR-01",
+      "OFR-03",
+      "WAL-07"
+    ]
+  },
+  {
+    "id": "OFR-04",
+    "title": "Offer ended",
+    "routes": [
+      "/offers/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Button",
+      "EmptyState",
+      "OfferCard",
+      "TopBar"
+    ],
+    "linksTo": [
+      "TRT-02"
+    ]
+  },
+  {
+    "id": "PAY-01",
+    "title": "Payment: choose a method",
+    "routes": [
+      "/pay/method"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "ctx": [
+        "deposit",
+        "package",
+        "none"
+      ],
+      "wallets": [
+        "on",
+        "off"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "Icon",
+      "PaymentMethodRow",
+      "TopBar",
+      "WalletPayButton"
+    ],
+    "linksTo": [
+      "PAY-02"
+    ]
+  },
+  {
+    "id": "PAY-02",
+    "title": "Payment: card",
+    "routes": [
+      "/pay/card"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "filled",
+        "empty",
+        "error",
+        "verify"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "Icon",
+      "TextField",
+      "TopBar"
+    ],
+    "linksTo": [
+      "PAY-04"
+    ]
+  },
+  {
+    "id": "PAY-03",
+    "title": "Leaving for Klarna",
+    "routes": [
+      "/pay/provider"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "Button",
+      "ListGroup",
+      "ListRow",
+      "Sheet"
+    ],
+    "linksTo": [
+      "PAY-01",
+      "PAY-04"
+    ]
+  },
+  {
+    "id": "PAY-04",
+    "title": "Payment: waiting",
+    "routes": [
+      "/pay/status"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "AsyncStatus"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "PAY-05",
+    "title": "Payment: paid",
+    "routes": [
+      "/pay/status"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "AsyncStatus",
+      "Button"
+    ],
+    "linksTo": [
+      "BKG-06",
+      "PAY-09"
+    ]
+  },
+  {
+    "id": "PAY-06",
+    "title": "Payment: declined",
+    "routes": [
+      "/pay/status"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "AsyncStatus",
+      "Button"
+    ],
+    "linksTo": [
+      "PAY-01",
+      "SUP-03"
+    ]
+  },
+  {
+    "id": "PAY-07",
+    "title": "Payment: cancelled",
+    "routes": [
+      "/pay/status"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "AsyncStatus",
+      "Banner",
+      "Button"
+    ],
+    "linksTo": [
+      "HOM-02",
+      "PAY-01"
+    ]
+  },
+  {
+    "id": "PAY-08",
+    "title": "Payment: still checking",
+    "routes": [
+      "/pay/status"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "AsyncStatus",
+      "Button"
+    ],
+    "linksTo": [
+      "SUP-03"
+    ]
+  },
+  {
+    "id": "PAY-09",
+    "title": "Receipt",
+    "routes": [
+      "/pay/receipt/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Button",
+      "Logo",
+      "TopBar"
+    ],
+    "linksTo": [
+      "SUP-03"
+    ]
+  },
+  {
+    "id": "STF-01",
+    "title": "STF-01 Staff home",
+    "routes": [
+      "/staff"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Front desk",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "role": [
+        "Owner",
+        "Editor",
+        "Front desk"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Icon",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-02",
+      "STF-04",
+      "STF-05",
+      "STF-08",
+      "STF-10",
+      "STF-11",
+      "STF-12",
+      "STF-13",
+      "STF-15",
+      "STF-17",
+      "STF-19",
+      "STF-21",
+      "STF-23",
+      "STF-25",
+      "STF-26",
+      "STF-29",
+      "STF-31",
+      "STF-32",
+      "STF-33",
+      "STF-34",
+      "STF-35",
+      "STF-36",
+      "STF-37",
+      "STF-40",
+      "STF-41"
+    ]
+  },
+  {
+    "id": "STF-02",
+    "title": "STF-02 Services",
+    "routes": [
+      "/staff/services"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "view": [
+        "all",
+        "archived"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Button",
+      "Chip",
+      "IconButton",
+      "PublishState",
+      "SearchField",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01",
+      "STF-03",
+      "STF-39",
+      "STF-41"
+    ]
+  },
+  {
+    "id": "STF-03",
+    "title": "STF-03 Service edit",
+    "routes": [
+      "/staff/services/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "ready",
+        "invalid",
+        "draft",
+        "conflict",
+        "offline",
+        "savefailed"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "Button",
+      "EditConflict",
+      "FormSection",
+      "IconButton",
+      "PublishState",
+      "SegmentedControl",
+      "StaffBar",
+      "TextField"
+    ],
+    "linksTo": [
+      "STF-02",
+      "STF-07",
+      "STF-08",
+      "STF-09",
+      "STF-40"
+    ]
+  },
+  {
+    "id": "STF-04",
+    "title": "STF-04 Categories and concerns",
+    "routes": [
+      "/staff/taxonomy"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "list",
+        "rename",
+        "move",
+        "blocked"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "Icon",
+      "IconButton",
+      "ListGroup",
+      "ListRow",
+      "SegmentedControl",
+      "Sheet",
+      "StaffBar",
+      "TextField"
+    ],
+    "linksTo": [
+      "STF-01",
+      "STF-39"
+    ]
+  },
+  {
+    "id": "STF-05",
+    "title": "STF-05 Campaigns",
+    "routes": [
+      "/staff/campaigns"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "view": [
+        "list",
+        "menu",
+        "calendar"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Button",
+      "IconButton",
+      "ListGroup",
+      "ListRow",
+      "PublishState",
+      "SegmentedControl",
+      "Sheet",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01",
+      "STF-06",
+      "STF-39"
+    ]
+  },
+  {
+    "id": "STF-06",
+    "title": "STF-06 Campaign edit",
+    "routes": [
+      "/staff/campaigns/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "ready",
+        "invalid",
+        "conflict",
+        "offline",
+        "savefailed"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "Chip",
+      "DateTimeRange",
+      "EditConflict",
+      "FormSection",
+      "IconButton",
+      "ImagePicker",
+      "PublishState",
+      "SimpleTextEditor",
+      "StaffBar",
+      "Switch",
+      "TextField"
+    ],
+    "linksTo": [
+      "OFR-01",
+      "STF-05",
+      "STF-08",
+      "STF-09"
+    ]
+  },
+  {
+    "id": "STF-07",
+    "title": "Staff: customer preview",
+    "routes": [
+      "/staff/campaigns/[id]/preview"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "Banner",
+      "Button",
+      "OfferCard",
+      "SegmentedControl",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-06"
+    ]
+  },
+  {
+    "id": "STF-08",
+    "title": "STF-08 Approvals",
+    "routes": [
+      "/staff/approvals"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "approver": [
+        "off",
+        "on"
+      ],
+      "role": [
+        "Owner"
+      ]
+    },
+    "components": [
+      "ApprovalItem",
+      "AuditEntry",
+      "Banner",
+      "Button",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01",
+      "STF-09",
+      "STF-32"
+    ]
+  },
+  {
+    "id": "STF-09",
+    "title": "STF-09 Approval detail",
+    "routes": [
+      "/staff/approvals/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "mode": [
+        "review",
+        "rejecting",
+        "selfpublish"
+      ],
+      "role": [
+        "Owner"
+      ]
+    },
+    "components": [
+      "ApprovalItem",
+      "AuditEntry",
+      "Dialog",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-08"
+    ]
+  },
+  {
+    "id": "STF-10",
+    "title": "Staff: support content",
+    "routes": [
+      "/staff/support-content"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "Banner",
+      "Button",
+      "ListGroup",
+      "ListRow",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01"
+    ]
+  },
+  {
+    "id": "STF-11",
+    "title": "STF-11 Value lookup",
+    "routes": [
+      "/staff/lookup"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Front desk",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "phone",
+        "reference",
+        "notfound"
+      ],
+      "role": [
+        "Front desk",
+        "Owner"
+      ]
+    },
+    "components": [
+      "Button",
+      "EmptyState",
+      "ListGroup",
+      "ListRow",
+      "SearchField",
+      "SegmentedControl",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01",
+      "STF-18",
+      "STF-25"
+    ]
+  },
+  {
+    "id": "STF-12",
+    "title": "Staff: audit log",
+    "routes": [
+      "/staff/audit"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "AuditEntry",
+      "Badge",
+      "Chip",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01"
+    ]
+  },
+  {
+    "id": "STF-13",
+    "title": "STF-13 Team and roles",
+    "routes": [
+      "/staff/team"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "role": [
+        "Owner"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Button",
+      "ListGroup",
+      "ListRow",
+      "RoleBadge",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01",
+      "STF-38"
+    ]
+  },
+  {
+    "id": "STF-14",
+    "title": "Staff: no permission",
+    "routes": [
+      "/staff/denied"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Front desk",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "Button",
+      "PermissionNotice",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01"
+    ]
+  },
+  {
+    "id": "STF-15",
+    "title": "STF-15 Packages",
+    "routes": [
+      "/staff/packages"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "view": [
+        "all",
+        "archived",
+        "empty"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Button",
+      "Chip",
+      "EmptyState",
+      "IconButton",
+      "PublishState",
+      "SearchField",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01",
+      "STF-16",
+      "STF-39"
+    ]
+  },
+  {
+    "id": "STF-16",
+    "title": "STF-16 Package edit",
+    "routes": [
+      "/staff/packages/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "ready",
+        "invalid",
+        "live",
+        "conflict",
+        "offline",
+        "savefailed"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "Button",
+      "EditConflict",
+      "FormSection",
+      "IconButton",
+      "PublishState",
+      "StaffBar",
+      "TextField"
+    ],
+    "linksTo": [
+      "STF-08",
+      "STF-09",
+      "STF-15",
+      "WAL-07"
+    ]
+  },
+  {
+    "id": "STF-17",
+    "title": "STF-17 Gift-card settings",
+    "routes": [
+      "/staff/gift-cards/settings"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "ready",
+        "saved",
+        "invalid",
+        "conflict",
+        "offline",
+        "savefailed"
+      ],
+      "role": [
+        "Owner"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "Chip",
+      "EditConflict",
+      "FormSection",
+      "GiftDesignPicker",
+      "IconButton",
+      "PublishState",
+      "SettingRow",
+      "StaffBar",
+      "TextField"
+    ],
+    "linksTo": [
+      "STF-01",
+      "WAL-08"
+    ]
+  },
+  {
+    "id": "STF-18",
+    "title": "STF-18 Gift-card actions",
+    "routes": [
+      "/staff/gift-cards/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Front desk",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "found",
+        "sent",
+        "voided"
+      ],
+      "role": [
+        "Owner",
+        "Front desk"
+      ]
+    },
+    "components": [
+      "Banner",
+      "GiftCard",
+      "Icon",
+      "StaffBar",
+      "Toast"
+    ],
+    "linksTo": [
+      "STF-11",
+      "STF-39"
+    ]
+  },
+  {
+    "id": "STF-19",
+    "title": "STF-19 Promo codes",
+    "routes": [
+      "/staff/promo-codes"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "view": [
+        "all",
+        "archived"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Button",
+      "Chip",
+      "IconButton",
+      "PublishState",
+      "SearchField",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01",
+      "STF-20",
+      "STF-39"
+    ]
+  },
+  {
+    "id": "STF-20",
+    "title": "STF-20 Promo code edit",
+    "routes": [
+      "/staff/promo-codes/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "ready",
+        "duplicate",
+        "invalid",
+        "conflict",
+        "offline",
+        "savefailed"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "DateTimeRange",
+      "EditConflict",
+      "FormSection",
+      "IconButton",
+      "PublishState",
+      "SegmentedControl",
+      "StaffBar",
+      "TextField"
+    ],
+    "linksTo": [
+      "OFR-03",
+      "STF-08",
+      "STF-09",
+      "STF-19"
+    ]
+  },
+  {
+    "id": "STF-21",
+    "title": "STF-21 Professionals",
+    "routes": [
+      "/staff/professionals"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "view": [
+        "all",
+        "archived"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Button",
+      "Chip",
+      "IconButton",
+      "PublishState",
+      "SearchField",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01",
+      "STF-22",
+      "STF-39"
+    ]
+  },
+  {
+    "id": "STF-22",
+    "title": "STF-22 Professional edit",
+    "routes": [
+      "/staff/professionals/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "ready",
+        "consent",
+        "live",
+        "conflict",
+        "offline",
+        "savefailed"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "EditConflict",
+      "FormSection",
+      "IconButton",
+      "ImagePicker",
+      "PublishState",
+      "StaffBar",
+      "Switch",
+      "TextField"
+    ],
+    "linksTo": [
+      "STF-08",
+      "STF-09",
+      "STF-21",
+      "TRT-06"
+    ]
+  },
+  {
+    "id": "STF-23",
+    "title": "STF-23 Today",
+    "routes": [
+      "/staff/today"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Front desk",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "ready",
+        "empty"
+      ],
+      "mode": [
+        "handoff",
+        "inapp"
+      ],
+      "role": [
+        "Front desk",
+        "Owner"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "EmptyState",
+      "QueueItem",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01",
+      "STF-24"
+    ]
+  },
+  {
+    "id": "STF-24",
+    "title": "STF-24 Request detail",
+    "routes": [
+      "/staff/requests/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Front desk",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "pending",
+        "done"
+      ],
+      "mode": [
+        "handoff",
+        "inapp"
+      ],
+      "role": [
+        "Front desk",
+        "Owner"
+      ]
+    },
+    "components": [
+      "AppointmentPass",
+      "AuditEntry",
+      "Badge",
+      "Banner",
+      "Button",
+      "ListGroup",
+      "ListRow",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-23",
+      "STF-24"
+    ]
+  },
+  {
+    "id": "STF-25",
+    "title": "STF-25 Counter redemption",
+    "routes": [
+      "/staff/redeem"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Front desk",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "found",
+        "notenough",
+        "done"
+      ],
+      "role": [
+        "Front desk",
+        "Owner"
+      ]
+    },
+    "components": [
+      "AsyncStatus",
+      "Banner",
+      "BookingSummary",
+      "Button",
+      "ListGroup",
+      "ListRow",
+      "SearchField",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01",
+      "STF-25"
+    ]
+  },
+  {
+    "id": "STF-26",
+    "title": "STF-26 Customer search",
+    "routes": [
+      "/staff/customers"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Front desk",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "results",
+        "none"
+      ],
+      "role": [
+        "Front desk",
+        "Owner"
+      ]
+    },
+    "components": [
+      "Badge",
+      "EmptyState",
+      "SearchField",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01",
+      "STF-27",
+      "STF-28"
+    ]
+  },
+  {
+    "id": "STF-27",
+    "title": "STF-27 Customer profile",
+    "routes": [
+      "/staff/customers/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Front desk",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "full",
+        "legacy"
+      ],
+      "role": [
+        "Front desk",
+        "Owner"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "Button",
+      "ListGroup",
+      "ListRow",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-26",
+      "STF-28",
+      "STF-30"
+    ]
+  },
+  {
+    "id": "STF-28",
+    "title": "STF-28 Account match check",
+    "routes": [
+      "/staff/customers/[id]/match"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Front desk",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "match",
+        "partial",
+        "reject"
+      ],
+      "role": [
+        "Owner",
+        "Front desk"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "Button",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-27"
+    ]
+  },
+  {
+    "id": "STF-29",
+    "title": "STF-29 Support inbox",
+    "routes": [
+      "/staff/inbox"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Front desk",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "list",
+        "empty"
+      ],
+      "role": [
+        "Front desk",
+        "Owner"
+      ]
+    },
+    "components": [
+      "Chip",
+      "EmptyState",
+      "QueueItem",
+      "SearchField",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01",
+      "STF-30"
+    ]
+  },
+  {
+    "id": "STF-30",
+    "title": "STF-30 Message",
+    "routes": [
+      "/staff/inbox/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Front desk",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "draft",
+        "sent",
+        "failed"
+      ],
+      "role": [
+        "Front desk",
+        "Owner"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "Button",
+      "SegmentedControl",
+      "StaffBar",
+      "TextField"
+    ],
+    "linksTo": [
+      "STF-27",
+      "STF-29"
+    ]
+  },
+  {
+    "id": "STF-31",
+    "title": "STF-31 Clinic info",
+    "routes": [
+      "/staff/settings/clinic"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "ready",
+        "saved",
+        "overlap",
+        "conflict",
+        "offline",
+        "savefailed"
+      ],
+      "role": [
+        "Owner"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "DateTimeRange",
+      "EditConflict",
+      "FormSection",
+      "IconButton",
+      "ListGroup",
+      "ListRow",
+      "PublishState",
+      "StaffBar",
+      "TextField"
+    ],
+    "linksTo": [
+      "STF-01",
+      "STF-23",
+      "SUP-01"
+    ]
+  },
+  {
+    "id": "STF-32",
+    "title": "STF-32 Booking and payment rules",
+    "routes": [
+      "/staff/settings/rules"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "ready",
+        "changed",
+        "conflict",
+        "offline",
+        "savefailed"
+      ],
+      "role": [
+        "Owner"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "Button",
+      "EditConflict",
+      "FormSection",
+      "IconButton",
+      "PublishState",
+      "SettingRow",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "BKG-05",
+      "STF-01"
+    ]
+  },
+  {
+    "id": "STF-33",
+    "title": "STF-33 Policies",
+    "routes": [
+      "/staff/policies"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "view": [
+        "list",
+        "editor",
+        "history"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "AuditEntry",
+      "Banner",
+      "Button",
+      "IconButton",
+      "PublishState",
+      "SimpleTextEditor",
+      "StaffBar",
+      "TextField"
+    ],
+    "linksTo": [
+      "ACC-11",
+      "STF-01",
+      "STF-08",
+      "STF-09",
+      "STF-33",
+      "STF-39"
+    ]
+  },
+  {
+    "id": "STF-34",
+    "title": "STF-34 Home layout",
+    "routes": [
+      "/staff/home-layout"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "set",
+        "empty"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Button",
+      "EmptyState",
+      "IconButton",
+      "PublishState",
+      "ReorderList",
+      "SettingRow",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "Main",
+      "STF-01",
+      "STF-05",
+      "STF-08",
+      "STF-09"
+    ]
+  },
+  {
+    "id": "STF-35",
+    "title": "STF-35 Push message",
+    "routes": [
+      "/staff/push"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "ready",
+        "scheduled",
+        "sent",
+        "noaudience",
+        "conflict",
+        "offline",
+        "savefailed"
+      ],
+      "role": [
+        "Owner"
+      ]
+    },
+    "components": [
+      "AsyncStatus",
+      "Banner",
+      "Button",
+      "EditConflict",
+      "FormSection",
+      "PublishState",
+      "SegmentedControl",
+      "StaffBar",
+      "TextField"
+    ],
+    "linksTo": [
+      "STF-01",
+      "STF-35"
+    ]
+  },
+  {
+    "id": "STF-36",
+    "title": "STF-36 Media library",
+    "routes": [
+      "/staff/media"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "library",
+        "empty",
+        "uploading",
+        "rights"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "EmptyState",
+      "ImagePicker",
+      "MediaTile",
+      "SearchField",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01"
+    ]
+  },
+  {
+    "id": "STF-37",
+    "title": "STF-37 Reports",
+    "routes": [
+      "/staff/reports"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "month",
+        "empty",
+        "loading"
+      ],
+      "role": [
+        "Owner"
+      ]
+    },
+    "components": [
+      "Badge",
+      "ListGroup",
+      "ListRow",
+      "SegmentedControl",
+      "StaffBar",
+      "StatTile"
+    ],
+    "linksTo": [
+      "STF-01"
+    ]
+  },
+  {
+    "id": "STF-38",
+    "title": "STF-38 Team member",
+    "routes": [
+      "/staff/team/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "active",
+        "invited",
+        "removed"
+      ],
+      "role": [
+        "Owner"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "Button",
+      "ConsentRow",
+      "ListGroup",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-13",
+      "STF-39"
+    ]
+  },
+  {
+    "id": "STF-39",
+    "title": "STF-39 Archive or delete",
+    "routes": [
+      "(dialog) archive / delete / restore"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "kind": [
+        "archive",
+        "delete",
+        "restore"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "ConfirmDialog",
+      "PublishState",
+      "SearchField",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-02"
+    ]
+  },
+  {
+    "id": "STF-40",
+    "title": "STF-40 FAQ editor",
+    "routes": [
+      "/staff/services/[id]/faq"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "ready",
+        "live",
+        "conflict",
+        "offline",
+        "savefailed"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "Button",
+      "EditConflict",
+      "FAQBlock",
+      "FormSection",
+      "IconButton",
+      "PublishState",
+      "SimpleTextEditor",
+      "StaffBar",
+      "TextField"
+    ],
+    "linksTo": [
+      "STF-03",
+      "STF-08",
+      "STF-09",
+      "TRT-05"
+    ]
+  },
+  {
+    "id": "STF-41",
+    "title": "STF-41 Import: file and columns",
+    "routes": [
+      "/staff/import"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "mapped",
+        "missing"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "Button",
+      "ListGroup",
+      "ListRow",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-02",
+      "STF-42"
+    ]
+  },
+  {
+    "id": "STF-42",
+    "title": "STF-42 Import: review",
+    "routes": [
+      "/staff/import/review"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [
+      "Editor",
+      "Owner"
+    ],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "review",
+        "conflicts",
+        "published"
+      ],
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "AsyncStatus",
+      "Badge",
+      "Banner",
+      "Button",
+      "Chip",
+      "StaffBar",
+      "StatTile"
+    ],
+    "linksTo": [
+      "STF-02",
+      "STF-03",
+      "STF-08",
+      "STF-41",
+      "STF-42"
+    ]
+  },
+  {
+    "id": "SUP-01",
+    "title": "Help and contact",
+    "routes": [
+      "/support"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Button",
+      "Icon",
+      "ListGroup",
+      "ListRow",
+      "SearchField",
+      "TopBar"
+    ],
+    "linksTo": [
+      "SUP-02",
+      "SUP-03",
+      "SUP-04",
+      "TRT-04"
+    ]
+  },
+  {
+    "id": "SUP-02",
+    "title": "Help article: deposits",
+    "routes": [
+      "/support/[article]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Chip",
+      "TopBar"
+    ],
+    "linksTo": [
+      "SUP-03"
+    ]
+  },
+  {
+    "id": "SUP-03",
+    "title": "Contact with reference",
+    "routes": [
+      "/support/contact"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "closed",
+        "open",
+        "sent"
+      ]
+    },
+    "components": [
+      "Banner",
+      "SupportContext",
+      "Toast",
+      "TopBar"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "SUP-04",
+    "title": "SUP-04 Ask us",
+    "routes": [
+      "/support/ask"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "empty",
+        "filled",
+        "error",
+        "sending"
+      ]
+    },
+    "components": [
+      "Button",
+      "Chip",
+      "SegmentedControl",
+      "TextField",
+      "TopBar"
+    ],
+    "linksTo": [
+      "SUP-05"
+    ]
+  },
+  {
+    "id": "SUP-05",
+    "title": "SUP-05 Question sent",
+    "routes": [
+      "/support/ask/sent"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "AsyncStatus",
+      "Button"
+    ],
+    "linksTo": [
+      "ACC-04",
+      "SUP-01"
+    ]
+  },
+  {
+    "id": "TAB-01",
+    "title": "TAB-01 Service edit (tablet)",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Button",
+      "FormSection",
+      "IconButton",
+      "PublishState",
+      "SegmentedControl",
+      "ServiceCard",
+      "SimpleTextEditor",
+      "StaffBar",
+      "TextField"
+    ],
+    "linksTo": [
+      "STF-02",
+      "STF-07",
+      "STF-08",
+      "STF-09"
+    ]
+  },
+  {
+    "id": "TAB-02",
+    "title": "TAB-02 Campaign edit (tablet)",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Button",
+      "Chip",
+      "DateTimeRange",
+      "FormSection",
+      "IconButton",
+      "OfferCard",
+      "PublishState",
+      "SegmentedControl",
+      "SimpleTextEditor",
+      "StaffBar",
+      "TextField"
+    ],
+    "linksTo": [
+      "OFR-01",
+      "STF-05",
+      "STF-08",
+      "STF-09"
+    ]
+  },
+  {
+    "id": "TAB-03",
+    "title": "TAB-03 Package edit (tablet)",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Button",
+      "FormSection",
+      "IconButton",
+      "PackageBalance",
+      "PublishState",
+      "SimpleTextEditor",
+      "StaffBar",
+      "TextField"
+    ],
+    "linksTo": [
+      "STF-08",
+      "STF-09",
+      "STF-15",
+      "WAL-07"
+    ]
+  },
+  {
+    "id": "TAB-04",
+    "title": "TAB-04 Professional edit (tablet)",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Button",
+      "Chip",
+      "FormSection",
+      "IconButton",
+      "ImagePicker",
+      "PublishState",
+      "SimpleTextEditor",
+      "StaffBar",
+      "Switch",
+      "TextField"
+    ],
+    "linksTo": [
+      "STF-08",
+      "STF-09",
+      "STF-21",
+      "TRT-06"
+    ]
+  },
+  {
+    "id": "TAB-05",
+    "title": "TAB-05 Booking and payment rules (tablet)",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "role": [
+        "Owner"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "Button",
+      "FormSection",
+      "SettingRow",
+      "StaffBar"
+    ],
+    "linksTo": [
+      "STF-01"
+    ]
+  },
+  {
+    "id": "TAB-06",
+    "title": "TAB-06 Push message (tablet)",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "role": [
+        "Owner"
+      ]
+    },
+    "components": [
+      "Button",
+      "FormSection",
+      "SegmentedControl",
+      "StaffBar",
+      "TextField"
+    ],
+    "linksTo": [
+      "STF-01"
+    ]
+  },
+  {
+    "id": "TAB-07",
+    "title": "TAB-07 Import review (tablet)",
+    "routes": [],
+    "bookingMode": [],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "role": [
+        "Owner",
+        "Editor"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Banner",
+      "Button",
+      "Chip",
+      "StaffBar",
+      "StatTile"
+    ],
+    "linksTo": [
+      "STF-08",
+      "STF-09",
+      "STF-41"
+    ]
+  },
+  {
+    "id": "TRT-01",
+    "title": "Treatments",
+    "routes": [
+      "/(tabs)/treatments"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Button",
+      "Chip",
+      "SearchField",
+      "TabBar"
+    ],
+    "linksTo": [
+      "BKG-01",
+      "TRT-02",
+      "TRT-04"
+    ]
+  },
+  {
+    "id": "TRT-02",
+    "title": "Skin tightening treatments",
+    "routes": [
+      "/treatments/list"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "loaded",
+        "empty",
+        "loading"
+      ]
+    },
+    "components": [
+      "Button",
+      "Chip",
+      "EmptyState",
+      "ServiceCard",
+      "Skeleton",
+      "TabBar",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-01",
+      "TRT-02",
+      "TRT-03",
+      "TRT-05"
+    ]
+  },
+  {
+    "id": "TRT-03",
+    "title": "Filters",
+    "routes": [
+      "/treatments/list"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Button",
+      "Chip",
+      "SegmentedControl",
+      "Sheet"
+    ],
+    "linksTo": [
+      "TRT-02"
+    ]
+  },
+  {
+    "id": "TRT-04",
+    "title": "Search, no results",
+    "routes": [
+      "/treatments/search"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "noresults",
+        "typing",
+        "results"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "Chip",
+      "EmptyState",
+      "ListGroup",
+      "ListRow",
+      "SearchField"
+    ],
+    "linksTo": [
+      "SUP-03",
+      "TRT-01",
+      "TRT-02",
+      "TRT-05"
+    ]
+  },
+  {
+    "id": "TRT-05",
+    "title": "12D HIFU",
+    "routes": [
+      "/treatments/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "price": [
+        "from",
+        "fixed",
+        "range",
+        "perunit",
+        "consultation",
+        "promo"
+      ],
+      "view": [
+        "standard",
+        "faq",
+        "perarea"
+      ],
+      "financing": [
+        "off",
+        "on"
+      ],
+      "mode": [
+        "handoff",
+        "inapp"
+      ]
+    },
+    "components": [
+      "Badge",
+      "Button",
+      "FAQBlock",
+      "Icon",
+      "ListGroup",
+      "ListRow",
+      "PhotoFrame",
+      "PriceTag",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-02",
+      "BKG-10",
+      "BKG-12",
+      "CAR-01",
+      "SUP-02",
+      "TRT-06"
+    ]
+  },
+  {
+    "id": "TRT-06",
+    "title": "Professional profile",
+    "routes": [
+      "/professionals/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Button",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-03"
+    ]
+  },
+  {
+    "id": "TRT-07",
+    "title": "Treatment unavailable",
+    "routes": [
+      "/treatments/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "unavailable",
+        "archived"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "ListGroup",
+      "ListRow",
+      "PhotoFrame",
+      "TopBar"
+    ],
+    "linksTo": [
+      "SUP-03",
+      "TRT-05"
+    ]
+  },
+  {
+    "id": "VIS-01",
+    "title": "Visits",
+    "routes": [
+      "/(tabs)/visits"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "upcoming",
+        "past",
+        "empty",
+        "guest",
+        "offline"
+      ],
+      "mode": [
+        "handoff",
+        "inapp"
+      ],
+      "sync": [
+        "synced",
+        "notsynced"
+      ]
+    },
+    "components": [
+      "AppointmentPass",
+      "Banner",
+      "Button",
+      "EmptyState",
+      "IconButton",
+      "ListGroup",
+      "ListRow",
+      "SegmentedControl",
+      "TabBar"
+    ],
+    "linksTo": [
+      "AUT-01",
+      "BKG-01",
+      "BKG-08",
+      "VIS-02",
+      "VIS-07"
+    ]
+  },
+  {
+    "id": "VIS-02",
+    "title": "Visit detail",
+    "routes": [
+      "/visits/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "early",
+        "late",
+        "requested"
+      ],
+      "mode": [
+        "handoff",
+        "inapp"
+      ]
+    },
+    "components": [
+      "AppointmentPass",
+      "Banner",
+      "Button",
+      "Icon",
+      "ListGroup",
+      "ListRow",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-08",
+      "CAR-01",
+      "PAY-09",
+      "SUP-03",
+      "VIS-03",
+      "VIS-04",
+      "VIS-06"
+    ]
+  },
+  {
+    "id": "VIS-03",
+    "title": "Reschedule",
+    "routes": [
+      "/visits/[id]/reschedule"
+    ],
+    "bookingMode": [
+      "inapp"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "ready",
+        "none",
+        "failed"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "IconButton",
+      "TimeSlotGrid",
+      "TopBar"
+    ],
+    "linksTo": [
+      "VIS-02"
+    ]
+  },
+  {
+    "id": "VIS-04",
+    "title": "Cancel visit",
+    "routes": [
+      "/visits/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "money": [
+        "refund",
+        "package"
+      ]
+    },
+    "components": [
+      "Dialog"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "VIS-05",
+    "title": "Visit cancelled",
+    "routes": [
+      "/visits/[id]/cancelled"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "AsyncStatus",
+      "Button",
+      "ListGroup",
+      "ListRow"
+    ],
+    "linksTo": [
+      "BKG-03",
+      "PAY-09",
+      "VIS-01"
+    ]
+  },
+  {
+    "id": "VIS-06",
+    "title": "Late change",
+    "routes": [
+      "/visits/[id]/late-change"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "ListGroup",
+      "ListRow",
+      "SupportContext",
+      "TopBar"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "VIS-07",
+    "title": "Past visit",
+    "routes": [
+      "/visits/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "completed",
+        "missed"
+      ]
+    },
+    "components": [
+      "AppointmentPass",
+      "Banner",
+      "Button",
+      "ListGroup",
+      "ListRow",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-03",
+      "CAR-01",
+      "PAY-09",
+      "SUP-03"
+    ]
+  },
+  {
+    "id": "WAL-01",
+    "title": "Wallet",
+    "routes": [
+      "/(tabs)/wallet"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "full",
+        "reconciling",
+        "offline",
+        "empty",
+        "guest"
+      ],
+      "member": [
+        "no",
+        "yes"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "CreditRow",
+      "EmptyState",
+      "IconButton",
+      "ListGroup",
+      "ListRow",
+      "TabBar"
+    ],
+    "linksTo": [
+      "AUT-01",
+      "WAL-02",
+      "WAL-03",
+      "WAL-04",
+      "WAL-05",
+      "WAL-06",
+      "WAL-07",
+      "WAL-12",
+      "WAL-13"
+    ]
+  },
+  {
+    "id": "WAL-02",
+    "title": "Clinic credit",
+    "routes": [
+      "/wallet/credit"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "available",
+        "expiring",
+        "reconciling"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "CreditRow",
+      "ListGroup",
+      "ListRow",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-01",
+      "WAL-12"
+    ]
+  },
+  {
+    "id": "WAL-03",
+    "title": "Package",
+    "routes": [
+      "/wallet/packages/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "active",
+        "expiring",
+        "expired",
+        "used"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "ListGroup",
+      "ListRow",
+      "PackageBalance",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-03",
+      "SUP-02",
+      "SUP-03",
+      "WAL-07"
+    ]
+  },
+  {
+    "id": "WAL-04",
+    "title": "Gift card",
+    "routes": [
+      "/wallet/gift-cards/[id]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "role": [
+        "mine",
+        "sent"
+      ]
+    },
+    "components": [
+      "Button",
+      "GiftCard",
+      "ListGroup",
+      "ListRow",
+      "TopBar"
+    ],
+    "linksTo": [
+      "BKG-01",
+      "PAY-09",
+      "WAL-12"
+    ]
+  },
+  {
+    "id": "WAL-05",
+    "title": "Membership",
+    "routes": [
+      "/wallet/membership"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "Banner",
+      "MemberStatus",
+      "TopBar"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "WAL-06",
+    "title": "Receipts and history",
+    "routes": [
+      "/wallet/history"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "ListGroup",
+      "ListRow",
+      "SegmentedControl",
+      "TopBar"
+    ],
+    "linksTo": [
+      "PAY-09"
+    ]
+  },
+  {
+    "id": "WAL-07",
+    "title": "Buy a package",
+    "routes": [
+      "/wallet/buy-package"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "Badge",
+      "Button",
+      "ListGroup",
+      "ListRow",
+      "TopBar"
+    ],
+    "linksTo": [
+      "PAY-01",
+      "SUP-02"
+    ]
+  },
+  {
+    "id": "WAL-08",
+    "title": "Gift card: value",
+    "routes": [
+      "/wallet/gift/value"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "preset",
+        "custom",
+        "error"
+      ]
+    },
+    "components": [
+      "BookingStepper",
+      "Button",
+      "GiftCard",
+      "TextField",
+      "TopBar"
+    ],
+    "linksTo": [
+      "WAL-09"
+    ]
+  },
+  {
+    "id": "WAL-09",
+    "title": "Gift card: recipient",
+    "routes": [
+      "/wallet/gift/recipient"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "now",
+        "later"
+      ]
+    },
+    "components": [
+      "BookingStepper",
+      "Button",
+      "SegmentedControl",
+      "TextField",
+      "TopBar"
+    ],
+    "linksTo": [
+      "WAL-10"
+    ]
+  },
+  {
+    "id": "WAL-10",
+    "title": "Gift card: review",
+    "routes": [
+      "/wallet/gift/review"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {},
+    "components": [
+      "BookingStepper",
+      "Button",
+      "GiftCard",
+      "TopBar"
+    ],
+    "linksTo": [
+      "PAY-01"
+    ]
+  },
+  {
+    "id": "WAL-11",
+    "title": "Claim a gift card",
+    "routes": [
+      "/wallet/claim"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "valid",
+        "invalid",
+        "claimed",
+        "notfound"
+      ]
+    },
+    "components": [
+      "Banner",
+      "Button",
+      "GiftCard",
+      "SupportContext",
+      "TextField",
+      "TopBar"
+    ],
+    "linksTo": [
+      "WAL-04"
+    ]
+  },
+  {
+    "id": "WAL-12",
+    "title": "Balance help",
+    "routes": [
+      "/wallet/help"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": true,
+    "tweaks": {
+      "state": [
+        "form",
+        "sent"
+      ]
+    },
+    "components": [
+      "AsyncStatus",
+      "Button",
+      "TextField",
+      "TopBar"
+    ],
+    "linksTo": [
+      "WAL-01",
+      "WAL-12"
+    ]
+  },
+  {
+    "id": "WAL-13",
+    "title": "WAL-13 Gift design",
+    "routes": [
+      "/wallet/gift/design"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "selected",
+        "loading"
+      ]
+    },
+    "components": [
+      "BookingStepper",
+      "Button",
+      "GiftCard",
+      "GiftDesignPicker",
+      "TopBar"
+    ],
+    "linksTo": [
+      "WAL-08"
+    ]
+  },
+  {
+    "id": "WEB-01",
+    "title": "WEB-01 Gift claim (web)",
+    "routes": [
+      "https://app.nanobeautystar.com/gift/[code]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "ready",
+        "code",
+        "error"
+      ]
+    },
+    "components": [
+      "Button",
+      "GiftCard",
+      "Icon",
+      "Logo",
+      "OTPInput",
+      "TextField"
+    ],
+    "linksTo": [
+      "WEB-01",
+      "WEB-02"
+    ]
+  },
+  {
+    "id": "WEB-02",
+    "title": "WEB-02 Gift claimed (web)",
+    "routes": [
+      "https://app.nanobeautystar.com/gift/[code]"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "AsyncStatus",
+      "Button",
+      "Icon",
+      "Logo"
+    ],
+    "linksTo": []
+  },
+  {
+    "id": "WEB-03",
+    "title": "WEB-03 Delete account (web)",
+    "routes": [
+      "https://app.nanobeautystar.com/delete"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {
+      "state": [
+        "phone",
+        "code",
+        "error"
+      ]
+    },
+    "components": [
+      "Button",
+      "Icon",
+      "ListGroup",
+      "ListRow",
+      "Logo",
+      "OTPInput",
+      "TextField"
+    ],
+    "linksTo": [
+      "WEB-03",
+      "WEB-04"
+    ]
+  },
+  {
+    "id": "WEB-04",
+    "title": "WEB-04 Deletion requested (web)",
+    "routes": [
+      "https://app.nanobeautystar.com/delete"
+    ],
+    "bookingMode": [
+      "both"
+    ],
+    "roles": [],
+    "signIn": false,
+    "tweaks": {},
+    "components": [
+      "AsyncStatus",
+      "Badge",
+      "CareTimeline",
+      "Icon",
+      "Logo"
+    ],
+    "linksTo": []
+  }
+]

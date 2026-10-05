@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BKG-08 Fresha hand-off</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<x-import component-from-global-scope="NanoBeauty.TopBar" title="Book" back-label="Back" platform="{{platform}}"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 14px; padding: 8px 20px 12px;">
+<sc-if value="{{mode_inapp}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="info" title="Backup path">Shown only when booking inside the app isn’t possible right now.</x-import>
+</sc-if>
+<h1 class="title-lg" style="margin: 0; color: var(--ink-display);">Book with Fresha</h1>
+<sc-if value="{{mode_handoff}}" hint-placeholder-val="{{true}}">
+<p class="body" style="margin: 0; color: var(--ink-muted);">Nano Beauty takes bookings through Fresha. It takes about a minute.</p>
+</sc-if>
+<x-import component-from-global-scope="NanoBeauty.ListGroup" header="What we try to carry over"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="check" title="Your treatment" subtitle="12D HIFU · lower face" chevron="{{no}}"></x-import><x-import component-from-global-scope="NanoBeauty.ListRow" icon="check" title="Your name and phone" subtitle="So you don’t type them again" chevron="{{no}}"></x-import><x-import component-from-global-scope="NanoBeauty.ListRow" icon="info" title="Time and deposit" subtitle="You choose and pay in Fresha" chevron="{{no}}"></x-import></x-import>
+<sc-if value="{{mode_handoff}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Badge" tone="sample">Assumption: depends on what Fresha allows</x-import>
+</sc-if>
+<x-import component-from-global-scope="NanoBeauty.ListGroup" header="What to expect"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="arrow-square-out" title="Fresha opens inside the app" subtitle="Our booking partner; you stay signed in here" chevron="{{no}}"></x-import><x-import component-from-global-scope="NanoBeauty.ListRow" icon="calendar-check" title="You come back here when done" subtitle="Your booking shows in Visits once Fresha shares it" chevron="{{no}}"></x-import></x-import>
+</div>
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<a href="BKG-09.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" size="lg" icon-after="arrow-square-out" full-width="{{yes}}">Continue to Fresha</x-import></a><x-import component-from-global-scope="NanoBeauty.Button" variant="tertiary" icon="phone" full-width="{{yes}}">Call the clinic instead</x-import>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "platform": {"editor": "enum", "options": ["ios", "android"], "default": "ios"}, "mode": {"editor": "enum", "options": ["handoff", "inapp"], "default": "handoff"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const mode = this.props.mode ?? 'handoff';
+return { theme: this.props.theme ?? 'light', platform: this.props.platform ?? 'ios', yes: true, mode, mode_handoff: mode === 'handoff', not_mode_handoff: mode !== 'handoff', mode_inapp: mode === 'inapp', not_mode_inapp: mode !== 'inapp', no: false };
+}
+}
+</script>
+</body>
+</html>

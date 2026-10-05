@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>STF-20 Promo code edit</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Promo code" role="{{roleLabel}}" env="Production"></x-import>
+<div style="flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 12px 20px 20px;">
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 32px;">
+<a href="STF-19.dc.html" class="caption" style="color: var(--primary); font-weight: 600; text-decoration: none; white-space: nowrap;">‹ Promo codes</a>
+<div style="display: flex; gap: 6px; align-items: center;"><x-import component-from-global-scope="NanoBeauty.PublishState" state="draft" detail="Not live"></x-import><a href="OFR-03.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="eye" label="Preview as a customer" variant="outline"></x-import></a></div>
+</div>
+<sc-if value="{{state_conflict}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.EditConflict" who="Naz" when="2 minutes ago"></x-import>
+</sc-if>
+<sc-if value="{{state_offline}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="offline" title="Offline: read only">You can read this, but changes wait until you’re back online.</x-import>
+</sc-if>
+<sc-if value="{{state_savefailed}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="danger" title="Couldn’t save the draft">Your edits are kept on this phone. Try again; nothing was published.</x-import>
+</sc-if>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Code" open="{{yes}}"><sc-if value="{{not_state_duplicate}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Code" value="HALLO26" helper="Letters and numbers, no spaces"></x-import>
+</sc-if><sc-if value="{{state_duplicate}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Code" value="HALLO25" error="Already used by “Halloween 2025”. Pick another."></x-import>
+</sc-if><x-import component-from-global-scope="NanoBeauty.TextField" label="Linked campaign" value="Halloween 2026" optional="{{yes}}"></x-import></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Discount" open="{{yes}}" error="{{valErr}}"><p class="label" style="margin: 0;">Type</p><x-import component-from-global-scope="NanoBeauty.SegmentedControl" label="Discount type" options="{{dtypes}}" value="Percent"></x-import><sc-if value="{{not_state_invalid}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Value" value="20" helper="%"></x-import>
+</sc-if><sc-if value="{{state_invalid}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Value" value="120" error="A percent can’t be more than 100"></x-import>
+</sc-if></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Eligible items" summary="Facials: OxyGeneo facial, SQT, Signature facial" open="{{no}}"></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Limits" open="{{yes}}"><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Per person" value="1" input-mode="numeric"></x-import>
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Total uses" value="100" input-mode="numeric"></x-import>
+</div></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Dates" open="{{yes}}"><x-import component-from-global-scope="NanoBeauty.DateTimeRange" start="20 Oct, 9:00" end="1 Nov, 23:59"></x-import></x-import>
+</div>
+</div>
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+<x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" full-width="{{yes}}" disabled="{{readOnly}}">Save draft</x-import>
+<div><sc-if value="{{role_owner}}" hint-placeholder-val="{{true}}">
+<a href="STF-09.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" full-width="{{yes}}" disabled="{{readOnly}}">Publish</x-import></a>
+</sc-if>
+<sc-if value="{{role_editor}}" hint-placeholder-val="{{true}}">
+<a href="STF-08.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" full-width="{{yes}}" disabled="{{readOnly}}">Submit</x-import></a>
+</sc-if></div>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "state": {"editor": "enum", "options": ["ready", "duplicate", "invalid", "conflict", "offline", "savefailed"], "default": "ready"}, "role": {"editor": "enum", "options": ["Owner", "Editor"], "default": "Owner"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'ready';
+const role = this.props.role ?? 'Owner';
+return { theme: this.props.theme ?? 'light', yes: true, state, state_ready: state === 'ready', not_state_ready: state !== 'ready', state_duplicate: state === 'duplicate', not_state_duplicate: state !== 'duplicate', state_invalid: state === 'invalid', not_state_invalid: state !== 'invalid', state_conflict: state === 'conflict', not_state_conflict: state !== 'conflict', state_offline: state === 'offline', not_state_offline: state !== 'offline', state_savefailed: state === 'savefailed', not_state_savefailed: state !== 'savefailed', role, role_owner: role === 'Owner', not_role_owner: role !== 'Owner', role_editor: role === 'Editor', not_role_editor: role !== 'Editor', readOnly: (this.props.state ?? 'ready') === 'offline', notConflict: (this.props.state ?? 'ready') !== 'conflict', roleLabel: ({Owner: 'Owner', Editor: 'Editor', 'Front desk': 'Front desk'})[this.props.role ?? 'Owner'] || 'Owner', no: false, two: 2, s20: 20, s16: 16, dtypes: ['Percent', 'Amount'], valErr: (this.props.state ?? 'ready') === 'invalid' ? '1 issue' : '' };
+}
+}
+</script>
+</body>
+</html>

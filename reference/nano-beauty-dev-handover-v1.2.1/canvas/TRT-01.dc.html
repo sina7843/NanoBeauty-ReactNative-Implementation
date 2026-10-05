@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Treatments</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 20px; padding: 8px 20px 24px;">
+<h1 class="display-md" style="margin: 0; color: var(--ink-display);">Treatments</h1>
+<a href="TRT-04.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.SearchField"></x-import></a>
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<h2 class="headline" style="margin: 0;">What would you like to work on?</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 8px;">
+<a href="TRT-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Chip">Fine lines</x-import></a>
+<a href="TRT-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Chip">Loose skin</x-import></a>
+<a href="TRT-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Chip">Acne and scars</x-import></a>
+<a href="TRT-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Chip">Pigmentation</x-import></a>
+<a href="TRT-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Chip">Hair loss</x-import></a>
+<a href="TRT-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Chip">Unwanted hair</x-import></a>
+<a href="TRT-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Chip">Brows and lashes</x-import></a>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<h2 class="headline" style="margin: 0;">Categories</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+<a href="TRT-02.dc.html" style="display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: var(--ink);">
+<img src="/_blob/db7b6328577b95a4bbfba8750bc2d93a" alt="" style="width: 100%; height: 76px; object-fit: cover; border-radius: 16px;">
+<span class="label" style="font-weight: 600;">Skin tightening and resurfacing</span>
+</a>
+<a href="TRT-02.dc.html" style="display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: var(--ink);">
+<img src="/_blob/255ceb60af15494d27bd758963a5122e" alt="" style="width: 100%; height: 76px; object-fit: cover; border-radius: 16px;">
+<span class="label" style="font-weight: 600;">Injectables and medical</span>
+</a>
+<a href="TRT-02.dc.html" style="display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: var(--ink);">
+<img src="/_blob/97c35b0f4397d4f6ef8456f69c69ad9a" alt="" style="width: 100%; height: 76px; object-fit: cover; border-radius: 16px;">
+<span class="label" style="font-weight: 600;">Laser</span>
+</a>
+<a href="TRT-02.dc.html" style="display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: var(--ink);">
+<img src="/_blob/1b219b3acb41d78a93ae40bc87987e0d" alt="" style="width: 100%; height: 76px; object-fit: cover; border-radius: 16px;">
+<span class="label" style="font-weight: 600;">Facials and skin health</span>
+</a>
+</div>
+</div>
+</div>
+<div style="position: absolute; right: 20px; bottom: 114px; border-radius: 9999px; box-shadow: var(--shadow-overlay);">
+<a href="BKG-01.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" icon="calendar-plus">Book</x-import></a>
+</div>
+<div style="flex-shrink: 0; background: var(--surface);">
+<x-import component-from-global-scope="NanoBeauty.TabBar" value="treatments"></x-import>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { theme: this.props.theme ?? 'light', yes: true };
+}
+}
+</script>
+</body>
+</html>

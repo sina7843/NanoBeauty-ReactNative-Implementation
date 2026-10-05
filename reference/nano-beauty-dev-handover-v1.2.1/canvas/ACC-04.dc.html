@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Messages</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<x-import component-from-global-scope="NanoBeauty.TopBar" title="Messages" back-label="Account" platform="{{platform}}"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 16px; padding: 8px 20px 24px;">
+<sc-if value="{{state_list}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.ListGroup" header="New">
+<a href="ACC-05.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="calendar-check" title="Your visit is tomorrow" subtitle="12D HIFU, Thu 16 Oct, 2:30 pm · 2 h ago"></x-import></a>
+<a href="OFR-01.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="ticket" title="15% off laser packages" subtitle="Ends 31 Oct · yesterday"></x-import></a>
+</x-import>
+<x-import component-from-global-scope="NanoBeauty.ListGroup" header="Earlier">
+<a href="PAY-09.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="receipt" title="Receipt NB-20418" subtitle="Deposit $50 · 2 Oct"></x-import></a>
+<a href="VIS-02.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="check-circle" title="Booking confirmed" subtitle="12D HIFU · 2 Oct"></x-import></a>
+<a href="WAL-04.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="gift" title="Gift card added" subtitle="$115 brought over from the old app · 1 Sep"></x-import></a>
+</x-import>
+<x-import component-from-global-scope="NanoBeauty.Badge" tone="sample">Sample messages</x-import>
+</sc-if>
+<sc-if value="{{state_empty}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.EmptyState" icon="envelope-simple" title="No messages yet">Visit reminders, receipts and offers you’ve agreed to will show up here.</x-import>
+</sc-if>
+</div>
+<div style="height: 34px; flex-shrink: 0;"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"platform":{"editor":"enum","options":["ios","android"],"default":"ios"},"state":{"editor": "enum", "options": ["list", "empty"], "default": "list"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'list';
+return { theme: this.props.theme ?? 'light', platform: this.props.platform ?? 'ios', state, state_list: state === 'list', state_empty: state === 'empty' };
+}
+}
+</script>
+</body>
+</html>

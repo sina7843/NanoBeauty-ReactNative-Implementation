@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Motion: payment result</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 16px; padding: 8px 20px 16px;">
+<div style="display: flex; justify-content: space-between; align-items: center;"><span class="overline" style="color: var(--ink-muted);">Motion · Payment result</span><x-import component-from-global-scope="NanoBeauty.Badge" tone="neutral" icon="info">{{modeLabel}}</x-import></div>
+<sc-if value="{{idle}}" hint-placeholder-val="{{true}}">
+<p class="overline" style="margin: 0; color: var(--ink-muted);">Deposit</p>
+<p class="display-md" style="margin: 0; color: var(--ink-display);">$50.00</p>
+<x-import component-from-global-scope="NanoBeauty.PaymentMethodRow" method="debit" label="Visa •••• 4242" detail="Debit or credit card" selected="{{yes}}"></x-import>
+<p class="overline" style="margin: 0; color: var(--ink-muted);">Simulate the bank’s answer</p>
+<x-import component-from-global-scope="NanoBeauty.SegmentedControl" label="Outcome" options="{{outcomes}}" value="{{outcome}}" on-change="{{setOutcome}}"></x-import>
+</sc-if>
+<sc-if value="{{pending}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.AsyncStatus" state="pending" title="Waiting for your bank…">Keep the app open. We only show the result when your bank answers.</x-import>
+</sc-if>
+<sc-if value="{{paid}}" hint-placeholder-val="{{true}}">
+<div style="{{resStyle}}"><x-import component-from-global-scope="NanoBeauty.AsyncStatus" state="success" title="Payment received" reference="PAY-88213">$50.00 paid with Visa •••• 4242.</x-import></div>
+</sc-if>
+<sc-if value="{{declined}}" hint-placeholder-val="{{true}}">
+<div style="{{resStyle}}"><x-import component-from-global-scope="NanoBeauty.AsyncStatus" state="failed" title="Your bank declined the payment">Nothing was charged. Try another card or method.</x-import></div>
+</sc-if>
+<sc-if value="{{timeout}}" hint-placeholder-val="{{true}}">
+<div style="{{resStyle}}"><x-import component-from-global-scope="NanoBeauty.AsyncStatus" state="timeout" title="Still checking your payment" reference="PAY-88213">Please don’t pay again. We’ll text you when it’s confirmed.</x-import></div>
+</sc-if>
+</div>
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="NanoBeauty.Button" size="lg" full-width="{{yes}}" disabled="{{busy}}" icon="{{ctaIcon}}" on-click="{{go}}">{{cta}}</x-import>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "motion": {"editor": "enum", "options": ["normal", "reduced"], "default": "normal"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+
+  componentWillUnmount() { (this._t || []).forEach(clearTimeout); if (this._i) clearInterval(this._i); }
+  later(fn, ms) { this._t = this._t || []; this._t.push(setTimeout(fn, ms)); }
+  reduced() { return (this.props.motion ?? 'normal') === 'reduced'; }
+  // enter transition for a block that just appeared: start hidden, then settle
+  reveal(key) { this.setState({ [key]: false }); this.later(() => this.setState({ [key]: true }), 30); }
+  enterStyle(on, dur) {
+    const r = this.reduced();
+    const tr = r ? 'opacity var(--duration-reduced) linear' : `opacity var(--duration-${dur || 'reveal'}) var(--ease-enter), transform var(--duration-${dur || 'reveal'}) var(--ease-enter)`;
+    const tf = r || on ? 'none' : 'translateY(8px)';
+    return `opacity: ${on ? 1 : 0}; transform: ${tf}; transition: ${tr};`;
+  }
+  base() { return { theme: this.props.theme ?? 'light', platform: this.props.platform ?? 'ios', yes: true, no: false, s16: 16, modeLabel: this.reduced() ? 'Reduce Motion on' : 'Normal motion' }; }
+
+  constructor(props) { super(props); this.state = { status: 'idle', outcome: 'Approved', resOn: true }; }
+  renderVals() {
+    const st = this.state.status;
+    const map = { Approved: 'paid', Declined: 'declined', 'No answer': 'timeout' };
+    return { ...this.base(), idle: st === 'idle', pending: st === 'pending', paid: st === 'paid', declined: st === 'declined', timeout: st === 'timeout', busy: st === 'pending',
+      outcomes: ['Approved', 'Declined', 'No answer'], outcome: this.state.outcome, setOutcome: (o) => this.setState({ outcome: o }),
+      cta: st === 'idle' || st === 'pending' ? 'Pay $50.00' : (st === 'timeout' ? 'Check again' : 'Start over'), ctaIcon: st === 'idle' ? 'lock' : undefined,
+      resStyle: this.enterStyle(this.state.resOn),
+      go: () => { if (st === 'pending') return; if (st !== 'idle' && st !== 'timeout') { this.setState({ status: 'idle' }); return; }
+        this.setState({ status: 'pending' });
+        this.later(() => { this.setState({ status: st === 'timeout' ? 'paid' : map[this.state.outcome] }); this.reveal('resOn'); }, 1600); } };
+  }
+}
+</script>
+</body>
+</html>

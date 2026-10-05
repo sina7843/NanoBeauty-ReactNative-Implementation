@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Skin tightening treatments</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<x-import component-from-global-scope="NanoBeauty.TopBar" title="Skin tightening" back-label="Treatments" platform="{{platform}}"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 10px; padding: 0 20px 4px;">
+<div style="display: flex; gap: 8px; align-items: center;">
+<a href="TRT-03.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Chip" icon="sliders-horizontal">Filters</x-import></a>
+<span class="caption" style="margin-left: auto; color: var(--ink-muted);">{{countLabel}}</span>
+</div>
+<sc-if value="{{state_loaded}}" hint-placeholder-val="{{true}}">
+<a href="TRT-05.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ServiceCard" photo-ratio="{{ratio}}" photo="/_blob/db7b6328577b95a4bbfba8750bc2d93a" category="Skin tightening" name="12D HIFU" duration="60 to 90 min" price="{{hifuPrice}}"></x-import></a>
+<a href="TRT-05.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ServiceCard" photo-ratio="{{ratio}}" photo="/_blob/1b219b3acb41d78a93ae40bc87987e0d" category="Resurfacing" name="Secret RF Microneedling" duration="75 min" price="{{rfPrice}}"></x-import></a>
+</sc-if>
+<sc-if value="{{state_loading}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Skeleton" media="{{yes}}" lines="{{two}}"></x-import>
+<x-import component-from-global-scope="NanoBeauty.Skeleton" media="{{yes}}" lines="{{two}}"></x-import>
+</sc-if>
+<sc-if value="{{state_empty}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.EmptyState" icon="sliders-horizontal" title="No treatments match">Try removing a filter. Loose skin and fixed price together match nothing yet.</x-import>
+<a href="TRT-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" full-width="{{yes}}">Clear filters</x-import></a>
+</sc-if>
+</div>
+<div style="position: absolute; right: 20px; bottom: 114px; border-radius: 9999px; box-shadow: var(--shadow-overlay);">
+<a href="BKG-01.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" icon="calendar-plus">Book</x-import></a>
+</div>
+<div style="flex-shrink: 0; background: var(--surface);">
+<x-import component-from-global-scope="NanoBeauty.TabBar" value="treatments"></x-import>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"platform":{"editor":"enum","options":["ios","android"],"default":"ios"},"state":{"editor": "enum", "options": ["loaded", "empty", "loading"], "default": "loaded"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'loaded';
+return { countLabel: (this.props.state ?? 'loaded') === 'empty' ? '0 treatments' : ((this.props.state ?? 'loaded') === 'loading' ? 'Loading…' : '4 treatments'), two: 2, theme: this.props.theme ?? 'light', platform: this.props.platform ?? 'ios', yes: true, ratio: '5 / 2', hifuPrice: { kind: 'from', amount: 350 }, rfPrice: { kind: 'from', amount: 300 }, sqtPrice: { kind: 'fixed', amount: 280 }, mnPrice: { kind: 'from', amount: 220 }, state, state_loaded: state === 'loaded', state_empty: state === 'empty', state_loading: state === 'loading' };
+}
+}
+</script>
+</body>
+</html>

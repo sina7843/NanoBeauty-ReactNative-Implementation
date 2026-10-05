@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home with next visit</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 16px; padding: 0 20px 16px;">
+<div style="display: flex; justify-content: space-between; align-items: center; min-height: 48px;">
+<x-import component-from-global-scope="NanoBeauty.Logo" height="{{logoH}}"></x-import>
+<div style="display: flex; gap: 4px;">
+<a href="ACC-04.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="bell" label="Messages" badge="{{yes}}"></x-import></a>
+<a href="ACC-01.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="user-circle" label="Account" variant="tonal"></x-import></a>
+</div>
+</div>
+<h1 class="display-md" style="margin: 0; color: var(--ink-display);">Good morning, Maria</h1>
+<sc-if value="{{showPass}}" hint-placeholder-val="{{true}}">
+<a href="VIS-02.dc.html" style="text-decoration: none; display: block;"><sc-if value="{{state_offline}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="offline" title="You’re offline">Last updated today, 9:41 am. Changes need a connection.</x-import>
+</sc-if>
+<x-import component-from-global-scope="NanoBeauty.AppointmentPass" compact="{{compactPass}}" sample="{{yes}}" eyebrow="{{passEyebrow}}" service="12D HIFU" date="Thu 16 Oct" time="2:30 pm" provider="Nazanin (Naz)"></x-import></a>
+</sc-if>
+<sc-if value="{{freshaCard}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line);"><p class="overline" style="margin: 0; color: var(--ink-muted);">Your bookings</p><p class="headline" style="margin: 0;">Your bookings are in Fresha</p><p class="body" style="margin: 0; color: var(--ink-muted);">We couldn’t load them here yet. Open Fresha to see or change a visit.</p><a href="BKG-08.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" icon-after="arrow-square-out" full-width="{{yes}}">Open Fresha</x-import></a></div>
+</sc-if>
+<a href="CAR-01.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 14px; background: var(--surface-tint); color: var(--on-tint); text-decoration: none;">
+<x-import component-from-global-scope="NanoBeauty.Icon" name="calendar-check" size="{{iconSize}}"></x-import>
+<span class="body" style="flex-grow: 1; font-weight: 600;">Before your visit: 2 steps</span>
+<x-import component-from-global-scope="NanoBeauty.Icon" name="caret-right" size="{{iconSize}}"></x-import>
+</a>
+<x-import component-from-global-scope="NanoBeauty.ListGroup" header="Your value">
+<a href="WAL-03.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="package" title="Laser package" subtitle="Underarm, 6 sessions" value="3 left"></x-import></a>
+<a href="WAL-04.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="gift" title="Gift card" value="$95"></x-import></a>
+</x-import>
+</div>
+<div style="position: absolute; right: 20px; bottom: 114px; border-radius: 9999px; box-shadow: var(--shadow-overlay);">
+<a href="BKG-01.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" icon="calendar-plus">Book</x-import></a>
+</div>
+<div style="flex-shrink: 0; background: var(--surface);">
+<x-import component-from-global-scope="NanoBeauty.TabBar" value="home"></x-import>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"state":{"editor": "enum", "options": ["ready", "offline"], "default": "ready"},"mode":{"editor": "enum", "options": ["handoff", "inapp"], "default": "handoff"},"sync":{"editor": "enum", "options": ["synced", "notsynced"], "default": "synced"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'ready';
+const mode = this.props.mode ?? 'handoff';
+const sync = this.props.sync ?? 'synced';
+return { compactPass: (this.props.state ?? 'ready') === 'offline', theme: this.props.theme ?? 'light', yes: true, logoH: 30, iconSize: 20, state, state_ready: state === 'ready', state_offline: state === 'offline', mode, mode_handoff: mode === 'handoff', mode_inapp: mode === 'inapp', sync, sync_synced: sync === 'synced', sync_notsynced: sync === 'notsynced', showPass: (this.props.mode ?? 'handoff') === 'inapp' || (this.props.sync ?? 'synced') === 'synced', freshaCard: (this.props.mode ?? 'handoff') === 'handoff' && (this.props.sync ?? 'synced') === 'notsynced', passEyebrow: (this.props.mode ?? 'handoff') === 'handoff' ? 'Booked in Fresha' : 'Next visit' };
+}
+}
+</script>
+</body>
+</html>

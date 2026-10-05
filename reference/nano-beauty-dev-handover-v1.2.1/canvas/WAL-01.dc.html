@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Wallet</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 14px; padding: 0 20px 12px;">
+<div style="display: flex; gap: 8px; align-items: center; min-height: 48px;">
+<h1 class="display-md" style="margin: 0; color: var(--ink-display);">Wallet</h1><span style="flex-grow: 1;"></span><x-import component-from-global-scope="NanoBeauty.IconButton" icon="user-circle" label="Account" variant="tonal"></x-import>
+</div>
+<sc-if value="{{state_offline}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="offline" title="You’re offline">Balances as of today, 9:41 am. They’ll refresh when you’re back online.</x-import>
+</sc-if>
+<sc-if value="{{hasValue}}" hint-placeholder-val="{{true}}">
+<a href="WAL-02.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.CreditRow" available="{{credit}}" reconciling="{{recon}}" sample="{{yes}}"></x-import></a>
+</sc-if>
+<sc-if value="{{hasValue}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.ListGroup"><a href="WAL-03.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="package" title="Laser package" subtitle="Underarm · use by 28 Feb 2027" value="3 of 6 left"></x-import></a>
+<a href="WAL-04.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="gift" title="Gift card" subtitle="•••• 4821" value="{{giftValue}}"></x-import></a>
+<sc-if value="{{member_yes}}" hint-placeholder-val="{{true}}">
+<a href="WAL-05.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="seal-check" title="Membership" subtitle="From the old app" value="Active"></x-import></a>
+</sc-if>
+<a href="WAL-06.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="receipt" title="Receipts and history"></x-import></a></x-import>
+</sc-if>
+<sc-if value="{{state_empty}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.EmptyState" icon="wallet" title="Nothing here yet">Clinic credit, packages and gift cards you buy or receive will show up here.</x-import>
+</sc-if>
+<sc-if value="{{state_guest}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.EmptyState" icon="wallet" title="Your Wallet">Sign in to see your credit, packages and gift cards. You can still send a gift card.</x-import>
+</sc-if>
+<sc-if value="{{state_guest}}" hint-placeholder-val="{{true}}">
+<a href="AUT-01.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" full-width="{{yes}}">Sign in</x-import></a>
+</sc-if>
+<sc-if value="{{notGuest}}" hint-placeholder-val="{{true}}">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+<a href="WAL-07.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" icon="package" full-width="{{yes}}">Buy a package</x-import></a>
+<a href="WAL-13.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" icon="gift" full-width="{{yes}}">Send a gift</x-import></a>
+</div>
+</sc-if>
+<sc-if value="{{state_guest}}" hint-placeholder-val="{{true}}">
+<a href="WAL-13.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" icon="gift" full-width="{{yes}}">Send a gift card</x-import></a>
+</sc-if>
+<sc-if value="{{hasValue}}" hint-placeholder-val="{{true}}">
+<a href="WAL-12.dc.html" style="text-decoration: none;"><p class="caption" style="margin: 0; color: var(--primary); font-weight: 600; text-align: center;">Something’s wrong with a balance?</p></a>
+</sc-if>
+</div>
+<div style="flex-shrink: 0; background: var(--surface);">
+<x-import component-from-global-scope="NanoBeauty.TabBar" value="wallet"></x-import>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "state": {"editor": "enum", "options": ["full", "reconciling", "offline", "empty", "guest"], "default": "full"}, "member":{"editor": "enum", "options": ["no", "yes"], "default": "no"},"$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'full';
+const member = this.props.member ?? 'no';
+return { theme: this.props.theme ?? 'light', yes: true, state, state_full: state === 'full', state_reconciling: state === 'reconciling', state_offline: state === 'offline', state_empty: state === 'empty', state_guest: state === 'guest', hasValue: state === 'full' || state === 'reconciling' || state === 'offline', recon: state === 'reconciling', notGuest: state !== 'guest', credit: 40, giftValue: state === 'reconciling' ? 'Checking…' : '$95', member, member_no: member === 'no', member_yes: member === 'yes' };
+}
+}
+</script>
+</body>
+</html>

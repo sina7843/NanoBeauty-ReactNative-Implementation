@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>STF-36 Media library</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Media" role="{{roleLabel}}" env="Production"></x-import>
+<div style="flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 16px 20px 16px;">
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<a href="STF-01.dc.html" class="caption" style="color: var(--primary); font-weight: 600; text-decoration: none; white-space: nowrap;">‹ Staff home</a>
+<x-import component-from-global-scope="NanoBeauty.SearchField" placeholder="Search photos"></x-import>
+<sc-if value="{{state_uploading}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.ImagePicker" state="uploading" src="/_blob/255ceb60af15494d27bd758963a5122e" label="Uploading prp-before.jpg" progress="{{sixty}}"></x-import>
+</sc-if>
+<sc-if value="{{state_rights}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="danger" title="Rights not confirmed">clinic-room.webp can’t be used until you confirm the clinic owns it or has permission.</x-import>
+</sc-if>
+<sc-if value="{{not_state_empty}}" hint-placeholder-val="{{true}}">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;"><x-import component-from-global-scope="NanoBeauty.MediaTile" src="/_blob/1b219b3acb41d78a93ae40bc87987e0d" name="facial.webp" selected="{{yes}}"></x-import><x-import component-from-global-scope="NanoBeauty.MediaTile" src="/_blob/db7b6328577b95a4bbfba8750bc2d93a" name="hifu.webp" alt="{{noAlt}}"></x-import><x-import component-from-global-scope="NanoBeauty.MediaTile" src="/_blob/b0858e93e8de27137ec94d6b1554c2c7" name="clinic-room.webp" rights="{{rightsOk}}"></x-import><x-import component-from-global-scope="NanoBeauty.MediaTile" src="/_blob/97c35b0f4397d4f6ef8456f69c69ad9a" name="laser.webp"></x-import></div>
+</sc-if>
+<sc-if value="{{state_empty}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.EmptyState" icon="image" title="No photos yet">Upload photos once and pick them in services, offers and profiles. JPG or PNG, 1,050 px wide or more.</x-import>
+</sc-if>
+</div>
+</div>
+<div style="flex-shrink: 0; padding: 12px 20px 0;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="NanoBeauty.Button" icon="upload-simple" full-width="{{yes}}">Upload photo</x-import>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "state": {"editor": "enum", "options": ["library", "empty", "uploading", "rights"], "default": "library"}, "role": {"editor": "enum", "options": ["Owner", "Editor"], "default": "Owner"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'library';
+const role = this.props.role ?? 'Owner';
+return { theme: this.props.theme ?? 'light', yes: true, state, state_library: state === 'library', not_state_library: state !== 'library', state_empty: state === 'empty', not_state_empty: state !== 'empty', state_uploading: state === 'uploading', not_state_uploading: state !== 'uploading', state_rights: state === 'rights', not_state_rights: state !== 'rights', role, role_owner: role === 'Owner', not_role_owner: role !== 'Owner', role_editor: role === 'Editor', not_role_editor: role !== 'Editor', roleLabel: ({Owner: 'Owner', Editor: 'Editor', 'Front desk': 'Front desk'})[this.props.role ?? 'Owner'] || 'Owner', no: false, two: 2, noAlt: false, rightsOk: (this.props.state ?? 'library') !== 'rights', sixty: 60 };
+}
+}
+</script>
+</body>
+</html>

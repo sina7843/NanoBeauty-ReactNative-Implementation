@@ -1,0 +1,315 @@
+{
+  "v": 3,
+  "assetGroups": {
+    "Icons": {
+      "files": {
+        "bell.svg": {
+          "blob": "b6f71816dd3cdc5fe5a3969b28d66602",
+          "name": "bell.svg",
+          "size": 395,
+          "type": "image/svg+xml"
+        },
+        "calendar-blank.svg": {
+          "blob": "df3146e6cefc9ddda6a97471934c98f2",
+          "name": "calendar-blank.svg",
+          "size": 322,
+          "type": "image/svg+xml"
+        },
+        "chat-circle-text.svg": {
+          "blob": "17cbdb12f5a793d83a7036e9dc115e51",
+          "name": "chat-circle-text.svg",
+          "size": 436,
+          "type": "image/svg+xml"
+        },
+        "check-circle.svg": {
+          "blob": "eecb9f1a0384fb0c801f615ff19b6df6",
+          "name": "check-circle.svg",
+          "size": 334,
+          "type": "image/svg+xml"
+        },
+        "clock.svg": {
+          "blob": "7436497f91468b60711ddbd3a902caf7",
+          "name": "clock.svg",
+          "size": 282,
+          "type": "image/svg+xml"
+        },
+        "compass.svg": {
+          "blob": "ff45e99f9aefcc556decaf54311e98ac",
+          "name": "compass.svg",
+          "size": 397,
+          "type": "image/svg+xml"
+        },
+        "first-aid-kit.svg": {
+          "blob": "eeb039e3be74a7a80554c08dda2b07be",
+          "name": "first-aid-kit.svg",
+          "size": 418,
+          "type": "image/svg+xml"
+        },
+        "gift.svg": {
+          "blob": "23fef0cf286ae567ead25e7e53b724b1",
+          "name": "gift.svg",
+          "size": 903,
+          "type": "image/svg+xml"
+        },
+        "house.svg": {
+          "blob": "89ed936ab9ac4f0e5807ef5eec3156b8",
+          "name": "house.svg",
+          "size": 351,
+          "type": "image/svg+xml"
+        },
+        "info.svg": {
+          "blob": "a2423d1ee09afba6634c5c33f09c2313",
+          "name": "info.svg",
+          "size": 343,
+          "type": "image/svg+xml"
+        },
+        "lock.svg": {
+          "blob": "3b4bb8d99fb4d89a103620f7ce4e22a9",
+          "name": "lock.svg",
+          "size": 316,
+          "type": "image/svg+xml"
+        },
+        "magnifying-glass.svg": {
+          "blob": "1a84f084e75edbfd34ca62b03ec8f830",
+          "name": "magnifying-glass.svg",
+          "size": 238,
+          "type": "image/svg+xml"
+        },
+        "map-pin.svg": {
+          "blob": "d9f9b631962e49932eb5853efbef1c2f",
+          "name": "map-pin.svg",
+          "size": 454,
+          "type": "image/svg+xml"
+        },
+        "package.svg": {
+          "blob": "f7e7709a6656d71aaa7772ddf57f6dce",
+          "name": "package.svg",
+          "size": 481,
+          "type": "image/svg+xml"
+        },
+        "phone.svg": {
+          "blob": "e0d3b19fb4831545d4f00b0c421d783d",
+          "name": "phone.svg",
+          "size": 704,
+          "type": "image/svg+xml"
+        },
+        "receipt.svg": {
+          "blob": "da87abe0d8a37df7253bec9a44717142",
+          "name": "receipt.svg",
+          "size": 532,
+          "type": "image/svg+xml"
+        },
+        "shield-check.svg": {
+          "blob": "d8b43c5a86dc665dbe5cde5e6007a1b0",
+          "name": "shield-check.svg",
+          "size": 531,
+          "type": "image/svg+xml"
+        },
+        "ticket.svg": {
+          "blob": "6f30afa3246c5069bc8a1abc6dc95a48",
+          "name": "ticket.svg",
+          "size": 374,
+          "type": "image/svg+xml"
+        },
+        "user-circle.svg": {
+          "blob": "aa92b1aacbd5b70d94bf103be425e47c",
+          "name": "user-circle.svg",
+          "size": 371,
+          "type": "image/svg+xml"
+        },
+        "user-gear.svg": {
+          "blob": "311097aad8db06024e7dd8db6a46d392",
+          "name": "user-gear.svg",
+          "size": 784,
+          "type": "image/svg+xml"
+        },
+        "wallet.svg": {
+          "blob": "07075f2bcf67bba0f1cbf81284617ba9",
+          "name": "wallet.svg",
+          "size": 331,
+          "type": "image/svg+xml"
+        },
+        "warning-circle.svg": {
+          "blob": "93289b3ecd1e61086eeee0e2b7229ead",
+          "name": "warning-circle.svg",
+          "size": 289,
+          "type": "image/svg+xml"
+        },
+        "warning.svg": {
+          "blob": "c21a91aafc2f617a778a3aefde9fb267",
+          "name": "warning.svg",
+          "size": 538,
+          "type": "image/svg+xml"
+        },
+        "wifi-slash.svg": {
+          "blob": "0016069d1b7e4c84eadfcf903f7e99dc",
+          "name": "wifi-slash.svg",
+          "size": 781,
+          "type": "image/svg+xml"
+        }
+      },
+      "name": "Icons",
+      "order": [
+        "house.svg",
+        "compass.svg",
+        "calendar-blank.svg",
+        "wallet.svg",
+        "user-circle.svg",
+        "magnifying-glass.svg",
+        "gift.svg",
+        "ticket.svg",
+        "package.svg",
+        "receipt.svg",
+        "clock.svg",
+        "map-pin.svg",
+        "phone.svg",
+        "chat-circle-text.svg",
+        "bell.svg",
+        "lock.svg",
+        "shield-check.svg",
+        "check-circle.svg",
+        "warning.svg",
+        "warning-circle.svg",
+        "info.svg",
+        "wifi-slash.svg",
+        "first-aid-kit.svg",
+        "user-gear.svg"
+      ],
+      "tile": "xs"
+    },
+    "Logos": {
+      "files": {
+        "NBS-White-Logo-master.pdf": {
+          "blob": "34300a17be51adb641eb591f228a384b",
+          "name": "NBS-White-Logo-master.pdf",
+          "size": 225442,
+          "type": "application/pdf"
+        },
+        "nano-beauty-lockup-plum.svg": {
+          "blob": "2e1b6961aeebd8e6a1eccf0948a9f2d4",
+          "name": "nano-beauty-lockup-plum.svg",
+          "size": 25244,
+          "type": "image/svg+xml"
+        },
+        "nano-beauty-logo-master.svg": {
+          "blob": "a250131ef3b72177e8102c45b92427fd",
+          "name": "nano-beauty-logo-master.svg",
+          "size": 25290,
+          "type": "image/svg+xml"
+        }
+      },
+      "name": "Logos",
+      "order": [
+        "nano-beauty-logo-master.svg",
+        "nano-beauty-lockup-plum.svg",
+        "NBS-White-Logo-master.pdf"
+      ],
+      "tile": "l"
+    },
+    "Imagery": {
+      "name": "Imagery",
+      "tile": "m",
+      "order": [
+        "clinic-treatment-room.webp",
+        "clinic-interior.webp",
+        "team-naz.webp",
+        "team-maria.webp",
+        "team-anna.webp",
+        "treatment-facial.webp",
+        "treatment-hifu.webp",
+        "treatment-laser.webp",
+        "treatment-prp.webp"
+      ],
+      "files": {
+        "clinic-treatment-room.webp": {
+          "name": "clinic-treatment-room.webp",
+          "blob": "8b5d05a2ec742dcc4df8331fab85578d",
+          "size": 72776,
+          "type": "image/webp"
+        },
+        "clinic-interior.webp": {
+          "name": "clinic-interior.webp",
+          "blob": "6d4a7bd7f47283777ac02be33a4d8317",
+          "size": 65700,
+          "type": "image/webp"
+        },
+        "team-naz.webp": {
+          "name": "team-naz.webp",
+          "blob": "007997c972b11e17a3be1ea239d3e06c",
+          "size": 64890,
+          "type": "image/webp"
+        },
+        "team-maria.webp": {
+          "name": "team-maria.webp",
+          "blob": "55db47c49f3fde2e038c5134644deaf1",
+          "size": 51698,
+          "type": "image/webp"
+        },
+        "team-anna.webp": {
+          "name": "team-anna.webp",
+          "blob": "826c61e7d3d423498837fba3a8389bc4",
+          "size": 48800,
+          "type": "image/webp"
+        },
+        "treatment-facial.webp": {
+          "name": "treatment-facial.webp",
+          "blob": "ca9958a94cab36d9a90d25f69ef43cf0",
+          "size": 44616,
+          "type": "image/webp"
+        },
+        "treatment-hifu.webp": {
+          "name": "treatment-hifu.webp",
+          "blob": "d295b5df29bb3cc5f73f0d63a2d81231",
+          "size": 21766,
+          "type": "image/webp"
+        },
+        "treatment-laser.webp": {
+          "name": "treatment-laser.webp",
+          "blob": "f31fe6f2e39e5f4dd8bc0b0ea8ec8066",
+          "size": 11542,
+          "type": "image/webp"
+        },
+        "treatment-prp.webp": {
+          "name": "treatment-prp.webp",
+          "blob": "a9720f4572431dee5e2af9650f09d481",
+          "size": 20870,
+          "type": "image/webp"
+        }
+      }
+    }
+  },
+  "blobs": {},
+  "createdOnFiles": {
+    "at": "2026-09-24T21:45:25Z",
+    "v": 1
+  },
+  "docs": {
+    "readme": "project/README.md",
+    "sections": []
+  },
+  "groups": [
+    "Logos",
+    "Imagery",
+    "Icons"
+  ],
+  "lastChange": {
+    "by": "Dragon",
+    "at": "2026-09-25T12:37:22Z",
+    "via": "Cowork",
+    "note": "Round 3 sample data (CR-56, CR-58): GLOW25 in promoCodes; NB-19877 paid $70"
+  },
+  "layout": "files",
+  "libraries": [
+    {
+      "name": "react",
+      "version": "18"
+    },
+    {
+      "name": "react-dom",
+      "version": "18"
+    }
+  ],
+  "namespace": "NanoBeauty",
+  "sections": {},
+  "title": "Nano Beauty"
+}

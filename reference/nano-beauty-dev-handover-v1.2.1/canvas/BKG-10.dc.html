@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BKG-10 Choose areas</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<x-import component-from-global-scope="NanoBeauty.TopBar" title="Book" back-label="Service" platform="{{platform}}"></x-import>
+<div style="flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 4px 20px 12px;">
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<x-import component-from-global-scope="NanoBeauty.BookingStepper" current="{{zero}}"></x-import>
+<div style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
+<h1 class="title-md" style="margin: 0; color: var(--ink-display);">Laser Hair Removal</h1><x-import component-from-global-scope="NanoBeauty.Badge" tone="sample">Sample prices</x-import>
+</div>
+<x-import component-from-global-scope="NanoBeauty.AreaPicker" areas="{{areas}}" set="{{setKey}}" max="{{four}}" total="{{total}}" note="{{note}}"></x-import>
+</div>
+</div>
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<sc-if value="{{mode_inapp}}" hint-placeholder-val="{{true}}">
+<a href="BKG-11.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" size="lg" full-width="{{yes}}" disabled="{{none}}">{{cta}}</x-import></a>
+</sc-if><sc-if value="{{mode_handoff}}" hint-placeholder-val="{{true}}">
+<a href="BKG-12.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" size="lg" icon-after="{{ctaIcon}}" full-width="{{yes}}" disabled="{{none}}">{{ctaH}}</x-import></a>
+</sc-if>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "platform": {"editor": "enum", "options": ["ios", "android"], "default": "ios"}, "state": {"editor": "enum", "options": ["some", "none", "max"], "default": "some"}, "set": {"editor": "enum", "options": ["women", "men"], "default": "women"}, "mode": {"editor": "enum", "options": ["handoff", "inapp"], "default": "handoff"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'some';
+const set = this.props.set ?? 'women';
+const mode = this.props.mode ?? 'handoff';
+return { theme: this.props.theme ?? 'light', platform: this.props.platform ?? 'ios', yes: true, state, state_some: state === 'some', not_state_some: state !== 'some', state_none: state === 'none', not_state_none: state !== 'none', state_max: state === 'max', not_state_max: state !== 'max', set, set_women: set === 'women', not_set_women: set !== 'women', set_men: set === 'men', not_set_men: set !== 'men', mode, mode_handoff: mode === 'handoff', not_mode_handoff: mode !== 'handoff', mode_inapp: mode === 'inapp', not_mode_inapp: mode !== 'inapp', zero: 0, four: 4, sets: ['Women', 'Men'], setVal: (this.props.set ?? 'women') === 'men' ? 'Men' : 'Women', setKey: this.props.set ?? 'women',
+none: (this.props.state ?? 'some') === 'none',
+areas: (() => { const st = this.props.state ?? 'some'; const men = (this.props.set ?? 'women') === 'men';
+  const list = men ? [['Beard', 75], ['Back', 200], ['Chest and abdomen', 200]] : [['Upper lip', 50], ['Chin', 50], ['Underarms', 70], ['Bikini line', 80], ['Lower leg', 110], ['Full leg and feet', 250]];
+  const pick = st === 'none' ? [] : st === 'max' ? (men ? [0, 1, 2] : [0, 1, 2, 3]) : (men ? [0, 1] : [2, 3]);
+  return list.map(([name, price], i) => ({ name, price, selected: pick.includes(i) })); })(),
+total: (() => { const st = this.props.state ?? 'some'; const men = (this.props.set ?? 'women') === 'men'; if (st === 'none') return 0; if (st === 'max') return men ? 475 : 250; return men ? 275 : 150; })(),
+note: ({none: 'Pick the areas you’d like treated.', some: 'Add up to 4 areas in one visit. Most prices are “from”; the clinic confirms at your visit.', max: (this.props.set ?? 'women') === 'men' ? 'All areas picked. Prices are “from”; the clinic confirms at your visit.' : 'That’s the most for one visit. Book another visit for more areas.'})[this.props.state ?? 'some'],
+ctaH: (this.props.state ?? 'some') === 'none' ? 'Choose at least one area' : 'Continue in Fresha', ctaIcon: (this.props.state ?? 'some') === 'none' ? '' : 'arrow-square-out',
+cta: (this.props.state ?? 'some') === 'none' ? 'Choose at least one area' : 'Continue' };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Request my data</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<x-import component-from-global-scope="NanoBeauty.TopBar" title="Your data" back-label="Privacy" platform="{{platform}}"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 16px; padding: 8px 20px 24px;">
+<h1 class="title-lg" style="margin: 0; color: var(--ink-display);">Get a copy of your data</h1>
+<p class="body" style="margin: 0;">We'll email a file with your profile, visits, payments, balances and consent history. It usually takes up to 30 days.</p>
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Send to" value="maria@example.com"></x-import>
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="success" title="Request sent">Reference DR-1042. We'll email you when it's ready.</x-import>
+</div>
+<div style="flex-shrink: 0; padding: 12px 20px 0;">
+<x-import component-from-global-scope="NanoBeauty.Button" size="lg" full-width="{{yes}}" disabled="{{yes}}">Requested</x-import>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"platform":{"editor":"enum","options":["ios","android"],"default":"ios"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { theme: this.props.theme ?? 'light', platform: this.props.platform ?? 'ios', yes: true };
+}
+}
+</script>
+</body>
+</html>

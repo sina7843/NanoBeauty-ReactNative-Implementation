@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reschedule</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<x-import component-from-global-scope="NanoBeauty.TopBar" title="Reschedule" back-label="Visit" platform="{{platform}}"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 16px; padding: 8px 20px 16px;">
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<p class="overline" style="margin: 0; color: var(--ink-muted);">Now booked</p>
+<p class="headline" style="margin: 0;">12D HIFU · Thu 16 Oct, 2:30 pm · Naz</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<div style="display: flex; gap: 4px; align-items: center;">
+<p class="headline" style="margin: 0;">October 2026</p><span style="flex-grow: 1;"></span><x-import component-from-global-scope="NanoBeauty.IconButton" icon="caret-left" label="Previous week" disabled="{{yes}}"></x-import><x-import component-from-global-scope="NanoBeauty.IconButton" icon="caret-right" label="Next week"></x-import>
+</div>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px;">
+<div aria-disabled="true" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border-radius: 14px; background: transparent; color: var(--ink-muted); border: 1px dashed var(--line-strong); text-decoration: line-through;"><span class="caption">Mon</span><span class="headline">13</span><span style="width: 4px; height: 4px;"></span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border-radius: 14px; background: var(--surface); color: var(--ink); border: 1px solid var(--line);"><span class="caption">Tue</span><span class="headline">14</span><span style="width: 4px; height: 4px; border-radius: 9999px; background: currentColor; opacity: 0.8;"></span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border-radius: 14px; background: var(--surface); color: var(--ink); border: 1px solid var(--line);"><span class="caption">Wed</span><span class="headline">15</span><span style="width: 4px; height: 4px; border-radius: 9999px; background: currentColor; opacity: 0.8;"></span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border-radius: 14px; background: var(--primary); color: var(--on-primary); border: 1px solid var(--primary);"><span class="caption">Thu</span><span class="headline">16</span><span style="width: 4px; height: 4px; border-radius: 9999px; background: currentColor; opacity: 0.8;"></span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border-radius: 14px; background: var(--surface); color: var(--ink); border: 1px solid var(--line);"><span class="caption">Fri</span><span class="headline">17</span><span style="width: 4px; height: 4px; border-radius: 9999px; background: currentColor; opacity: 0.8;"></span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border-radius: 14px; background: var(--surface); color: var(--ink); border: 1px solid var(--line);"><span class="caption">Sat</span><span class="headline">18</span><span style="width: 4px; height: 4px; border-radius: 9999px; background: currentColor; opacity: 0.8;"></span></div>
+<div aria-disabled="true" style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border-radius: 14px; background: transparent; color: var(--ink-muted); border: 1px dashed var(--line-strong); text-decoration: line-through;"><span class="caption">Sun</span><span class="headline">19</span><span style="width: 4px; height: 4px;"></span></div>
+</div>
+</div>
+<x-import component-from-global-scope="NanoBeauty.TimeSlotGrid" date="Thursday 16 October" slots="{{slots}}" state="{{slotState}}"></x-import>
+<sc-if value="{{state_failed}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="danger" title="We couldn’t move your visit">The new time couldn’t be confirmed, so your visit stays on Thu 16 Oct at 2:30 pm. Nothing was charged.</x-import>
+</sc-if>
+</div>
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<a href="VIS-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" size="lg" disabled="{{noTime}}" full-width="{{yes}}">{{cta}}</x-import></a>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "platform": {"editor": "enum", "options": ["ios", "android"], "default": "ios"}, "state": {"editor": "enum", "options": ["ready", "none", "failed"], "default": "ready"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'ready';
+return { theme: this.props.theme ?? 'light', platform: this.props.platform ?? 'ios', yes: true, state, state_ready: state === 'ready', state_none: state === 'none', state_failed: state === 'failed', slotState: state === 'none' ? 'none' : 'ready', noTime: state === 'none', cta: state === 'ready' ? 'Move to 11:30 am' : 'Confirm new time', slots: [{time:'10:00 am',state:'unavailable'},{time:'11:00 am'},{time:'11:30 am',state: state === 'ready' ? 'selected' : 'available'},{time:'1:00 pm',state:'unavailable'},{time:'2:30 pm',state:'unavailable'},{time:'3:00 pm'}] };
+}
+}
+</script>
+</body>
+</html>

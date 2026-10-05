@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Receipts and history</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<x-import component-from-global-scope="NanoBeauty.TopBar" title="Receipts and history" back-label="Wallet" platform="{{platform}}"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 14px; padding: 8px 20px 16px;">
+<x-import component-from-global-scope="NanoBeauty.SegmentedControl" label="Show" options="{{opts}}" value="All"></x-import>
+<x-import component-from-global-scope="NanoBeauty.ListGroup" header="October 2026"><a href="PAY-09.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="receipt" title="Deposit · 12D HIFU" subtitle="12 Oct · Visa •••• 4242" value="−$50.00"></x-import></a></x-import>
+<x-import component-from-global-scope="NanoBeauty.ListGroup" header="September 2026"><a href="PAY-09.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="gift" title="Gift card for Sara" subtitle="20 Sep · Visa •••• 4242" value="−$100.00"></x-import></a>
+<a href="PAY-09.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="gift" title="Gift card used" subtitle="12 Sep · at your visit" value="−$20.00"></x-import></a>
+<a href="PAY-09.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="arrow-clockwise" title="Refund · Consultation deposit" subtitle="3 Sep · to Visa •••• 4242" value="+$50.00"></x-import></a></x-import>
+<x-import component-from-global-scope="NanoBeauty.ListGroup" header="June 2026"><a href="PAY-09.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="package" title="Laser package · Underarm" subtitle="19 Jun · Klarna" value="−$378.00"></x-import></a></x-import>
+</div>
+<div style="height: 34px; flex-shrink: 0;"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "platform": {"editor": "enum", "options": ["ios", "android"], "default": "ios"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { theme: this.props.theme ?? 'light', platform: this.props.platform ?? 'ios', yes: true, opts: ['All', 'Payments', 'Refunds'] };
+}
+}
+</script>
+</body>
+</html>

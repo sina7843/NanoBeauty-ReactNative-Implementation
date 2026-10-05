@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Staff: support content</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Support content" role="Editor" env="Production"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 16px 20px 24px;">
+<a href="STF-01.dc.html" class="caption" style="color: var(--primary); font-weight: 600; text-decoration: none;">‹ Staff home</a>
+<x-import component-from-global-scope="NanoBeauty.ListGroup" header="Contact details">
+<x-import component-from-global-scope="NanoBeauty.ListRow" icon="phone" title="Phone and text" value="(604) •••-••••"></x-import>
+<x-import component-from-global-scope="NanoBeauty.ListRow" icon="clock" title="Hours" value="Not set"></x-import>
+<x-import component-from-global-scope="NanoBeauty.ListRow" icon="chat-circle-text" title="Reply time" value="1 business day"></x-import>
+</x-import>
+<x-import component-from-global-scope="NanoBeauty.ListGroup" header="FAQ (12)">
+<x-import component-from-global-scope="NanoBeauty.ListRow" title="How do deposits work?" value="Live"></x-import>
+<x-import component-from-global-scope="NanoBeauty.ListRow" title="How do I change or cancel a visit?" value="Live"></x-import>
+<x-import component-from-global-scope="NanoBeauty.ListRow" title="Where do I park?" value="Draft"></x-import>
+</x-import>
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="warning" title="Clinic hours are missing">Clients see “Hours to be confirmed” until you add them.</x-import>
+</div>
+<div style="flex-shrink: 0; padding: 12px 20px 0;">
+<x-import component-from-global-scope="NanoBeauty.Button" icon="plus" full-width="{{yes}}">New question</x-import>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { theme: this.props.theme ?? 'light', yes: true };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,701 @@
+{
+  "_note": "Sample data used on the design canvas (v1.2). Public prices come from the clinic’s Fresha page and keep the Sample badge until the clinic confirms. Phone, hours and team stay placeholders.",
+  "clinic": {
+    "name": "Nano Beauty",
+    "address": "555 6th St #130, New Westminster, BC V3L 5H1",
+    "timezone": "America/Vancouver",
+    "hours": null,
+    "supportReplyTime": "1 business day (A8, sample)"
+  },
+  "rules": {
+    "A2_freeChangeHours": 48,
+    "A2_lateCancel": "deposit becomes clinic credit",
+    "A2_noShow": "deposit kept",
+    "A3_holdMinutes": 10,
+    "A3_expiryWarningMinutes": 2,
+    "A4_depositCAD": 50,
+    "A4_depositThresholdCAD": 150,
+    "A7_giftPresetsCAD": [
+      50,
+      100,
+      150,
+      200
+    ],
+    "A7_giftCustomRangeCAD": [
+      25,
+      500
+    ],
+    "A7_giftExpiry": null
+  },
+  "staff": [
+    {
+      "id": "stf_naz",
+      "name": "Nazanin (Naz)",
+      "roles": [
+        "Owner"
+      ],
+      "performs": [
+        "12D HIFU",
+        "Secret RF Microneedling",
+        "Microblading",
+        "Facials"
+      ],
+      "title": "[Title to confirm]",
+      "bio": "[Bio to confirm, with consent]"
+    },
+    {
+      "id": "stf_maria",
+      "name": "Maria",
+      "roles": [
+        "Editor"
+      ],
+      "performs": [
+        "12D HIFU",
+        "Secret RF Microneedling"
+      ],
+      "title": "[Title to confirm]",
+      "bio": "[Bio to confirm, with consent]"
+    },
+    {
+      "id": "stf_anna",
+      "name": "Anna",
+      "roles": [
+        "Front desk"
+      ],
+      "status": "invited",
+      "performs": [
+        "Laser Hair Removal"
+      ],
+      "title": "[Title to confirm]",
+      "bio": "[Bio to confirm, with consent]"
+    }
+  ],
+  "services": [
+    {
+      "id": "svc_hifu",
+      "name": "12D HIFU",
+      "category": "Skin tightening and resurfacing",
+      "concerns": [
+        "Loose skin",
+        "Fine lines"
+      ],
+      "aliases": [
+        "hifu",
+        "ultherapy"
+      ],
+      "duration": "60 to 90 min",
+      "price": {
+        "kind": "from",
+        "amount": 250,
+        "note": "Lower face $250 (public price)"
+      },
+      "bookable": true
+    },
+    {
+      "id": "svc_rf",
+      "name": "Secret RF Microneedling",
+      "category": "Skin tightening and resurfacing",
+      "concerns": [
+        "Fine lines",
+        "Acne and scars"
+      ],
+      "duration": "75 min",
+      "price": {
+        "kind": "from",
+        "amount": 300
+      },
+      "bookable": true
+    },
+    {
+      "id": "svc_sqt",
+      "name": "Biomicroneedling SQT",
+      "category": "Skin tightening and resurfacing",
+      "duration": "60 min",
+      "price": {
+        "kind": "fixed",
+        "amount": 350,
+        "package": {
+          "sessions": 4,
+          "amountCAD": 1200
+        }
+      },
+      "bookable": true
+    },
+    {
+      "id": "svc_laser_ua",
+      "name": "Laser Hair Removal",
+      "category": "Laser",
+      "concerns": [
+        "Unwanted hair"
+      ],
+      "duration": "20 min",
+      "price": {
+        "kind": "perUnit",
+        "amount": 50,
+        "unit": "per area",
+        "from": true
+      },
+      "bookable": true,
+      "areas": {
+        "women": [
+          [
+            "Upper lip",
+            50,
+            "fixed"
+          ],
+          [
+            "Chin",
+            50,
+            "from"
+          ],
+          [
+            "Underarms",
+            70,
+            "from"
+          ],
+          [
+            "Bikini line",
+            80,
+            "from"
+          ],
+          [
+            "Lower leg",
+            110,
+            "from"
+          ],
+          [
+            "Full leg and feet",
+            250,
+            "from"
+          ]
+        ],
+        "men": [
+          [
+            "Beard",
+            75,
+            "fixed"
+          ],
+          [
+            "Back",
+            200,
+            "fixed"
+          ],
+          [
+            "Chest and abdomen",
+            200,
+            "fixed"
+          ]
+        ]
+      },
+      "maxAreasPerVisit": 4,
+      "areasSource": "Public Fresha list; the third value says whether the price is fixed or \"from\""
+    },
+    {
+      "id": "svc_antiwrinkle",
+      "name": "Anti-wrinkle injections",
+      "category": "Injectables and medical",
+      "aliases": [
+        "botox"
+      ],
+      "price": {
+        "kind": "consultation"
+      },
+      "bookable": "consultation"
+    },
+    {
+      "id": "svc_prp_hair",
+      "name": "PRP Hair Treatment",
+      "category": "Injectables and medical",
+      "bookable": false,
+      "unavailableReason": "updating"
+    },
+    {
+      "id": "svc_consult",
+      "name": "Consultation",
+      "category": "Consultation",
+      "duration": "30 min",
+      "price": {
+        "kind": "fixed",
+        "amount": 20,
+        "credited": true
+      },
+      "bookable": true
+    },
+    {
+      "id": "svc_new_01",
+      "name": "Filler",
+      "category": "Injectables and medical",
+      "price": {
+        "kind": "consultation"
+      },
+      "bookable": "draft",
+      "source": "Fresha public menu, to import (STF-41/42)"
+    },
+    {
+      "id": "svc_new_02",
+      "name": "Fat dissolving",
+      "category": "Injectables and medical",
+      "price": {
+        "kind": "consultation"
+      },
+      "bookable": "draft",
+      "source": "Fresha public menu, to import (STF-41/42)"
+    },
+    {
+      "id": "svc_new_03",
+      "name": "Liposonix",
+      "category": "Body",
+      "price": {
+        "kind": "consultation"
+      },
+      "bookable": "draft",
+      "source": "Fresha public menu, to import (STF-41/42)"
+    },
+    {
+      "id": "svc_new_04",
+      "name": "PRF",
+      "category": "Injectables and medical",
+      "price": {
+        "kind": "consultation"
+      },
+      "bookable": "draft",
+      "source": "Fresha public menu, to import (STF-41/42)"
+    },
+    {
+      "id": "svc_new_05",
+      "name": "Skin brightening",
+      "category": "Skin tightening and resurfacing",
+      "price": {
+        "kind": "consultation"
+      },
+      "bookable": "draft",
+      "source": "Fresha public menu, to import (STF-41/42)"
+    },
+    {
+      "id": "svc_new_06",
+      "name": "Intimate brightening",
+      "category": "Body",
+      "price": {
+        "kind": "consultation"
+      },
+      "bookable": "draft",
+      "source": "Fresha public menu, to import (STF-41/42)"
+    },
+    {
+      "id": "svc_new_07",
+      "name": "Chrome nail fungus treatment",
+      "category": "Laser",
+      "price": {
+        "kind": "consultation"
+      },
+      "bookable": "draft",
+      "source": "Fresha public menu, to import (STF-41/42)"
+    },
+    {
+      "id": "svc_new_08",
+      "name": "Photo Frax",
+      "category": "Laser",
+      "price": {
+        "kind": "consultation"
+      },
+      "bookable": "draft",
+      "source": "Fresha public menu, to import (STF-41/42)"
+    },
+    {
+      "id": "svc_new_09",
+      "name": "Plasma Frax",
+      "category": "Skin tightening and resurfacing",
+      "price": {
+        "kind": "consultation"
+      },
+      "bookable": "draft",
+      "source": "Fresha public menu, to import (STF-41/42)"
+    },
+    {
+      "id": "svc_new_10",
+      "name": "Face massage",
+      "category": "Facials",
+      "price": {
+        "kind": "consultation"
+      },
+      "bookable": "draft",
+      "source": "Fresha public menu, to import (STF-41/42)"
+    },
+    {
+      "id": "svc_new_11",
+      "name": "PMU (permanent makeup)",
+      "category": "Beauty",
+      "price": {
+        "kind": "consultation"
+      },
+      "bookable": "draft",
+      "source": "Fresha public menu, to import (STF-41/42)"
+    }
+  ],
+  "client": {
+    "id": "cus_maria",
+    "firstName": "Maria",
+    "lastName": "Chen",
+    "phone": "+16045550123",
+    "email": "maria@example.com",
+    "clientSince": "2025",
+    "consents": {
+      "terms": "v2.1 accepted 2 Oct 2026",
+      "texts": true,
+      "offers": false
+    }
+  },
+  "appointments": [
+    {
+      "ref": "NB-20418",
+      "service": "svc_hifu",
+      "variant": "Full face",
+      "professional": "stf_naz",
+      "start": "2026-10-16T14:30:00-07:00",
+      "status": "confirmed",
+      "deposit": {
+        "amount": 50,
+        "paid": true,
+        "payment": "PAY-88213"
+      },
+      "dueAtVisit": 300
+    },
+    {
+      "ref": "NB-20533",
+      "service": "svc_laser_ua",
+      "professional": "stf_anna",
+      "start": "2026-11-13T11:00:00-08:00",
+      "status": "pending"
+    },
+    {
+      "ref": "NB-19877",
+      "service": "svc_laser_ua",
+      "professional": "stf_anna",
+      "start": "2026-08-28T11:00:00-07:00",
+      "status": "completed",
+      "paid": 70,
+      "priceNote": "Underarms, public list price from $70"
+    }
+  ],
+  "wallet": {
+    "clinicCredit": {
+      "available": 40,
+      "source": "late cancellation",
+      "expires": "2027-05-12",
+      "ledger": [
+        {
+          "date": "2026-05-12",
+          "amount": 50,
+          "reason": "Late cancellation credit"
+        },
+        {
+          "date": "2026-08-28",
+          "amount": -10,
+          "reason": "Used at visit NB-19877"
+        }
+      ]
+    },
+    "packages": [
+      {
+        "id": "pkg_laser_ua",
+        "name": "Laser Hair Removal · Underarms",
+        "total": 6,
+        "used": 3,
+        "booked": 0,
+        "expires": "2027-02-28",
+        "purchased": {
+          "date": "2026-06-19",
+          "method": "Klarna",
+          "amount": 378
+        }
+      }
+    ],
+    "giftCards": [
+      {
+        "id": "gc_4821",
+        "last4": "4821",
+        "balance": 95,
+        "ledger": [
+          {
+            "date": "2026-09-01",
+            "amount": 115,
+            "reason": "Brought over from the old app"
+          },
+          {
+            "date": "2026-09-12",
+            "amount": -20,
+            "reason": "Used at visit NB-19877"
+          }
+        ]
+      }
+    ],
+    "sentGifts": [
+      {
+        "id": "gc_sent_sara",
+        "recipient": "Sara",
+        "channel": "text",
+        "amount": 100,
+        "sendAt": "2026-12-24T09:00:00-08:00",
+        "status": "scheduled"
+      }
+    ]
+  },
+  "campaigns": [
+    {
+      "id": "cmp_halloween",
+      "title": "Halloween glow",
+      "state": "live",
+      "template": "halloween",
+      "discount": {
+        "type": "percent",
+        "value": 20
+      },
+      "code": "HALLO26",
+      "starts": "2026-10-20T09:00:00-07:00",
+      "ends": "2026-11-01T23:59:00-07:00",
+      "homeSlot": 1,
+      "push": false
+    },
+    {
+      "id": "cmp_autumn_laser",
+      "title": "15% off laser packages",
+      "state": "live",
+      "ends": "2026-10-31T23:59:00-07:00",
+      "eligible": [
+        {
+          "name": "Underarms, 6 sessions",
+          "was": 378,
+          "now": 321
+        },
+        {
+          "name": "Full leg and feet, 6 sessions",
+          "was": 1350,
+          "now": 1148
+        }
+      ],
+      "code": "GLOW25"
+    },
+    {
+      "id": "cmp_winter_facials",
+      "title": "Winter glow facials",
+      "state": "scheduled",
+      "starts": "2026-11-01T09:00:00-07:00"
+    },
+    {
+      "id": "cmp_holiday_gift",
+      "title": "Holiday gift cards",
+      "state": "review",
+      "submittedBy": "stf_maria"
+    }
+  ],
+  "payments": [
+    {
+      "ref": "PAY-88213",
+      "type": "deposit",
+      "amount": 50,
+      "gstIncluded": 2.38,
+      "method": "Visa •••• 4242",
+      "at": "2026-10-12T10:14:00-07:00",
+      "appointment": "NB-20418",
+      "status": "paid"
+    }
+  ],
+  "settings": {
+    "bookingMode": "handoff",
+    "deposit": {
+      "amount": 50,
+      "overCAD": 150
+    },
+    "freeChangeHours": 48,
+    "lateCancelOutcome": "credit",
+    "slotHoldMinutes": 10,
+    "paymentMethods": {
+      "card": true,
+      "applePay": false,
+      "googlePay": false,
+      "klarna": false,
+      "affirm": false
+    },
+    "financingLine": {
+      "on": false,
+      "minCAD": 500
+    },
+    "gift": {
+      "presetsCAD": [
+        50,
+        100,
+        150,
+        200
+      ],
+      "customRangeCAD": [
+        25,
+        500
+      ],
+      "expiry": null,
+      "designs": [
+        "thanks",
+        "birthday",
+        "holiday",
+        "love"
+      ]
+    },
+    "consultation": {
+      "priceCAD": 20,
+      "credited": true
+    },
+    "secondApprover": {
+      "on": false,
+      "fields": [
+        "price",
+        "policy",
+        "offerTerms"
+      ]
+    },
+    "clinicHours": null,
+    "ratingLine": {
+      "on": false,
+      "source": "Fresha"
+    },
+    "giftRefundDays": 14,
+    "deletionGraceDays": 30,
+    "lateChangeRule": "deposit becomes clinic credit (same as lateCancelOutcome)",
+    "_sample": "All values are samples until the clinic confirms (A1–A8)."
+  },
+  "legacyMembershipExample": {
+    "_note": "Only for a customer who had a membership in the old app (D38). Not part of default customer data.",
+    "membership": {
+      "tier": "Glow member",
+      "since": "2024-03",
+      "benefits": [
+        "10% off facials",
+        "A birthday treatment upgrade",
+        "Early access to offers"
+      ],
+      "source": "old app"
+    }
+  },
+  "promoCodes": [
+    {
+      "code": "HALLO26",
+      "discount": "20% off facials",
+      "perPerson": 1,
+      "total": 100,
+      "used": 38,
+      "state": "live"
+    },
+    {
+      "code": "GLOW25",
+      "discount": "15% off new 6-session laser packages",
+      "campaign": "cmp_autumn_laser",
+      "perPerson": 1,
+      "total": null,
+      "state": "live",
+      "ends": "2026-10-31T23:59:00-07:00"
+    },
+    {
+      "code": "WELCOME20",
+      "discount": "$20 off first visit",
+      "perPerson": 1,
+      "total": null,
+      "state": "live"
+    },
+    {
+      "code": "BFRIDAY",
+      "discount": "25% off packages",
+      "state": "scheduled",
+      "starts": "2026-11-27"
+    },
+    {
+      "code": "HALLO25",
+      "state": "archived"
+    }
+  ],
+  "packagesForSale": [
+    {
+      "id": "pkg_sqt4",
+      "name": "SQT, 4 sessions",
+      "sessions": 4,
+      "priceCAD": 1200,
+      "regularCAD": 1400,
+      "validMonths": 12,
+      "state": "live"
+    },
+    {
+      "id": "pkg_laser_ua6",
+      "name": "Laser, 6 sessions (underarms)",
+      "sessions": 6,
+      "priceCAD": 378,
+      "regularCAD": 420,
+      "validMonths": 12,
+      "state": "live"
+    },
+    {
+      "id": "pkg_laser_leg6",
+      "name": "Laser, 6 sessions (full leg and feet)",
+      "sessions": 6,
+      "priceCAD": 1350,
+      "regularCAD": 1500,
+      "validMonths": 12,
+      "state": "draft"
+    }
+  ],
+  "staffQueue": {
+    "requests": [
+      {
+        "id": "REQ-118",
+        "type": "move",
+        "customer": "Jenna T.",
+        "visit": "Thu 11:30",
+        "inside48h": true,
+        "status": "new"
+      },
+      {
+        "id": "REQ-119",
+        "type": "callback",
+        "customer": "Omar H.",
+        "status": "progress"
+      }
+    ],
+    "inbox": [
+      {
+        "id": "SUP-3321",
+        "from": "Jenna T.",
+        "topic": "Treatment question: laser",
+        "status": "new",
+        "channel": "text"
+      }
+    ]
+  },
+  "reports": {
+    "_note": "Sample numbers",
+    "month": "2026-10",
+    "bookingsStarted": 146,
+    "bookingsCompleted": 118,
+    "giftCardSalesCAD": 2350,
+    "packagesSold": 9
+  },
+  "ratingLine": {
+    "rating": 4.9,
+    "count": 357,
+    "source": "Fresha",
+    "on": false
+  },
+  "basketExample": {
+    "items": [
+      {
+        "service": "svc_hifu",
+        "detail": "Lower face",
+        "minutes": 60,
+        "priceCAD": 250
+      },
+      {
+        "service": "svc_laser_ua",
+        "detail": "Underarms, bikini line",
+        "minutes": 30,
+        "priceCAD": 150
+      }
+    ],
+    "totalMinutes": 90,
+    "totalCAD": 400
+  }
+}

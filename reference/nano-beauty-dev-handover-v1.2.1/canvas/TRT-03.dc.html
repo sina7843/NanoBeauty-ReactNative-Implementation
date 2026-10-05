@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Filters</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; background: var(--scrim); color: var(--ink); font-family: var(--font-sans);">
+<x-import component-from-global-scope="NanoBeauty.Sheet" title="Filters">
+<div style="display: flex; flex-direction: column; gap: 20px; padding-bottom: 8px;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<p class="overline" style="margin: 0; color: var(--ink-muted);">Concern</p>
+<div style="display: flex; flex-wrap: wrap; gap: 8px;">
+<x-import component-from-global-scope="NanoBeauty.Chip" selected="{{yes}}">Loose skin</x-import>
+<x-import component-from-global-scope="NanoBeauty.Chip">Fine lines</x-import>
+<x-import component-from-global-scope="NanoBeauty.Chip">Acne and scars</x-import>
+<x-import component-from-global-scope="NanoBeauty.Chip">Pigmentation</x-import>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<p class="overline" style="margin: 0; color: var(--ink-muted);">Price</p>
+<div style="display: flex; flex-wrap: wrap; gap: 8px;">
+<x-import component-from-global-scope="NanoBeauty.Chip" selected="{{yes}}">Fixed price</x-import>
+<x-import component-from-global-scope="NanoBeauty.Chip">Price range</x-import>
+<x-import component-from-global-scope="NanoBeauty.Chip">Consultation first</x-import>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<p class="overline" style="margin: 0; color: var(--ink-muted);">Duration</p>
+<x-import component-from-global-scope="NanoBeauty.SegmentedControl" label="Duration" options="{{durations}}" value="Any"></x-import>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<p class="overline" style="margin: 0; color: var(--ink-muted);">Professional</p>
+<div style="display: flex; flex-wrap: wrap; gap: 8px;">
+<x-import component-from-global-scope="NanoBeauty.Chip">Naz</x-import>
+<x-import component-from-global-scope="NanoBeauty.Chip">Maria</x-import>
+<x-import component-from-global-scope="NanoBeauty.Chip">Anna</x-import>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<a href="TRT-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" full-width="{{yes}}">Show 4 treatments</x-import></a>
+<x-import component-from-global-scope="NanoBeauty.Button" variant="tertiary" full-width="{{yes}}">Clear all</x-import>
+</div>
+</div>
+</x-import>
+<div style="height: 34px; background: var(--surface-raised); flex-shrink: 0;"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { theme: this.props.theme ?? 'light', yes: true, durations: ['Any', 'Under 60 min', '60 min +'] };
+}
+}
+</script>
+</body>
+</html>

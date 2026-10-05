@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>STF-30 Message</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Message" role="{{roleLabel}}" env="Production"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 10px; padding: 16px 20px 16px;">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 32px;">
+<a href="STF-29.dc.html" class="caption" style="color: var(--primary); font-weight: 600; text-decoration: none; white-space: nowrap;">‹ Inbox</a>
+<div style="display: flex; gap: 6px; align-items: center;"><x-import component-from-global-scope="NanoBeauty.Badge" tone="{{btone}}">{{badge}}</x-import></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line);"><span class="body" style="font-weight: 600;">Jenna T. · treatment question</span><span class="caption" style="color: var(--ink-muted);">Ask us · laser · SUP-3321 · prefers text</span><a href="STF-27.dc.html" style="text-decoration: none;"><span class="caption" style="color: var(--primary); font-weight: 600;">Open profile</span></a></div>
+<div style="align-self: flex-start; max-width: 82%; padding: 10px 12px; border-radius: 16px; background: var(--surface); color: var(--ink); border: 1px solid var(--line);"><p class="body" style="margin: 0;">Hi, is laser safe on tanned skin? I was in Mexico last week.</p></div>
+<sc-if value="{{not_state_draft}}" hint-placeholder-val="{{true}}">
+<div style="align-self: flex-end; max-width: 82%; padding: 10px 12px; border-radius: 16px; background: var(--primary); color: var(--on-primary); border: 1px solid transparent;"><p class="body" style="margin: 0;">Hi Jenna, thanks for asking. [Clinic’s advice on sun exposure before laser.] Want us to hold a spot for 12 Oct?</p></div>
+</sc-if>
+<sc-if value="{{state_failed}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="danger" title="Not delivered">The text didn’t go through. Check the number or send by email instead.</x-import>
+</sc-if>
+</div>
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px;"><x-import component-from-global-scope="NanoBeauty.SegmentedControl" label="Reply by" options="{{ch}}" value="Text"></x-import><sc-if value="{{state_draft}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Reply" value="Hi Jenna, thanks for asking. [Clinic’s advice on sun exposure before laser.]"></x-import>
+</sc-if><sc-if value="{{state_draft}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Button" icon="paper-plane-tilt" full-width="{{yes}}">Send reply</x-import>
+</sc-if><sc-if value="{{not_state_draft}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" full-width="{{yes}}">{{after}}</x-import>
+</sc-if><div style="height: 34px;"></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "state": {"editor": "enum", "options": ["draft", "sent", "failed"], "default": "draft"}, "role": {"editor": "enum", "options": ["Front desk", "Owner"], "default": "Front desk"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'draft';
+const role = this.props.role ?? 'Front desk';
+return { theme: this.props.theme ?? 'light', yes: true, state, state_draft: state === 'draft', not_state_draft: state !== 'draft', state_sent: state === 'sent', not_state_sent: state !== 'sent', state_failed: state === 'failed', not_state_failed: state !== 'failed', role, role_front_desk: role === 'Front desk', not_role_front_desk: role !== 'Front desk', role_owner: role === 'Owner', not_role_owner: role !== 'Owner', roleLabel: ({Owner: 'Owner', Editor: 'Editor', 'Front desk': 'Front desk'})[this.props.role ?? 'Owner'] || 'Owner', no: false, two: 2, ch: ['Text', 'Email', 'In app'], badge: ({draft: 'New', sent: 'Waiting on client', failed: 'Not sent'})[this.props.state ?? 'draft'], btone: ({draft: 'primary', sent: 'info', failed: 'danger'})[this.props.state ?? 'draft'], after: (this.props.state ?? 'draft') === 'failed' ? 'Send by email instead' : 'Mark as done' };
+}
+}
+</script>
+</body>
+</html>

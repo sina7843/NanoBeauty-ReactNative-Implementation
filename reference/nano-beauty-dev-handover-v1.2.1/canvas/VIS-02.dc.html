@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Visit detail</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<x-import component-from-global-scope="NanoBeauty.TopBar" title="Visit" back-label="Visits" platform="{{platform}}"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 16px; padding: 8px 20px 16px;">
+<x-import component-from-global-scope="NanoBeauty.AppointmentPass" service="12D HIFU" date="Thu 16 Oct" time="2:30 pm" provider="Nazanin (Naz)" status="{{status}}" sample="{{yes}}" eyebrow="Your visit"></x-import>
+<sc-if value="{{earlyInapp}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; gap: 8px; align-items: center; color: var(--ink-muted); align-items: flex-start;">
+<x-import component-from-global-scope="NanoBeauty.Icon" name="info" size="{{s16}}"></x-import><p class="caption" style="margin: 0;">Free changes until Tue 14 Oct, 2:30 pm (48 hours before). After that, the $50 deposit becomes clinic credit.</p>
+</div>
+</sc-if>
+<sc-if value="{{earlyHandoff}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="info" title="Booked in Fresha">Changes happen in Fresha. Late changes still go to the clinic.</x-import>
+</sc-if>
+<sc-if value="{{state_late}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="warning" title="Your visit is less than 48 hours away">Changes now go through the clinic. Cancelling keeps your $50 deposit as clinic credit.</x-import>
+</sc-if>
+<sc-if value="{{state_requested}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="info" title="Change requested">You asked to move this visit. The clinic will confirm by text; your current time stays booked until then.</x-import>
+</sc-if>
+<x-import component-from-global-scope="NanoBeauty.ListGroup"><a href="CAR-01.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="calendar-check" title="Preparation and aftercare" subtitle="2 steps before your visit"></x-import></a>
+<sc-if value="{{mode_inapp}}" hint-placeholder-val="{{true}}">
+<a href="PAY-09.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="receipt" title="Deposit receipt" value="$50.00"></x-import></a>
+</sc-if>
+<a href="SUP-03.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="question" title="Get help with this visit" subtitle="Reference NB-20418"></x-import></a></x-import>
+</div>
+<sc-if value="{{earlyInapp}}" hint-placeholder-val="{{true}}">
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+<a href="VIS-03.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" full-width="{{yes}}">Reschedule</x-import></a>
+<a href="VIS-04.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" full-width="{{yes}}">Cancel visit</x-import></a>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</sc-if>
+<sc-if value="{{earlyHandoff}}" hint-placeholder-val="{{true}}">
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<a href="BKG-08.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" icon-after="arrow-square-out" full-width="{{yes}}">Change in Fresha</x-import></a><a href="VIS-06.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" variant="tertiary" full-width="{{yes}}">Within 48 hours? Ask the clinic</x-import></a>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</sc-if>
+<sc-if value="{{state_late}}" hint-placeholder-val="{{true}}">
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<a href="VIS-06.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" size="lg" icon="phone" full-width="{{yes}}">Contact the clinic</x-import></a>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</sc-if>
+<sc-if value="{{state_requested}}" hint-placeholder-val="{{true}}">
+<div style="height: 34px; flex-shrink: 0;"></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "platform": {"editor": "enum", "options": ["ios", "android"], "default": "ios"}, "state": {"editor": "enum", "options": ["early", "late", "requested"], "default": "early"}, "mode":{"editor": "enum", "options": ["handoff", "inapp"], "default": "handoff"},"$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'early';
+const mode = this.props.mode ?? 'handoff';
+return { theme: this.props.theme ?? 'light', platform: this.props.platform ?? 'ios', yes: true, state, state_early: state === 'early', state_late: state === 'late', state_requested: state === 'requested', s16: 16, status: state === 'requested' ? 'changed' : 'confirmed', mode, mode_handoff: mode === 'handoff', mode_inapp: mode === 'inapp', earlyInapp: (this.props.state ?? 'early') === 'early' && (this.props.mode ?? 'handoff') === 'inapp', earlyHandoff: (this.props.state ?? 'early') === 'early' && (this.props.mode ?? 'handoff') === 'handoff' };
+}
+}
+</script>
+</body>
+</html>

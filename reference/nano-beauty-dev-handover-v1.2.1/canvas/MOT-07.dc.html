@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Motion: publish and send back</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Review change" role="Owner" env="Production"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 12px 20px 12px;">
+<div style="display: flex; justify-content: space-between; align-items: center;"><span class="overline" style="color: var(--ink-muted);">Motion · Publish and send back</span><x-import component-from-global-scope="NanoBeauty.Badge" tone="neutral" icon="info">{{modeLabel}}</x-import></div>
+<div style="display: flex; gap: 8px; align-items: center;"><span class="headline">Holiday gift cards</span><span style="flex-grow: 1;"></span><span style="{{badgeStyle}}"><x-import component-from-global-scope="NanoBeauty.PublishState" state="{{pub}}" detail="{{pubDetail}}"></x-import></span></div>
+<sc-if value="{{notLocked}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.ApprovalItem" kind="Campaign" title="Holiday gift cards" hide-actions="{{yes}}" changes="{{c}}" by="Maria" at="Yesterday"></x-import>
+</sc-if>
+<sc-if value="{{isLive}}" hint-placeholder-val="{{true}}">
+<div style="{{resStyle}}"><x-import component-from-global-scope="NanoBeauty.Banner" tone="success" title="Published">Customers see it from its scheduled start. The audit log records that you approved it just now.</x-import></div>
+</sc-if>
+<sc-if value="{{isSent}}" hint-placeholder-val="{{true}}">
+<div style="{{resStyle}}"><x-import component-from-global-scope="NanoBeauty.Banner" tone="info" title="Sent back to Maria">Maria sees your reason and the change goes back to draft. Nothing was published.</x-import></div>
+</sc-if>
+<sc-if value="{{rejecting}}" hint-placeholder-val="{{true}}">
+<div style="{{resStyle}}"><x-import component-from-global-scope="NanoBeauty.TextField" label="Reason for changes" placeholder="Tell the editor what to fix" error="{{err}}" on-change="{{typed}}"></x-import></div>
+</sc-if>
+</div>
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;"><x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" full-width="{{yes}}" disabled="{{locked}}" on-click="{{left}}">{{leftLabel}}</x-import><x-import component-from-global-scope="NanoBeauty.Button" variant="{{rightVariant}}" full-width="{{yes}}" loading="{{busy}}" loading-label="Publishing…" disabled="{{locked}}" on-click="{{right}}">{{rightLabel}}</x-import></div>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "motion": {"editor": "enum", "options": ["normal", "reduced"], "default": "normal"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+
+  componentWillUnmount() { (this._t || []).forEach(clearTimeout); if (this._i) clearInterval(this._i); }
+  later(fn, ms) { this._t = this._t || []; this._t.push(setTimeout(fn, ms)); }
+  reduced() { return (this.props.motion ?? 'normal') === 'reduced'; }
+  // enter transition for a block that just appeared: start hidden, then settle
+  reveal(key) { this.setState({ [key]: false }); this.later(() => this.setState({ [key]: true }), 30); }
+  enterStyle(on, dur) {
+    const r = this.reduced();
+    const tr = r ? 'opacity var(--duration-reduced) linear' : `opacity var(--duration-${dur || 'reveal'}) var(--ease-enter), transform var(--duration-${dur || 'reveal'}) var(--ease-enter)`;
+    const tf = r || on ? 'none' : 'translateY(8px)';
+    return `opacity: ${on ? 1 : 0}; transform: ${tf}; transition: ${tr};`;
+  }
+  base() { return { theme: this.props.theme ?? 'light', platform: this.props.platform ?? 'ios', yes: true, no: false, s16: 16, modeLabel: this.reduced() ? 'Reduce Motion on' : 'Normal motion' }; }
+
+  constructor(props) { super(props); this.state = { mode: 'review', reason: '', err: false, badgeOn: true, resOn: true }; }
+  renderVals() {
+    const m = this.state.mode;
+    return { ...this.base(),
+      c: [{ field: 'Preset values', from: '$50, $100', to: '$50, $100, $150' }, { field: 'Ends', from: '24 Dec', to: '31 Dec' }],
+      pub: m === 'live' ? 'live' : (m === 'sent' ? 'rejected' : 'review'), pubDetail: m === 'live' ? 'Just now' : (m === 'sent' ? 'Sent back' : ''),
+      badgeStyle: 'display: inline-flex; ' + this.enterStyle(this.state.badgeOn, 'state'), resStyle: this.enterStyle(this.state.resOn),
+      rejecting: m === 'rejecting', busy: m === 'publishing', locked: m === 'live' || m === 'sent', notLocked: m !== 'live' && m !== 'sent', isLive: m === 'live', isSent: m === 'sent',
+      err: this.state.err ? 'A reason is required to send this back' : undefined,
+      typed: (e) => this.setState({ reason: e.target.value, err: false }),
+      leftLabel: m === 'rejecting' ? 'Cancel' : 'Request changes',
+      rightLabel: m === 'rejecting' ? 'Send back' : (m === 'live' ? 'Published' : (m === 'sent' ? 'Sent back' : 'Approve')),
+      rightVariant: m === 'rejecting' ? 'destructive' : 'primary',
+      left: () => { if (m === 'rejecting') this.setState({ mode: 'review', err: false }); else { this.setState({ mode: 'rejecting' }); this.reveal('resOn'); } },
+      right: () => { if (m === 'rejecting') { if (!this.state.reason.trim()) { this.setState({ err: true }); return; } this.setState({ mode: 'sent' }); this.reveal('badgeOn'); this.reveal('resOn'); return; }
+        if (m !== 'review') return; this.setState({ mode: 'publishing' }); this.later(() => { this.setState({ mode: 'live' }); this.reveal('badgeOn'); this.reveal('resOn'); }, 1200); } };
+  }
+}
+</script>
+</body>
+</html>

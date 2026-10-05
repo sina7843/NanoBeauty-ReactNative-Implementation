@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Book: review</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<x-import component-from-global-scope="NanoBeauty.TopBar" title="Book" back-label="Details" platform="{{platform}}"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 4px 20px 12px;">
+<x-import component-from-global-scope="NanoBeauty.BookingStepper" current="{{step}}"></x-import>
+<sc-if value="{{state_expiring}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="warning" title="Your time is held until 2:40 pm">Finish in the next 2 minutes to keep this time.</x-import>
+</sc-if>
+<sc-if value="{{state_expired}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="danger" title="Your hold on 2:30 pm ended">Someone else may book it now. Pick the time again; nothing has been charged.</x-import>
+</sc-if>
+<sc-if value="{{state_package}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="info" title="Uses 1 of 4 sessions">This visit uses 1 of your 4 remaining HIFU sessions. Nothing to pay now.</x-import>
+</sc-if>
+<sc-if value="{{several}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.ServiceBasket" items="{{basketItems}}" total-minutes="{{ninety}}" total="{{total}}" compact="{{yes}}"></x-import>
+</sc-if>
+<sc-if value="{{showMoney}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.BookingSummary" rows="{{rows}}" total="{{total}}" due-later="{{later}}" due-now="{{deposit}}" policy="Free changes up to 48 hours before. Later cancellations keep the deposit as clinic credit; missed visits lose it."></x-import>
+</sc-if>
+<sc-if value="{{state_package}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.BookingSummary" rows="{{rows}}" policy="Free changes up to 48 hours before. Later cancellations or missed visits use the session."></x-import>
+</sc-if>
+<sc-if value="{{notExpired}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; gap: 8px; align-items: center;">
+<x-import component-from-global-scope="NanoBeauty.Badge" tone="sample">Sample rules</x-import><p class="caption" style="margin: 0; color: var(--ink-muted);">Deposit and policy wait for the clinic’s written rules.</p>
+</div>
+</sc-if>
+</div>
+<sc-if value="{{state_deposit}}" hint-placeholder-val="{{true}}">
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<a href="PAY-01.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" size="lg" icon="lock" full-width="{{yes}}">Pay $50 deposit</x-import></a>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</sc-if>
+<sc-if value="{{state_expiring}}" hint-placeholder-val="{{true}}">
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<a href="PAY-01.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" size="lg" icon="lock" full-width="{{yes}}">Pay $50 deposit</x-import></a>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</sc-if>
+<sc-if value="{{state_package}}" hint-placeholder-val="{{true}}">
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<a href="BKG-06.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" size="lg" full-width="{{yes}}">Confirm booking</x-import></a>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</sc-if>
+<sc-if value="{{state_expired}}" hint-placeholder-val="{{true}}">
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<a href="BKG-03.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" size="lg" full-width="{{yes}}">Pick a time again</x-import></a>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "platform": {"editor": "enum", "options": ["ios", "android"], "default": "ios"}, "state": {"editor": "enum", "options": ["deposit", "expiring", "expired", "package"], "default": "deposit"}, "basket":{"editor": "enum", "options": ["one", "several"], "default": "one"},"$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'deposit';
+const basket = this.props.basket ?? 'one';
+return { ninety: 90, theme: this.props.theme ?? 'light', platform: this.props.platform ?? 'ios', yes: true, state, state_deposit: state === 'deposit', state_expiring: state === 'expiring', state_expired: state === 'expired', state_package: state === 'package', rows: (this.props.basket ?? 'one') === 'several' ? [{label:'Treatments',value:'2 · 90 min in one visit'},{label:'Professional',value:'Nazanin (Naz), then Anna'},{label:'When',value:'Thu 16 Oct, 2:30 pm'}] : [{label:'Treatment',value:'12D HIFU · Full face'},{label:'Professional',value:'Nazanin (Naz)'},{label:'When',value:'Thu 16 Oct, 2:30 pm'},{label:'Where',value:'555 6th St #130, New Westminster'}], step: 4, total: (this.props.basket ?? 'one') === 'several' ? 400 : 350, later: (this.props.basket ?? 'one') === 'several' ? 350 : 300, deposit: 50, showMoney: state === 'deposit' || state === 'expiring' || state === 'expired', notExpired: state !== 'expired' && (this.props.basket ?? 'one') !== 'several', basket, basket_one: basket === 'one', basket_several: basket === 'several', several: (this.props.basket ?? 'one') === 'several', basketItems: [{name: '12D HIFU', detail: 'Lower face', duration: 60, price: 250}, {name: 'Laser Hair Removal', detail: 'Underarms, bikini line', duration: 30, price: 150}] };
+}
+}
+</script>
+</body>
+</html>

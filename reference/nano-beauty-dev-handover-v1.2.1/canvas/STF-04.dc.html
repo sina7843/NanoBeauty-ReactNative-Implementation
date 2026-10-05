@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>STF-04 Categories and concerns</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Categories" role="{{roleLabel}}" env="Production"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 16px 20px 16px;">
+<a href="STF-01.dc.html" class="caption" style="color: var(--primary); font-weight: 600; text-decoration: none; white-space: nowrap;">‹ Staff home</a>
+<x-import component-from-global-scope="NanoBeauty.SegmentedControl" label="Show" options="{{segs}}" value="Categories"></x-import>
+<sc-if value="{{state_rename}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Rename “Skin tightening”" value="Lifting and tightening" helper="Customers see the new name right away after publishing"></x-import>
+</sc-if>
+<div style="display: flex; flex-direction: column; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); overflow: hidden; flex-shrink: 0;">
+<div style="display: flex; align-items: center; gap: 8px; padding: 10px 8px 10px 16px; border-bottom: 1px solid var(--line);">
+<div style="flex-grow: 1; min-width: 0; display: flex;"><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span class="body" style="font-weight: 600; color: var(--ink);">Skin tightening</span><span class="caption" style="color: var(--ink-muted);">3 treatments</span></span></div>
+<div style="display: flex; align-items: center; gap: 2px; flex-shrink: 0;"><x-import component-from-global-scope="NanoBeauty.Icon" name="pencil-simple" size="{{s20}}"></x-import><a href="STF-39.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="dots-three" label="More actions for Skin tightening"></x-import></a></div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 10px 8px 10px 16px; border-bottom: 1px solid var(--line);">
+<div style="flex-grow: 1; min-width: 0; display: flex;"><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span class="body" style="font-weight: 600; color: var(--ink);">Laser</span><span class="caption" style="color: var(--ink-muted);">4 treatments</span></span></div>
+<div style="display: flex; align-items: center; gap: 2px; flex-shrink: 0;"><a href="STF-39.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="dots-three" label="More actions for Laser"></x-import></a></div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 10px 8px 10px 16px; border-bottom: 1px solid var(--line);">
+<div style="flex-grow: 1; min-width: 0; display: flex;"><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span class="body" style="font-weight: 600; color: var(--ink);">Injectables</span><span class="caption" style="color: var(--ink-muted);">5 treatments</span></span></div>
+<div style="display: flex; align-items: center; gap: 2px; flex-shrink: 0;"><a href="STF-39.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="dots-three" label="More actions for Injectables"></x-import></a></div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 10px 8px 10px 16px; border-bottom: 1px solid var(--line);">
+<div style="flex-grow: 1; min-width: 0; display: flex;"><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span class="body" style="font-weight: 600; color: var(--ink);">Facials</span><span class="caption" style="color: var(--ink-muted);">6 treatments</span></span></div>
+<div style="display: flex; align-items: center; gap: 2px; flex-shrink: 0;"><a href="STF-39.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="dots-three" label="More actions for Facials"></x-import></a></div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 10px 8px 10px 16px;">
+<div style="flex-grow: 1; min-width: 0; display: flex;"><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span class="body" style="font-weight: 600; color: var(--ink);">Body</span><span class="caption" style="color: var(--ink-muted);">0 treatments · can be archived</span></span></div>
+<div style="display: flex; align-items: center; gap: 2px; flex-shrink: 0;"><a href="STF-39.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="dots-three" label="More actions for Body"></x-import></a></div>
+</div>
+</div>
+<sc-if value="{{state_blocked}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="warning" title="“Skin tightening” isn’t empty">Move its 3 treatments to another category first.</x-import>
+</sc-if>
+<x-import component-from-global-scope="NanoBeauty.Button" variant="tertiary" icon="plus">New category</x-import>
+</div>
+<div style="height: 34px; flex-shrink: 0;"></div><sc-if value="{{state_move}}" hint-placeholder-val="{{true}}">
+<div style="position: absolute; inset: 0; background: var(--scrim); display: flex; flex-direction: column; justify-content: flex-end;">
+<x-import component-from-global-scope="NanoBeauty.Sheet" title="Move 12D HIFU to…"><x-import component-from-global-scope="NanoBeauty.ListGroup"><x-import component-from-global-scope="NanoBeauty.ListRow" title="Skin tightening" subtitle="Now" value="Current"></x-import><x-import component-from-global-scope="NanoBeauty.ListRow" title="Facials" chevron="{{yes}}"></x-import><x-import component-from-global-scope="NanoBeauty.ListRow" title="Laser" chevron="{{yes}}"></x-import><x-import component-from-global-scope="NanoBeauty.ListRow" title="Body" chevron="{{yes}}"></x-import></x-import></x-import>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "state": {"editor": "enum", "options": ["list", "rename", "move", "blocked"], "default": "list"}, "role": {"editor": "enum", "options": ["Owner", "Editor"], "default": "Owner"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'list';
+const role = this.props.role ?? 'Owner';
+return { theme: this.props.theme ?? 'light', yes: true, state, state_list: state === 'list', not_state_list: state !== 'list', state_rename: state === 'rename', not_state_rename: state !== 'rename', state_move: state === 'move', not_state_move: state !== 'move', state_blocked: state === 'blocked', not_state_blocked: state !== 'blocked', role, role_owner: role === 'Owner', not_role_owner: role !== 'Owner', role_editor: role === 'Editor', not_role_editor: role !== 'Editor', roleLabel: ({Owner: 'Owner', Editor: 'Editor', 'Front desk': 'Front desk'})[this.props.role ?? 'Owner'] || 'Owner', no: false, two: 2, s20: 20, segs: ['Categories', 'Concerns'] };
+}
+}
+</script>
+</body>
+</html>

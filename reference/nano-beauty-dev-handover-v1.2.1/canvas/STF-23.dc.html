@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>STF-23 Today</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Today" role="{{roleLabel}}" env="Production"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 16px 20px 16px;">
+<a href="STF-01.dc.html" class="caption" style="color: var(--primary); font-weight: 600; text-decoration: none; white-space: nowrap;">‹ Staff home</a>
+<sc-if value="{{mode_handoff}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="info" title="Hand-off mode">Bookings live in Fresha. Here you see requests that came through the app.</x-import>
+</sc-if>
+<sc-if value="{{state_ready}}" hint-placeholder-val="{{true}}">
+<sc-if value="{{mode_inapp}}" hint-placeholder-val="{{true}}">
+<h2 class="overline" style="margin: 0; color: var(--ink-muted);">Today · 6 appointments</h2><div style="display: flex; flex-direction: column; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); overflow: hidden; flex-shrink: 0;">
+<div style="display: flex; align-items: center; gap: 8px; padding: 10px 8px 10px 16px; border-bottom: 1px solid var(--line);">
+<div style="flex-grow: 1; min-width: 0; display: flex;"><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span class="body" style="font-weight: 600; color: var(--ink);">10:00 · Leila K.</span><span class="caption" style="color: var(--ink-muted);">OxyGeneo facial · Naz · checked in</span></span></div>
+<div style="display: flex; align-items: center; gap: 2px; flex-shrink: 0;"><x-import component-from-global-scope="NanoBeauty.Badge" tone="success">Here</x-import></div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 10px 8px 10px 16px; border-bottom: 1px solid var(--line);">
+<div style="flex-grow: 1; min-width: 0; display: flex;"><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span class="body" style="font-weight: 600; color: var(--ink);">11:30 · Sara M.</span><span class="caption" style="color: var(--ink-muted);">Laser, 3 areas · Anna</span></span></div>
+<div style="display: flex; align-items: center; gap: 2px; flex-shrink: 0;"></div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 10px 8px 10px 16px;">
+<div style="flex-grow: 1; min-width: 0; display: flex;"><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span class="body" style="font-weight: 600; color: var(--ink);">14:00 · Priya R.</span><span class="caption" style="color: var(--ink-muted);">12D HIFU lower face · Maria</span></span></div>
+<div style="display: flex; align-items: center; gap: 2px; flex-shrink: 0;"></div>
+</div>
+</div>
+</sc-if><h2 class="overline" style="margin: 0; color: var(--ink-muted);">Open requests · 2</h2><div style="display: flex; flex-direction: column; gap: 8px;">
+<a href="STF-24.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.QueueItem" icon="calendar-x" title="Move my visit: Jenna T." subtitle="Thu 11:30 → next week · inside 48 h" status="new" since="12 min"></x-import></a>
+<a href="STF-24.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.QueueItem" icon="phone" title="Call back: Omar H." subtitle="Question about PRP before booking" status="progress" since="1 h"></x-import></a>
+</div>
+</sc-if>
+<sc-if value="{{state_empty}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.EmptyState" icon="tray" title="Nothing waiting">New requests from the app show up here. You’ll also get a notification.</x-import>
+</sc-if>
+</div>
+<div style="height: 34px; flex-shrink: 0;"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "state": {"editor": "enum", "options": ["ready", "empty"], "default": "ready"}, "mode": {"editor": "enum", "options": ["handoff", "inapp"], "default": "handoff"}, "role": {"editor": "enum", "options": ["Front desk", "Owner"], "default": "Front desk"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'ready';
+const mode = this.props.mode ?? 'handoff';
+const role = this.props.role ?? 'Front desk';
+return { theme: this.props.theme ?? 'light', yes: true, state, state_ready: state === 'ready', not_state_ready: state !== 'ready', state_empty: state === 'empty', not_state_empty: state !== 'empty', mode, mode_handoff: mode === 'handoff', not_mode_handoff: mode !== 'handoff', mode_inapp: mode === 'inapp', not_mode_inapp: mode !== 'inapp', role, role_front_desk: role === 'Front desk', not_role_front_desk: role !== 'Front desk', role_owner: role === 'Owner', not_role_owner: role !== 'Owner', roleLabel: ({Owner: 'Owner', Editor: 'Editor', 'Front desk': 'Front desk'})[this.props.role ?? 'Owner'] || 'Owner', no: false, two: 2 };
+}
+}
+</script>
+</body>
+</html>

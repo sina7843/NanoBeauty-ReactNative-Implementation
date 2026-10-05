@@ -1,0 +1,4 @@
+Nano Beauty React Native starter
+Expected implementation prompts: 12 (NANO-00..NANO-11)
+Targets: Android APK/AAB + iOS TestFlight/App Store via EAS
+Run: node tools/validate-package.mjs

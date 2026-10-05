@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Couldn’t book</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 24px; padding: 56px 20px 16px;">
+<sc-if value="{{state_failed}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.AsyncStatus" state="failed" title="We couldn’t book that time">The time was taken or your hold ended before we could confirm. Nothing was charged.</x-import>
+</sc-if>
+<sc-if value="{{state_offline}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.AsyncStatus" state="timeout" title="No connection">You’re offline, so nothing was sent. Your choices are saved; try again when you’re connected.</x-import>
+</sc-if>
+<sc-if value="{{state_failed}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.SupportContext" topic="booking" hours="[Clinic hours to confirm]" response="Replies within 1 business day"></x-import>
+</sc-if>
+</div>
+<sc-if value="{{state_failed}}" hint-placeholder-val="{{true}}">
+<div style="flex-shrink: 0; padding: 12px 20px 0;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<a href="BKG-03.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" size="lg" full-width="{{yes}}">Pick another time</x-import></a>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</sc-if>
+<sc-if value="{{state_offline}}" hint-placeholder-val="{{true}}">
+<div style="flex-shrink: 0; padding: 12px 20px 0;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="NanoBeauty.Button" size="lg" icon="arrow-clockwise" full-width="{{yes}}">Try again</x-import>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "state": {"editor": "enum", "options": ["failed", "offline"], "default": "failed"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'failed';
+return { theme: this.props.theme ?? 'light', yes: true, state, state_failed: state === 'failed', state_offline: state === 'offline' };
+}
+}
+</script>
+</body>
+</html>

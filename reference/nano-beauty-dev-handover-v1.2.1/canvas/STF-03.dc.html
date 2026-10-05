@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>STF-03 Service edit</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Edit service" role="{{roleLabel}}" env="Production"></x-import>
+<div style="flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 12px 20px 20px;">
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 32px;">
+<a href="STF-02.dc.html" class="caption" style="color: var(--primary); font-weight: 600; text-decoration: none; white-space: nowrap;">‹ Services</a>
+<div style="display: flex; gap: 6px; align-items: center;"><x-import component-from-global-scope="NanoBeauty.PublishState" state="draft" detail="Saved 2 min ago"></x-import><a href="STF-07.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="eye" label="Preview as a customer" variant="outline"></x-import></a></div>
+</div>
+<sc-if value="{{state_conflict}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.EditConflict" who="Naz" when="2 minutes ago"></x-import>
+</sc-if>
+<sc-if value="{{state_offline}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="offline" title="Offline: read only">You can read this, but changes wait until you’re back online.</x-import>
+</sc-if>
+<sc-if value="{{state_savefailed}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="danger" title="Couldn’t save the draft">Your edits are kept on this phone. Try again; nothing was published.</x-import>
+</sc-if>
+<sc-if value="{{state_invalid}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="danger" title="2 things missing">Add a duration and alt text for the photo before you publish.</x-import>
+</sc-if>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Details" open="{{yes}}" complete="{{yes}}"><x-import component-from-global-scope="NanoBeauty.TextField" label="Name" value="12D HIFU" disabled="{{readOnly}}"></x-import><sc-if value="{{notConflict}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Search words" value="hifu, skin tightening, ultherapy" optional="{{yes}}"></x-import>
+</sc-if></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Category and concerns" summary="Skin tightening · jawline, fine lines, sagging" open="{{no}}" complete="{{yes}}"></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Description" summary="Non-surgical lift using focused ultrasound…" open="{{no}}" complete="{{yes}}"></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Preparation and aftercare" summary="Before: no retinol 3 days · After: SPF, no sauna 24 h" open="{{no}}" complete="{{yes}}"></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Price and duration" open="{{yes}}" error="{{durErr}}"><p class="label" style="margin: 0;">Price type</p><x-import component-from-global-scope="NanoBeauty.SegmentedControl" label="Price type" options="{{priceTypes}}" value="From"></x-import><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Price (CAD)" value="250" input-mode="decimal" helper="Lower face"></x-import>
+<sc-if value="{{not_state_invalid}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Duration (min)" value="60"></x-import>
+</sc-if><sc-if value="{{state_invalid}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Duration (min)" value="" error="Required"></x-import>
+</sc-if>
+</div><x-import component-from-global-scope="NanoBeauty.Badge" tone="sample">Sample</x-import></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Professionals" summary="Naz, Maria" open="{{no}}" complete="{{yes}}"></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Deposit rule" summary="Uses the clinic rule: $50 over $150" open="{{no}}"></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Photos and alt text" summary="{{photoSum}}" open="{{no}}" error="{{altErr}}"></x-import>
+<x-import component-from-global-scope="NanoBeauty.FormSection" title="Visibility" summary="Shown in the app · bookable" open="{{no}}"></x-import>
+<a href="STF-40.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.FormSection" title="FAQ" summary="3 questions · edit in FAQ editor" open="{{no}}"></x-import></a>
+<sc-if value="{{draftEditor}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="info" title="You’re submitting a price change">The Owner reviews this before clients see it.</x-import>
+</sc-if>
+<sc-if value="{{draftOwner}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="info" title="Price change">You publish after a confirm step. A second approver is off in Rules.</x-import>
+</sc-if>
+</div>
+</div>
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+<x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" full-width="{{yes}}" disabled="{{readOnly}}">Save draft</x-import>
+<div><sc-if value="{{role_owner}}" hint-placeholder-val="{{true}}">
+<a href="STF-09.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" full-width="{{yes}}" disabled="{{readOnly}}">Publish</x-import></a>
+</sc-if>
+<sc-if value="{{role_editor}}" hint-placeholder-val="{{true}}">
+<a href="STF-08.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" full-width="{{yes}}" disabled="{{readOnly}}">Submit</x-import></a>
+</sc-if></div>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "state": {"editor": "enum", "options": ["ready", "invalid", "draft", "conflict", "offline", "savefailed"], "default": "ready"}, "role": {"editor": "enum", "options": ["Owner", "Editor"], "default": "Owner"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'ready';
+const role = this.props.role ?? 'Owner';
+return { theme: this.props.theme ?? 'light', yes: true, state, state_ready: state === 'ready', not_state_ready: state !== 'ready', state_invalid: state === 'invalid', not_state_invalid: state !== 'invalid', state_draft: state === 'draft', not_state_draft: state !== 'draft', state_conflict: state === 'conflict', not_state_conflict: state !== 'conflict', state_offline: state === 'offline', not_state_offline: state !== 'offline', state_savefailed: state === 'savefailed', not_state_savefailed: state !== 'savefailed', role, role_owner: role === 'Owner', not_role_owner: role !== 'Owner', role_editor: role === 'Editor', not_role_editor: role !== 'Editor', readOnly: (this.props.state ?? 'ready') === 'offline', notConflict: (this.props.state ?? 'ready') !== 'conflict', roleLabel: ({Owner: 'Owner', Editor: 'Editor', 'Front desk': 'Front desk'})[this.props.role ?? 'Owner'] || 'Owner', no: false, two: 2, s20: 20, s16: 16, priceTypes: ['Fixed', 'From', 'Range', 'Consult'], durErr: (this.props.state ?? 'ready') === 'invalid' ? 'Required' : '', altErr: (this.props.state ?? 'ready') === 'invalid' ? 'Alt text' : '', photoSum: (this.props.state ?? 'ready') === 'invalid' ? '2 photos · 1 without alt text' : '2 photos · alt text added', draftEditor: (this.props.state ?? 'ready') === 'draft' && (this.props.role ?? 'Owner') === 'Editor', draftOwner: (this.props.state ?? 'ready') === 'draft' && (this.props.role ?? 'Owner') === 'Owner' };
+}
+}
+</script>
+</body>
+</html>

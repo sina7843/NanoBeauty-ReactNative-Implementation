@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>STF-05 Campaigns</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Campaigns" role="{{roleLabel}}" env="Production"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 16px 20px 16px;">
+<a href="STF-01.dc.html" class="caption" style="color: var(--primary); font-weight: 600; text-decoration: none; white-space: nowrap;">‹ Staff home</a>
+<x-import component-from-global-scope="NanoBeauty.SegmentedControl" label="View" options="{{views}}" value="{{viewVal}}"></x-import>
+<sc-if value="{{not_view_calendar}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); overflow: hidden; flex-shrink: 0;">
+<div style="display: flex; align-items: center; gap: 8px; padding: 10px 8px 10px 16px; border-bottom: 1px solid var(--line);">
+<a href="STF-06.dc.html" style="flex-grow: 1; min-width: 0; text-decoration: none; display: flex;"><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span class="body" style="font-weight: 600; color: var(--ink);">Halloween glow</span><span class="caption" style="color: var(--ink-muted);">20% off facials · 20 Oct – 1 Nov</span></span></a>
+<div style="display: flex; align-items: center; gap: 2px; flex-shrink: 0;"><x-import component-from-global-scope="NanoBeauty.PublishState" state="live"></x-import><a href="STF-39.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="dots-three" label="More actions for Halloween glow"></x-import></a></div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 10px 8px 10px 16px; border-bottom: 1px solid var(--line);">
+<a href="STF-06.dc.html" style="flex-grow: 1; min-width: 0; text-decoration: none; display: flex;"><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span class="body" style="font-weight: 600; color: var(--ink);">Black Friday packages</span><span class="caption" style="color: var(--ink-muted);">25% off · 27 Nov – 1 Dec</span></span></a>
+<div style="display: flex; align-items: center; gap: 2px; flex-shrink: 0;"><x-import component-from-global-scope="NanoBeauty.PublishState" state="scheduled"></x-import><a href="STF-39.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="dots-three" label="More actions for Black Friday packages"></x-import></a></div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 10px 8px 10px 16px; border-bottom: 1px solid var(--line);">
+<a href="STF-06.dc.html" style="flex-grow: 1; min-width: 0; text-decoration: none; display: flex;"><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span class="body" style="font-weight: 600; color: var(--ink);">15% off laser packages</span><span class="caption" style="color: var(--ink-muted);">Until 31 Oct · Home slot 2</span></span></a>
+<div style="display: flex; align-items: center; gap: 2px; flex-shrink: 0;"><x-import component-from-global-scope="NanoBeauty.PublishState" state="live"></x-import><a href="STF-39.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="dots-three" label="More actions for 15% off laser packages"></x-import></a></div>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 10px 8px 10px 16px;">
+<a href="STF-06.dc.html" style="flex-grow: 1; min-width: 0; text-decoration: none; display: flex;"><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span class="body" style="font-weight: 600; color: var(--ink);">Canada Day 2026</span><span class="caption" style="color: var(--ink-muted);">Ended 2 Jul · 22 bookings</span></span></a>
+<div style="display: flex; align-items: center; gap: 2px; flex-shrink: 0;"><x-import component-from-global-scope="NanoBeauty.PublishState" state="expired"></x-import><a href="STF-39.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="dots-three" label="More actions for Canada Day 2026"></x-import></a></div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{view_calendar}}" hint-placeholder-val="{{true}}">
+<div style="padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px;"><div style="display: flex; justify-content: space-between; align-items: center;"><span class="headline">October 2026</span><span class="caption" style="color: var(--ink-muted);">‹ ›</span></div><div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px;"><span class="caption" style="text-align: center; color: var(--ink-muted);">M</span><span class="caption" style="text-align: center; color: var(--ink-muted);">T</span><span class="caption" style="text-align: center; color: var(--ink-muted);">W</span><span class="caption" style="text-align: center; color: var(--ink-muted);">T</span><span class="caption" style="text-align: center; color: var(--ink-muted);">F</span><span class="caption" style="text-align: center; color: var(--ink-muted);">S</span><span class="caption" style="text-align: center; color: var(--ink-muted);">S</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; "></span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; "></span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; "></span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">1</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">2</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">3</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">4</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">5</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">6</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">7</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">8</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">9</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">10</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">11</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">12</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">13</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">14</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">15</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">16</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">17</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">18</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; ">19</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; background: var(--surface-tint);">20</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; background: var(--surface-tint);">21</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; background: var(--surface-tint);">22</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; background: var(--surface-tint);">23</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; background: var(--surface-tint);">24</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; background: var(--surface-tint);">25</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; background: var(--surface-tint);">26</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; background: var(--surface-tint);">27</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; background: var(--surface-tint);">28</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; background: var(--surface-tint);">29</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; background: var(--surface-tint);">30</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; background: var(--surface-tint);">31</span><span class="caption nb-tnum" style="text-align: center; padding: 6px 0; border-radius: 8px; "></span></div><x-import component-from-global-scope="NanoBeauty.Badge" tone="primary">Halloween glow · 20 Oct – 1 Nov</x-import><x-import component-from-global-scope="NanoBeauty.Badge" tone="info">15% off laser packages · until 31 Oct</x-import></div>
+</sc-if>
+</div>
+<div style="flex-shrink: 0; padding: 12px 20px 0;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<a href="STF-06.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" icon="plus" full-width="{{yes}}">New campaign</x-import></a>
+</div>
+<div style="height: 34px;"></div>
+</div><sc-if value="{{view_menu}}" hint-placeholder-val="{{true}}">
+<div style="position: absolute; inset: 0; background: var(--scrim); display: flex; flex-direction: column; justify-content: flex-end;">
+<x-import component-from-global-scope="NanoBeauty.Sheet" title="Halloween glow"><x-import component-from-global-scope="NanoBeauty.ListGroup"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="pause" title="Pause"></x-import><x-import component-from-global-scope="NanoBeauty.ListRow" icon="stop" title="End now"></x-import><a href="STF-06.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="copy" title="Duplicate" subtitle="Reuse for next year: dates move forward"></x-import></a><a href="STF-39.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="archive" title="Archive" destructive="{{yes}}"></x-import></a></x-import></x-import>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "view": {"editor": "enum", "options": ["list", "menu", "calendar"], "default": "list"}, "role": {"editor": "enum", "options": ["Owner", "Editor"], "default": "Owner"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const view = this.props.view ?? 'list';
+const role = this.props.role ?? 'Owner';
+return { theme: this.props.theme ?? 'light', yes: true, view, view_list: view === 'list', not_view_list: view !== 'list', view_menu: view === 'menu', not_view_menu: view !== 'menu', view_calendar: view === 'calendar', not_view_calendar: view !== 'calendar', role, role_owner: role === 'Owner', not_role_owner: role !== 'Owner', role_editor: role === 'Editor', not_role_editor: role !== 'Editor', roleLabel: ({Owner: 'Owner', Editor: 'Editor', 'Front desk': 'Front desk'})[this.props.role ?? 'Owner'] || 'Owner', no: false, two: 2, views: ['List', 'Calendar'], viewVal: (this.props.view ?? 'list') === 'calendar' ? 'Calendar' : 'List' };
+}
+}
+</script>
+</body>
+</html>

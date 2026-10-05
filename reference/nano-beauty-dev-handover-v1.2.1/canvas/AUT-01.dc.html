@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign in: phone number</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<div style="display: flex; justify-content: flex-end; padding: 0 12px;">
+<x-import component-from-global-scope="NanoBeauty.IconButton" icon="x" label="Close"></x-import>
+</div>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 20px; padding: 24px 20px 24px;">
+<div style="display: flex; justify-content: center; padding: 16px 0 24px;">
+<x-import component-from-global-scope="NanoBeauty.Logo" height="{{logoH}}"></x-import>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center;">
+<h1 class="display-md" style="margin: 0; color: var(--ink-display);">Sign in or join</h1>
+<p class="body" style="margin: 0; color: var(--ink-muted);">Use your mobile number. If you've visited before, we'll find your account.</p>
+</div>
+<x-import component-from-global-scope="NanoBeauty.TextField" label="Mobile number" icon="phone" placeholder="(604) 555-0123" value="{{phone}}" error="{{phoneErr}}" helper="We'll text you a 6-digit code." input-mode="tel"></x-import>
+<a href="AUT-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" size="lg" full-width="{{yes}}" loading="{{busy}}" loading-label="Sending code…" disabled="{{noPhone}}">Send code</x-import></a>
+<sc-if value="{{state_network}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="danger" title="No connection">We couldn’t reach Nano Beauty. Check your connection and try again; no code was sent.</x-import>
+</sc-if>
+<p class="caption" style="margin: 0; color: var(--ink-muted);">By continuing you agree to receive a verification text. Standard message rates may apply.</p>
+</div>
+<div style="height: 34px; flex-shrink: 0;"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"state":{"editor": "enum", "options": ["filled", "empty", "invalid", "sending", "network"], "default": "filled"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'filled';
+return { theme: this.props.theme ?? 'light', yes: true, logoH: 72, state, state_filled: state === 'filled', state_empty: state === 'empty', state_invalid: state === 'invalid', state_sending: state === 'sending', state_network: state === 'network', phone: state === 'empty' ? '' : (state === 'invalid' ? '(604) 555-01' : '(604) 555-0123'), phoneErr: state === 'invalid' ? 'Enter a 10-digit Canadian mobile number' : undefined, busy: state === 'sending', noPhone: state === 'empty' };
+}
+}
+</script>
+</body>
+</html>

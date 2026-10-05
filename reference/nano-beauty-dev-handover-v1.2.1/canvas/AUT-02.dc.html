@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign in: verification code</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<x-import component-from-global-scope="NanoBeauty.TopBar" title="" back-label="Back" platform="{{platform}}"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 20px; padding: 8px 20px 24px;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<h1 class="display-md" style="margin: 0; color: var(--ink-display);">Enter your code</h1>
+<p class="body" style="margin: 0; color: var(--ink-muted);">It can take up to a minute to arrive.</p>
+</div>
+<sc-if value="{{state_entering}}" hint-placeholder-val="{{true}}">
+<a href="AUT-03.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.OTPInput" value="482" sent-to="(604) •••-••23" resend-in="{{resend}}"></x-import></a>
+</sc-if>
+<sc-if value="{{state_wrong}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.OTPInput" value="482915" sent-to="(604) •••-••23" error="That code didn't match. You have 2 tries left."></x-import>
+</sc-if>
+<sc-if value="{{state_expired}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.OTPInput" value="" sent-to="(604) •••-••23" error="This code has expired. We've sent a new one."></x-import>
+</sc-if>
+<a href="AUT-01.dc.html" class="caption" style="color: var(--primary); font-weight: 600;">Use a different number</a>
+</div>
+<div style="height: 34px; flex-shrink: 0;"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"platform":{"editor":"enum","options":["ios","android"],"default":"ios"},"state":{"editor":"enum","options":["entering","wrong","expired"],"default":"entering"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'entering';
+return { theme: this.props.theme ?? 'light', platform: this.props.platform ?? 'ios', resend: 24, state_entering: state === 'entering', state_wrong: state === 'wrong', state_expired: state === 'expired' };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TAB-05 Booking and payment rules (tablet)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 1194px; height: 834px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Rules" role="{{roleLabel}}" env="Production" layout="tablet"></x-import>
+<div style="flex-grow: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; padding: 16px 32px 24px;"><div style="overflow-y: auto; min-height: 0;"><div style="display: flex; flex-direction: column; gap: 12px;"><a href="STF-01.dc.html" class="caption" style="color: var(--primary); font-weight: 600; text-decoration: none; white-space: nowrap;">‹ Staff home</a><x-import component-from-global-scope="NanoBeauty.Badge" tone="sample">Sample values until the clinic confirms (A1–A8)</x-import>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start;"><x-import component-from-global-scope="NanoBeauty.FormSection" title="Booking" open="{{yes}}"><x-import component-from-global-scope="NanoBeauty.SettingRow" label="Booking mode" detail="Hand-off to Fresha, or in-app" kind="value" value="Hand-off"></x-import><x-import component-from-global-scope="NanoBeauty.SettingRow" label="Free change window" kind="stepper" value="{{fortyEight}}" unit="h"></x-import><x-import component-from-global-scope="NanoBeauty.SettingRow" label="Slot hold" kind="stepper" value="{{ten}}" unit="min"></x-import><x-import component-from-global-scope="NanoBeauty.SettingRow" label="Late cancel or no-show" kind="value" value="Keep as credit"></x-import></x-import><x-import component-from-global-scope="NanoBeauty.FormSection" title="Payment methods" open="{{yes}}"><x-import component-from-global-scope="NanoBeauty.SettingRow" label="Card" checked="{{yes}}" locked="Always on"></x-import><x-import component-from-global-scope="NanoBeauty.SettingRow" label="Apple Pay" checked="{{no}}"></x-import><x-import component-from-global-scope="NanoBeauty.SettingRow" label="Google Pay" checked="{{no}}"></x-import><x-import component-from-global-scope="NanoBeauty.SettingRow" label="Klarna" checked="{{no}}"></x-import><x-import component-from-global-scope="NanoBeauty.SettingRow" label="Affirm" checked="{{no}}"></x-import></x-import></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start;"><x-import component-from-global-scope="NanoBeauty.FormSection" title="Deposit" open="{{yes}}"><x-import component-from-global-scope="NanoBeauty.SettingRow" label="Deposit" detail="$50 on bookings over $150" kind="value" value="On"></x-import><x-import component-from-global-scope="NanoBeauty.SettingRow" label="Financing line" detail="On treatments over $500" checked="{{no}}"></x-import></x-import><x-import component-from-global-scope="NanoBeauty.FormSection" title="Approvals" open="{{yes}}"><x-import component-from-global-scope="NanoBeauty.SettingRow" label="Second approver" detail="Price, policy and offer terms" checked="{{no}}"></x-import></x-import></div></div></div><div style="display: flex; flex-direction: column; gap: 12px; min-height: 0;"><div style="display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line);"><h2 class="overline" style="margin: 0; color: var(--ink-muted);">What changes</h2><p class="body" style="margin: 0; color: var(--ink-muted);">New bookings use these rules. Visits already booked keep the rules they were booked under.</p><x-import component-from-global-scope="NanoBeauty.Banner" tone="info" title="Used by BKG, VIS, PAY">Customers read these values on booking, visits and payment screens. Nothing is hard-coded.</x-import></div><div style="display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line);"><x-import component-from-global-scope="NanoBeauty.Button" full-width="{{yes}}">Save rules</x-import></div></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "role": {"editor": "enum", "options": ["Owner"], "default": "Owner"}, "$preview": {"width": 1194, "height": 834}}'>
+class Component extends DCLogic {
+renderVals() {
+const role = this.props.role ?? 'Owner';
+return { theme: this.props.theme ?? 'light', yes: true, role, role_owner: role === 'Owner', not_role_owner: role !== 'Owner', roleLabel: ({Owner: 'Owner', Editor: 'Editor', 'Front desk': 'Front desk'})[this.props.role ?? 'Owner'] || 'Owner', no: false, two: 2, s20: 20, fortyEight: 48, ten: 10 };
+}
+}
+</script>
+</body>
+</html>

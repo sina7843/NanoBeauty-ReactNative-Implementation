@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>STF-08 Approvals</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Approvals" role="{{roleLabel}}" env="Production"></x-import>
+<div style="flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 12px 20px 20px;">
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<a href="STF-01.dc.html" class="caption" style="color: var(--primary); font-weight: 600; text-decoration: none; white-space: nowrap;">‹ Staff home</a>
+<sc-if value="{{approver_on}}" hint-placeholder-val="{{true}}">
+<h2 class="overline" style="margin: 0; color: var(--ink-muted);">Waiting for a second approver · 2</h2><div style="display: flex; flex-direction: column; gap: 10px;">
+<a href="STF-09.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ApprovalItem" kind="Price" title="12D HIFU" changes="{{ch1}}" by="Maria" at="Today 09:12" risk="{{yes}}" hide-actions="{{yes}}"></x-import></a>
+<x-import component-from-global-scope="NanoBeauty.ApprovalItem" kind="Offer terms" title="Black Friday packages" changes="{{ch2}}" by="Maria" at="Yesterday" hide-actions="{{yes}}"></x-import>
+</div>
+</sc-if>
+<sc-if value="{{approver_off}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="info" title="Second approver is off">The Owner publishes directly after a confirm step. Turn on a second approver in Rules.</x-import><a href="STF-32.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" size="sm" variant="secondary">Open rules</x-import></a><h2 class="overline" style="margin: 0; color: var(--ink-muted);">Recently published</h2><div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="NanoBeauty.AuditEntry" actor="Naz" action="published" field="12D HIFU price" from="$320" to="$250" at="Today 10:02"></x-import>
+<x-import component-from-global-scope="NanoBeauty.AuditEntry" actor="Naz" action="published the Halloween glow campaign" at="Yesterday 16:40"></x-import>
+<x-import component-from-global-scope="NanoBeauty.AuditEntry" actor="Naz" action="archived PRP Hair Treatment" at="2 Sep"></x-import>
+</div>
+</sc-if>
+</div>
+</div>
+<div style="height: 34px; flex-shrink: 0;"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "approver": {"editor": "enum", "options": ["off", "on"], "default": "off"}, "role": {"editor": "enum", "options": ["Owner"], "default": "Owner"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const approver = this.props.approver ?? 'off';
+const role = this.props.role ?? 'Owner';
+return { theme: this.props.theme ?? 'light', yes: true, approver, approver_off: approver === 'off', not_approver_off: approver !== 'off', approver_on: approver === 'on', not_approver_on: approver !== 'on', role, role_owner: role === 'Owner', not_role_owner: role !== 'Owner', roleLabel: ({Owner: 'Owner', Editor: 'Editor', 'Front desk': 'Front desk'})[this.props.role ?? 'Owner'] || 'Owner', no: false, two: 2, ch1: [{field: 'Price', from: '$320', to: '$250'}], ch2: [{field: 'Discount', from: '20%', to: '25%'}] };
+}
+}
+</script>
+</body>
+</html>

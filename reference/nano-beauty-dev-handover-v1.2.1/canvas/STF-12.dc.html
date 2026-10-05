@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Staff: audit log</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Audit log" role="Owner" env="Production"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 12px; padding: 16px 20px 24px;">
+<a href="STF-01.dc.html" class="caption" style="color: var(--primary); font-weight: 600; text-decoration: none;">‹ Staff home</a>
+<div style="display: flex; gap: 8px; flex-wrap: wrap;">
+<x-import component-from-global-scope="NanoBeauty.Chip" selected="{{yes}}">Last 7 days</x-import>
+<x-import component-from-global-scope="NanoBeauty.Chip">Person</x-import>
+<x-import component-from-global-scope="NanoBeauty.Chip">Item</x-import>
+</div>
+<ol class="nb-audit-list" style="margin: 0; padding: 0;">
+<x-import component-from-global-scope="NanoBeauty.AuditEntry" actor="Naz" action="published 15% off laser packages" at="Today, 11:05 am"></x-import>
+<x-import component-from-global-scope="NanoBeauty.AuditEntry" actor="Naz" action="requested changes on Holiday gift cards" reason="End date must match the terms" at="Today, 10:58 am"></x-import>
+<x-import component-from-global-scope="NanoBeauty.AuditEntry" actor="Maria" action="edited 12D HIFU" field="Price" from="From $350" to="From $320" at="Today, 10:42 am"></x-import>
+<x-import component-from-global-scope="NanoBeauty.AuditEntry" actor="Anna" action="logged a note on NB-20418" at="Yesterday, 4:20 pm"></x-import>
+</ol>
+<x-import component-from-global-scope="NanoBeauty.Badge" tone="sample">Sample entries</x-import>
+</div>
+<div style="height: 34px; flex-shrink: 0;"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { theme: this.props.theme ?? 'light', yes: true };
+}
+}
+</script>
+</body>
+</html>

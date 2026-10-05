@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>STF-24 Request detail</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Request" role="{{roleLabel}}" env="Production"></x-import>
+<div style="flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 16px 20px 16px;">
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 32px;">
+<a href="STF-23.dc.html" class="caption" style="color: var(--primary); font-weight: 600; text-decoration: none; white-space: nowrap;">‹ Today</a>
+<div style="display: flex; gap: 6px; align-items: center;"><sc-if value="{{state_pending}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Badge" tone="primary">New</x-import>
+</sc-if><sc-if value="{{state_done}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Badge" tone="success">Done</x-import>
+</sc-if></div>
+</div>
+<h1 class="title-md" style="margin: 0; color: var(--ink-display);">Move my visit</h1>
+<sc-if value="{{mode_handoff}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="info" title="Booked in Fresha">This visit was booked in Fresha. Move it in Fresha, then mark this request done.</x-import>
+</sc-if>
+<x-import component-from-global-scope="NanoBeauty.AppointmentPass" service="OxyGeneo facial" date="Thu 1 Oct" time="11:30" provider="Naz" status="pending" compact="{{yes}}" eyebrow="Current booking"></x-import>
+<x-import component-from-global-scope="NanoBeauty.ListGroup" header="Request"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="user-circle" title="Jenna T." subtitle="(604) 555-0142 · 4 past visits"></x-import><x-import component-from-global-scope="NanoBeauty.ListRow" icon="chat-circle-text" title="“Can I move to next Tuesday or Wednesday morning?”" subtitle="Sent from the app 12 min ago"></x-import><x-import component-from-global-scope="NanoBeauty.ListRow" icon="clock" title="Inside the free-change window (48 h)" subtitle="Late-change rule from Rules: deposit becomes clinic credit"></x-import></x-import>
+<sc-if value="{{state_done}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.AuditEntry" actor="Naz" action="{{doneText}}" at="Today 10:31"></x-import>
+</sc-if>
+</div>
+</div>
+<sc-if value="{{state_pending}}" hint-placeholder-val="{{true}}">
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<sc-if value="{{mode_inapp}}" hint-placeholder-val="{{true}}">
+<a href="STF-24.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" full-width="{{yes}}">Approve and move</x-import></a>
+</sc-if><sc-if value="{{mode_handoff}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" icon-after="arrow-square-out" full-width="{{yes}}">Open in Fresha</x-import><a href="STF-24.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" full-width="{{yes}}">Mark as done</x-import></a>
+</sc-if>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;"><x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" full-width="{{yes}}">Decline</x-import><x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" icon="phone" full-width="{{yes}}">Call</x-import></div>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</sc-if><sc-if value="{{state_done}}" hint-placeholder-val="{{true}}">
+<div style="height: 34px; flex-shrink: 0;"></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "state": {"editor": "enum", "options": ["pending", "done"], "default": "pending"}, "mode": {"editor": "enum", "options": ["handoff", "inapp"], "default": "handoff"}, "role": {"editor": "enum", "options": ["Front desk", "Owner"], "default": "Front desk"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'pending';
+const mode = this.props.mode ?? 'handoff';
+const role = this.props.role ?? 'Front desk';
+return { theme: this.props.theme ?? 'light', yes: true, state, state_pending: state === 'pending', not_state_pending: state !== 'pending', state_done: state === 'done', not_state_done: state !== 'done', mode, mode_handoff: mode === 'handoff', not_mode_handoff: mode !== 'handoff', mode_inapp: mode === 'inapp', not_mode_inapp: mode !== 'inapp', role, role_front_desk: role === 'Front desk', not_role_front_desk: role !== 'Front desk', role_owner: role === 'Owner', not_role_owner: role !== 'Owner', roleLabel: ({Owner: 'Owner', Editor: 'Editor', 'Front desk': 'Front desk'})[this.props.role ?? 'Owner'] || 'Owner', no: false, two: 2, doneText: (this.props.mode ?? 'handoff') === 'handoff' ? 'moved it in Fresha to Tue 6 Oct, 10:00 and marked the request done' : 'approved and moved to Tue 6 Oct, 10:00' };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>STF-27 Customer profile</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0; background: var(--staff);"></div>
+<x-import component-from-global-scope="NanoBeauty.StaffBar" title="Customer" role="{{roleLabel}}" env="Production"></x-import>
+<div style="flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 12px 20px 20px;">
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<a href="STF-26.dc.html" class="caption" style="color: var(--primary); font-weight: 600; text-decoration: none; white-space: nowrap;">‹ Customers</a>
+<div style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
+<h1 class="title-md" style="margin: 0; color: var(--ink-display);">Leila K.</h1><x-import component-from-global-scope="NanoBeauty.Badge" tone="sample">Sample</x-import>
+</div>
+<p class="caption" style="margin: 0; color: var(--ink-muted);">(604) 555-0199 · leila@example.com · since 2023</p>
+<sc-if value="{{state_legacy}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="warning" title="Possible old-app match">An old-app account with the same name may be hers. Check before she signs in.</x-import><a href="STF-28.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" size="sm" variant="secondary">Check the match</x-import></a>
+</sc-if>
+<x-import component-from-global-scope="NanoBeauty.ListGroup" header="Visits"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="calendar-blank" title="Next: OxyGeneo facial" subtitle="Thu 1 Oct, 10:00 · Naz" chevron="{{yes}}"></x-import><x-import component-from-global-scope="NanoBeauty.ListRow" icon="clock-counter-clockwise" title="Past visits" value="7" chevron="{{yes}}"></x-import></x-import>
+<x-import component-from-global-scope="NanoBeauty.ListGroup" header="Value"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="package" title="SQT, 4 sessions" value="2 left"></x-import><x-import component-from-global-scope="NanoBeauty.ListRow" icon="gift" title="Gift card balance" value="$100"></x-import><x-import component-from-global-scope="NanoBeauty.ListRow" icon="wallet" title="Clinic credit" value="$25"></x-import></x-import>
+<x-import component-from-global-scope="NanoBeauty.ListGroup" header="Contact"><a href="STF-30.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="chat-circle-text" title="Messages" subtitle="Last: “Thanks, see you Thursday”" chevron="{{yes}}"></x-import></a><x-import component-from-global-scope="NanoBeauty.ListRow" icon="shield-check" title="Account" subtitle="App account · offers on · text on"></x-import></x-import>
+<p class="caption" style="margin: 0; color: var(--ink-muted);">Clinical notes stay in the clinic’s records system, not in this app.</p>
+</div>
+</div>
+<div style="height: 34px; flex-shrink: 0;"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "state": {"editor": "enum", "options": ["full", "legacy"], "default": "full"}, "role": {"editor": "enum", "options": ["Front desk", "Owner"], "default": "Front desk"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'full';
+const role = this.props.role ?? 'Front desk';
+return { theme: this.props.theme ?? 'light', yes: true, state, state_full: state === 'full', not_state_full: state !== 'full', state_legacy: state === 'legacy', not_state_legacy: state !== 'legacy', role, role_front_desk: role === 'Front desk', not_role_front_desk: role !== 'Front desk', role_owner: role === 'Owner', not_role_owner: role !== 'Owner', roleLabel: ({Owner: 'Owner', Editor: 'Editor', 'Front desk': 'Front desk'})[this.props.role ?? 'Owner'] || 'Owner', no: false, two: 2 };
+}
+}
+</script>
+</body>
+</html>

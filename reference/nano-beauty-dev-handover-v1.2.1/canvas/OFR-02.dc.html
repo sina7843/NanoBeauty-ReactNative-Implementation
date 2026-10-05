@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Offer terms</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; background: var(--scrim); color: var(--ink); font-family: var(--font-sans);">
+<x-import component-from-global-scope="NanoBeauty.Sheet" title="Offer terms">
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<x-import component-from-global-scope="NanoBeauty.Badge" tone="sample">Sample terms, clinic to write</x-import>
+<ul class="body" style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+<li>Valid on new 6-session laser hair removal packages bought 1 to 31 Oct 2026, Pacific Time.</li>
+<li>Not combinable with other offers or promo codes.</li>
+<li>Packages expire 12 months after purchase.</li>
+<li>One package per area per client.</li>
+<li>Deposits and cancellations follow the clinic booking policy.</li>
+</ul>
+<a href="ACC-11.dc.html" class="caption" style="color: var(--primary); font-weight: 600;">Read the booking policy</a>
+<a href="OFR-01.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" full-width="{{yes}}">Close</x-import></a>
+</div>
+</x-import>
+<div style="height: 34px; background: var(--surface-raised); flex-shrink: 0;"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { theme: this.props.theme ?? 'light', yes: true };
+}
+}
+</script>
+</body>
+</html>

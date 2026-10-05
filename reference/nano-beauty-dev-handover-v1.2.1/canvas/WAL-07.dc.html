@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Buy a package</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<x-import component-from-global-scope="NanoBeauty.TopBar" title="Buy a package" back-label="Wallet" platform="{{platform}}"></x-import>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 14px; padding: 8px 20px 16px;">
+<p class="body" style="margin: 0; color: var(--ink-muted);">Pay once, book each session when it suits you.</p>
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<div class="nb-provider is-selected" style="box-sizing: border-box;"><span class="nb-row__text"><span class="body nb-strong">SQT Bio-Microneedling · 4 sessions</span><span class="caption nb-muted">Saves $200 · use within 12 months</span></span><span class="body nb-strong" style="font-variant-numeric: tabular-nums;">$1,200</span><span class="nb-radio" aria-hidden="true"></span></div>
+<div class="nb-provider" style="box-sizing: border-box;"><span class="nb-row__text"><span class="body nb-strong">Laser · Underarms · 6 sessions</span><span class="caption nb-muted">Saves $42 · use within 12 months</span></span><span class="body nb-strong" style="font-variant-numeric: tabular-nums;">$378</span><span class="nb-radio" aria-hidden="true"></span></div>
+<div class="nb-provider" style="box-sizing: border-box;"><span class="nb-row__text"><span class="body nb-strong">Secret RF · 3 sessions</span><span class="caption nb-muted">Use within 9 months</span></span><span class="body nb-strong" style="font-variant-numeric: tabular-nums;">$810</span><span class="nb-radio" aria-hidden="true"></span></div>
+<div class="nb-provider" aria-disabled="true" style="box-sizing: border-box; opacity: 0.55;"><span class="nb-row__text"><span class="body nb-strong">Laser · Full leg and feet · 6 sessions</span><span class="caption nb-muted">Back soon</span></span><span class="body nb-strong" style="font-variant-numeric: tabular-nums;">$1,350</span><span class="nb-radio" aria-hidden="true"></span></div>
+</div>
+<x-import component-from-global-scope="NanoBeauty.ListGroup"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="calendar-check" title="Book sessions any time" subtitle="Each visit uses one session" chevron="{{no}}"></x-import>
+<a href="SUP-02.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.ListRow" icon="info" title="Package terms" subtitle="Transfers, refunds and expiry"></x-import></a></x-import>
+<div style="display: flex; gap: 8px; align-items: center;">
+<x-import component-from-global-scope="NanoBeauty.Badge" tone="sample">Sample</x-import><p class="caption" style="margin: 0; color: var(--ink-muted);">Packages and prices wait for the clinic’s list.</p>
+</div>
+</div>
+<div style="flex-shrink: 0; padding: 12px 20px 0; background: var(--surface); border-top: 1px solid var(--line);">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<a href="PAY-01.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" size="lg" full-width="{{yes}}">Continue to payment</x-import></a>
+</div>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "platform": {"editor": "enum", "options": ["ios", "android"], "default": "ios"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { theme: this.props.theme ?? 'light', platform: this.props.platform ?? 'ios', yes: true, no: false };
+}
+}
+</script>
+</body>
+</html>

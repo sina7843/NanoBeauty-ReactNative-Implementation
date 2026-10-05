@@ -1,0 +1,60 @@
+{
+  "project": "Nano Beauty",
+  "prompt_count": 12,
+  "notes": "Detailed requirement mappings are maintained in REQUIREMENTS_TRACEABILITY.md during implementation.",
+  "prompt_domains": {
+    "00": [
+      "FOUNDATION",
+      "NFR",
+      "D33-D40 flags"
+    ],
+    "01": [
+      "design system",
+      "ENT",
+      "ICN",
+      "navigation"
+    ],
+    "02": [
+      "AUTH",
+      "AUT"
+    ],
+    "03": [
+      "DISC",
+      "PROMO",
+      "SUP",
+      "ACC-11"
+    ],
+    "04": [
+      "BOOK handoff",
+      "VIS",
+      "D33"
+    ],
+    "05": [
+      "PRIV",
+      "ACC"
+    ],
+    "06": [
+      "PAY",
+      "WALT"
+    ],
+    "07": [
+      "ADMIN core/content"
+    ],
+    "08": [
+      "ADMIN operations/selling"
+    ],
+    "09": [
+      "NOTIF",
+      "analytics",
+      "conditional BOOK inapp"
+    ],
+    "10": [
+      "NFR",
+      "LEG",
+      "QA/security/accessibility"
+    ],
+    "11": [
+      "release/store/web claim/deletion"
+    ]
+  }
+}

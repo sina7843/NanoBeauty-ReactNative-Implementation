@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Motion: tabs and filters</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 16px; padding: 8px 20px 16px;">
+<div style="display: flex; justify-content: space-between; align-items: center;"><span class="overline" style="color: var(--ink-muted);">Motion · Tabs and filters</span><x-import component-from-global-scope="NanoBeauty.Badge" tone="neutral" icon="info">{{modeLabel}}</x-import></div>
+<h1 class="display-md" style="margin: 0; color: var(--ink-display);">{{tabTitle}}</h1>
+<sc-if value="{{isTreat}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-wrap: wrap; gap: 8px;">
+<sc-for list="{{chips}}" as="c" hint-placeholder-count="4"><x-import component-from-global-scope="NanoBeauty.Chip" selected="{{c.on}}" on-click="{{c.toggle}}">{{c.label}}</x-import></sc-for>
+</div>
+<p class="caption" style="margin: 0; color: var(--ink-muted);">{{countLabel}}</p>
+<div style="display: flex; flex-direction: column; gap: 10px; {{listStyle}}">
+<sc-for list="{{shown}}" as="s" hint-placeholder-count="2"><x-import component-from-global-scope="NanoBeauty.ServiceCard" layout="row" photo="{{s.photo}}" category="{{s.cat}}" name="{{s.name}}" duration="{{s.dur}}" price="{{s.price}}"></x-import></sc-for>
+</div>
+</sc-if>
+<sc-if value="{{notTreat}}" hint-placeholder-val="{{true}}">
+<div style="{{panelStyle}}"><x-import component-from-global-scope="NanoBeauty.EmptyState" icon="compass" title="{{tabTitle}}">In the app this tab keeps its own place. Only the selected tab and its label change; nothing slides or bounces.</x-import></div>
+</sc-if>
+</div>
+<div style="flex-shrink: 0; background: var(--surface);">
+<x-import component-from-global-scope="NanoBeauty.TabBar" value="{{tab}}" on-change="{{setTab}}"></x-import>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "motion": {"editor": "enum", "options": ["normal", "reduced"], "default": "normal"}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+
+  componentWillUnmount() { (this._t || []).forEach(clearTimeout); if (this._i) clearInterval(this._i); }
+  later(fn, ms) { this._t = this._t || []; this._t.push(setTimeout(fn, ms)); }
+  reduced() { return (this.props.motion ?? 'normal') === 'reduced'; }
+  // enter transition for a block that just appeared: start hidden, then settle
+  reveal(key) { this.setState({ [key]: false }); this.later(() => this.setState({ [key]: true }), 30); }
+  enterStyle(on, dur) {
+    const r = this.reduced();
+    const tr = r ? 'opacity var(--duration-reduced) linear' : `opacity var(--duration-${dur || 'reveal'}) var(--ease-enter), transform var(--duration-${dur || 'reveal'}) var(--ease-enter)`;
+    const tf = r || on ? 'none' : 'translateY(8px)';
+    return `opacity: ${on ? 1 : 0}; transform: ${tf}; transition: ${tr};`;
+  }
+  base() { return { theme: this.props.theme ?? 'light', platform: this.props.platform ?? 'ios', yes: true, no: false, s16: 16, modeLabel: this.reduced() ? 'Reduce Motion on' : 'Normal motion' }; }
+
+  constructor(props) { super(props); this.state = { tab: 'treatments', on: { 'Loose skin': true }, listOn: true, panelOn: true }; }
+  renderVals() {
+    const all = [
+      { name: '12D HIFU', cat: 'Skin tightening', dur: '60 to 90 min', price: { kind: 'from', amount: 350 }, photo: '/_blob/db7b6328577b95a4bbfba8750bc2d93a', tags: ['Loose skin'] },
+      { name: 'Secret RF Microneedling', cat: 'Resurfacing', dur: '75 min', price: { kind: 'from', amount: 300 }, photo: '/_blob/1b219b3acb41d78a93ae40bc87987e0d', tags: ['Fine lines', 'Acne and scars'] },
+      { name: 'Biomicroneedling SQT', cat: 'Resurfacing', dur: '60 min', price: { kind: 'fixed', amount: 280 }, photo: '/_blob/b0858e93e8de27137ec94d6b1554c2c7', tags: ['Acne and scars', 'Fine lines'] },
+      { name: 'Laser Hair Removal', cat: 'Laser', dur: '20 min', price: { kind: 'from', amount: 90 }, photo: '/_blob/97c35b0f4397d4f6ef8456f69c69ad9a', tags: ['Unwanted hair'] },
+    ];
+    const labels = ['Loose skin', 'Fine lines', 'Acne and scars', 'Unwanted hair'];
+    const active = labels.filter((l) => this.state.on[l]);
+    const shown = active.length ? all.filter((s) => s.tags.some((t) => active.includes(t))) : all;
+    const titles = { home: 'Home', treatments: 'Treatments', visits: 'Visits', wallet: 'Wallet' };
+    return { ...this.base(), tab: this.state.tab, tabTitle: titles[this.state.tab], isTreat: this.state.tab === 'treatments', notTreat: this.state.tab !== 'treatments',
+      setTab: (k) => { this.setState({ tab: k }); this.reveal('panelOn'); this.reveal('listOn'); },
+      chips: labels.map((l) => ({ label: l, on: !!this.state.on[l], toggle: () => { this.setState({ on: { ...this.state.on, [l]: !this.state.on[l] } }); this.reveal('listOn'); } })),
+      shown, countLabel: shown.length + (shown.length === 1 ? ' treatment' : ' treatments'),
+      listStyle: this.enterStyle(this.state.listOn, 'state'), panelStyle: this.enterStyle(this.state.panelOn, 'state') };
+  }
+}
+</script>
+</body>
+</html>

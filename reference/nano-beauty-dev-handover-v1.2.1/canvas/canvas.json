@@ -1,0 +1,1740 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "ACC-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Account",
+      "w": 390,
+      "x": 0,
+      "y": 5200
+    },
+    "ACC-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Profile",
+      "w": 390,
+      "x": 470,
+      "y": 5200
+    },
+    "ACC-03.dc.html": {
+      "h": 844,
+      "radius": 44,
+      "title": "Notifications",
+      "w": 390,
+      "x": 940,
+      "y": 5200
+    },
+    "ACC-04.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Messages",
+      "w": 390,
+      "x": 1410,
+      "y": 5200
+    },
+    "ACC-05.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Message: visit tomorrow",
+      "w": 390,
+      "x": 1880,
+      "y": 5200
+    },
+    "ACC-06.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Privacy and data",
+      "w": 390,
+      "x": 2350,
+      "y": 5200
+    },
+    "ACC-07.dc.html": {
+      "h": 844,
+      "radius": 44,
+      "title": "Request my data",
+      "w": 390,
+      "x": 2820,
+      "y": 5200
+    },
+    "ACC-08.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Delete account",
+      "w": 390,
+      "x": 3290,
+      "y": 5200
+    },
+    "ACC-09.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Confirm deletion",
+      "w": 390,
+      "x": 3760,
+      "y": 5200
+    },
+    "ACC-10.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Deletion requested",
+      "w": 390,
+      "x": 4230,
+      "y": 5200
+    },
+    "ACC-11.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Booking policy",
+      "w": 390,
+      "x": 4700,
+      "y": 5200
+    },
+    "AUT-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Sign in: phone number",
+      "w": 390,
+      "x": 0,
+      "y": 3900
+    },
+    "AUT-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Sign in: verification code",
+      "w": 390,
+      "x": 470,
+      "y": 3900
+    },
+    "AUT-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Sign in: consents",
+      "w": 390,
+      "x": 940,
+      "y": 3900
+    },
+    "AUT-04.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Sign in: name and email",
+      "w": 390,
+      "x": 1410,
+      "y": 3900
+    },
+    "AUT-05.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Account matched",
+      "w": 390,
+      "x": 1880,
+      "y": 3900
+    },
+    "AUT-06.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Account details don't match",
+      "w": 390,
+      "x": 2350,
+      "y": 3900
+    },
+    "AUT-07.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "No past account found",
+      "w": 390,
+      "x": 2820,
+      "y": 3900
+    },
+    "AUT-08.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Session expired",
+      "w": 390,
+      "x": 3290,
+      "y": 3900
+    },
+    "BKG-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "BKG-01 Service",
+      "w": 390,
+      "x": 0,
+      "y": 10400
+    },
+    "BKG-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Book: choose a professional",
+      "w": 390,
+      "x": 470,
+      "y": 10400
+    },
+    "BKG-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Book: date and time",
+      "w": 390,
+      "x": 940,
+      "y": 10400
+    },
+    "BKG-04.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Book: details",
+      "w": 390,
+      "x": 1410,
+      "y": 10400
+    },
+    "BKG-05.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Book: review",
+      "w": 390,
+      "x": 1880,
+      "y": 10400
+    },
+    "BKG-06.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Booked",
+      "w": 390,
+      "x": 2350,
+      "y": 10400
+    },
+    "BKG-07.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Couldn’t book",
+      "w": 390,
+      "x": 2820,
+      "y": 10400
+    },
+    "BKG-08.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "BKG-08 Fresha hand-off",
+      "w": 390,
+      "x": 3290,
+      "y": 10400
+    },
+    "BKG-09.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Back from Fresha",
+      "w": 390,
+      "x": 3760,
+      "y": 10400
+    },
+    "BKG-10.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "BKG-10 Choose areas",
+      "w": 390,
+      "x": 4230,
+      "y": 10400
+    },
+    "BKG-11.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "BKG-11 Your visit",
+      "w": 390,
+      "x": 4700,
+      "y": 10400
+    },
+    "BKG-12.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "BKG-12 How booking works",
+      "w": 390,
+      "x": 5170,
+      "y": 10400
+    },
+    "CAR-01.dc.html": {
+      "h": 844,
+      "radius": 44,
+      "title": "Preparation and aftercare",
+      "w": 390,
+      "x": 1410,
+      "y": 6500
+    },
+    "ENT-01.dc.html": {
+      "h": 844,
+      "radius": 44,
+      "title": "Splash",
+      "w": 390,
+      "x": 0,
+      "y": 7800
+    },
+    "ENT-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Update required",
+      "w": 390,
+      "x": 470,
+      "y": 7800
+    },
+    "ENT-03.dc.html": {
+      "h": 844,
+      "radius": 44,
+      "title": "Maintenance",
+      "w": 390,
+      "x": 940,
+      "y": 7800
+    },
+    "ENT-04.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Notification primer",
+      "w": 390,
+      "x": 1410,
+      "y": 7800
+    },
+    "HOM-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Home with next visit",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "HOM-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Home without a visit",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "ICN-01.dc.html": {
+      "h": 480,
+      "radius": 24,
+      "title": "App icon",
+      "w": 1180,
+      "x": 0,
+      "y": 16900
+    },
+    "MOT-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Motion: tabs and filters",
+      "w": 390,
+      "x": 0,
+      "y": 15600
+    },
+    "MOT-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Motion: slot selection",
+      "w": 390,
+      "x": 470,
+      "y": 15600
+    },
+    "MOT-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Motion: booking confirmation",
+      "w": 390,
+      "x": 940,
+      "y": 15600
+    },
+    "MOT-04.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Motion: payment result",
+      "w": 390,
+      "x": 1410,
+      "y": 15600
+    },
+    "MOT-05.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Motion: wallet reconciliation",
+      "w": 390,
+      "x": 1880,
+      "y": 15600
+    },
+    "MOT-06.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Motion: offer expiry",
+      "w": 390,
+      "x": 2350,
+      "y": 15600
+    },
+    "MOT-07.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Motion: publish and send back",
+      "w": 390,
+      "x": 2820,
+      "y": 15600
+    },
+    "MOT-08.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Motion: sheet dismissal",
+      "w": 390,
+      "x": 3290,
+      "y": 15600
+    },
+    "Main.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Guest home",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "NTF-01.dc.html": {
+      "h": 560,
+      "is_interactive": true,
+      "title": "NTF-01 Booking confirmed",
+      "w": 820,
+      "x": 0,
+      "y": 24600
+    },
+    "NTF-02.dc.html": {
+      "h": 560,
+      "is_interactive": true,
+      "title": "NTF-02 Reminder",
+      "w": 820,
+      "x": 900,
+      "y": 24600
+    },
+    "NTF-03.dc.html": {
+      "h": 560,
+      "is_interactive": true,
+      "title": "NTF-03 Visit changed",
+      "w": 820,
+      "x": 1800,
+      "y": 24600
+    },
+    "NTF-04.dc.html": {
+      "h": 560,
+      "is_interactive": true,
+      "title": "NTF-04 Cancelled, refund or credit",
+      "w": 820,
+      "x": 2700,
+      "y": 24600
+    },
+    "NTF-05.dc.html": {
+      "h": 560,
+      "is_interactive": true,
+      "title": "NTF-05 Payment receipt",
+      "w": 820,
+      "x": 3600,
+      "y": 24600
+    },
+    "NTF-06.dc.html": {
+      "h": 560,
+      "is_interactive": true,
+      "title": "NTF-06 Refund status",
+      "w": 820,
+      "x": 4500,
+      "y": 24600
+    },
+    "NTF-07.dc.html": {
+      "h": 560,
+      "is_interactive": true,
+      "title": "NTF-07 Gift received",
+      "w": 820,
+      "x": 0,
+      "y": 25240
+    },
+    "NTF-08.dc.html": {
+      "h": 560,
+      "is_interactive": true,
+      "title": "NTF-08 Gift scheduled or sent (buyer)",
+      "w": 820,
+      "x": 900,
+      "y": 25240
+    },
+    "NTF-09.dc.html": {
+      "h": 560,
+      "is_interactive": true,
+      "title": "NTF-09 Package session used",
+      "w": 820,
+      "x": 1800,
+      "y": 25240
+    },
+    "NTF-10.dc.html": {
+      "h": 560,
+      "is_interactive": true,
+      "title": "NTF-10 Support reply",
+      "w": 820,
+      "x": 2700,
+      "y": 25240
+    },
+    "NTF-11.dc.html": {
+      "h": 560,
+      "is_interactive": true,
+      "title": "NTF-11 Staff: request needs you",
+      "w": 820,
+      "x": 3600,
+      "y": 25240
+    },
+    "NTF-12.dc.html": {
+      "h": 560,
+      "is_interactive": true,
+      "title": "NTF-12 Staff: approval needed",
+      "w": 820,
+      "x": 4500,
+      "y": 25240
+    },
+    "OFR-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Offer",
+      "w": 390,
+      "x": 0,
+      "y": 2600
+    },
+    "OFR-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Offer terms",
+      "w": 390,
+      "x": 470,
+      "y": 2600
+    },
+    "OFR-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Promo code",
+      "w": 390,
+      "x": 940,
+      "y": 2600
+    },
+    "OFR-04.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Offer ended",
+      "w": 390,
+      "x": 1410,
+      "y": 2600
+    },
+    "PAY-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Payment: choose a method",
+      "w": 390,
+      "x": 0,
+      "y": 11700
+    },
+    "PAY-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Payment: card",
+      "w": 390,
+      "x": 470,
+      "y": 11700
+    },
+    "PAY-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Leaving for Klarna",
+      "w": 390,
+      "x": 940,
+      "y": 11700
+    },
+    "PAY-04.dc.html": {
+      "h": 844,
+      "radius": 44,
+      "title": "Payment: waiting",
+      "w": 390,
+      "x": 1410,
+      "y": 11700
+    },
+    "PAY-05.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Payment: paid",
+      "w": 390,
+      "x": 1880,
+      "y": 11700
+    },
+    "PAY-06.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Payment: declined",
+      "w": 390,
+      "x": 2350,
+      "y": 11700
+    },
+    "PAY-07.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Payment: cancelled",
+      "w": 390,
+      "x": 2820,
+      "y": 11700
+    },
+    "PAY-08.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Payment: still checking",
+      "w": 390,
+      "x": 3290,
+      "y": 11700
+    },
+    "PAY-09.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Receipt",
+      "w": 390,
+      "x": 3760,
+      "y": 11700
+    },
+    "STF-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-01 Staff home",
+      "w": 390,
+      "x": 0,
+      "y": 9100
+    },
+    "STF-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-02 Services",
+      "w": 390,
+      "x": 470,
+      "y": 9100
+    },
+    "STF-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-03 Service edit",
+      "w": 390,
+      "x": 940,
+      "y": 9100
+    },
+    "STF-04.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-04 Categories and concerns",
+      "w": 390,
+      "x": 1410,
+      "y": 9100
+    },
+    "STF-05.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-05 Campaigns",
+      "w": 390,
+      "x": 1880,
+      "y": 9100
+    },
+    "STF-06.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-06 Campaign edit",
+      "w": 390,
+      "x": 2350,
+      "y": 9100
+    },
+    "STF-07.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Staff: customer preview",
+      "w": 390,
+      "x": 2820,
+      "y": 9100
+    },
+    "STF-08.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-08 Approvals",
+      "w": 390,
+      "x": 3290,
+      "y": 9100
+    },
+    "STF-09.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-09 Approval detail",
+      "w": 390,
+      "x": 3760,
+      "y": 9100
+    },
+    "STF-10.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Staff: support content",
+      "w": 390,
+      "x": 4230,
+      "y": 9100
+    },
+    "STF-11.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-11 Value lookup",
+      "w": 390,
+      "x": 4700,
+      "y": 9100
+    },
+    "STF-12.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Staff: audit log",
+      "w": 390,
+      "x": 5170,
+      "y": 9100
+    },
+    "STF-13.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-13 Team and roles",
+      "w": 390,
+      "x": 5640,
+      "y": 9100
+    },
+    "STF-14.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Staff: no permission",
+      "w": 390,
+      "x": 6110,
+      "y": 9100
+    },
+    "STF-15.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-15 Packages",
+      "w": 390,
+      "x": 0,
+      "y": 19500
+    },
+    "STF-16.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-16 Package edit",
+      "w": 390,
+      "x": 470,
+      "y": 19500
+    },
+    "STF-17.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-17 Gift-card settings",
+      "w": 390,
+      "x": 940,
+      "y": 19500
+    },
+    "STF-18.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-18 Gift-card actions",
+      "w": 390,
+      "x": 1410,
+      "y": 19500
+    },
+    "STF-19.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-19 Promo codes",
+      "w": 390,
+      "x": 1880,
+      "y": 19500
+    },
+    "STF-20.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-20 Promo code edit",
+      "w": 390,
+      "x": 2350,
+      "y": 19500
+    },
+    "STF-21.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-21 Professionals",
+      "w": 390,
+      "x": 0,
+      "y": 20800
+    },
+    "STF-22.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-22 Professional edit",
+      "w": 390,
+      "x": 470,
+      "y": 20800
+    },
+    "STF-23.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-23 Today",
+      "w": 390,
+      "x": 0,
+      "y": 18200
+    },
+    "STF-24.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-24 Request detail",
+      "w": 390,
+      "x": 470,
+      "y": 18200
+    },
+    "STF-25.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-25 Counter redemption",
+      "w": 390,
+      "x": 940,
+      "y": 18200
+    },
+    "STF-26.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-26 Customer search",
+      "w": 390,
+      "x": 1410,
+      "y": 18200
+    },
+    "STF-27.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-27 Customer profile",
+      "w": 390,
+      "x": 1880,
+      "y": 18200
+    },
+    "STF-28.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-28 Account match check",
+      "w": 390,
+      "x": 2350,
+      "y": 18200
+    },
+    "STF-29.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-29 Support inbox",
+      "w": 390,
+      "x": 2820,
+      "y": 18200
+    },
+    "STF-30.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-30 Message",
+      "w": 390,
+      "x": 3290,
+      "y": 18200
+    },
+    "STF-31.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-31 Clinic info",
+      "w": 390,
+      "x": 3760,
+      "y": 20800
+    },
+    "STF-32.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-32 Booking and payment rules",
+      "w": 390,
+      "x": 4230,
+      "y": 20800
+    },
+    "STF-33.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-33 Policies",
+      "w": 390,
+      "x": 4700,
+      "y": 20800
+    },
+    "STF-34.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-34 Home layout",
+      "w": 390,
+      "x": 2820,
+      "y": 19500
+    },
+    "STF-35.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-35 Push message",
+      "w": 390,
+      "x": 3290,
+      "y": 19500
+    },
+    "STF-36.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-36 Media library",
+      "w": 390,
+      "x": 1410,
+      "y": 20800
+    },
+    "STF-37.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-37 Reports",
+      "w": 390,
+      "x": 5170,
+      "y": 20800
+    },
+    "STF-38.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-38 Team member",
+      "w": 390,
+      "x": 940,
+      "y": 20800
+    },
+    "STF-39.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-39 Archive or delete",
+      "w": 390,
+      "x": 3290,
+      "y": 20800
+    },
+    "STF-40.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-40 FAQ editor",
+      "w": 390,
+      "x": 1880,
+      "y": 20800
+    },
+    "STF-41.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-41 Import: file and columns",
+      "w": 390,
+      "x": 2350,
+      "y": 20800
+    },
+    "STF-42.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "STF-42 Import: review",
+      "w": 390,
+      "x": 2820,
+      "y": 20800
+    },
+    "SUP-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Help and contact",
+      "w": 390,
+      "x": 0,
+      "y": 6500
+    },
+    "SUP-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Help article: deposits",
+      "w": 390,
+      "x": 470,
+      "y": 6500
+    },
+    "SUP-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Contact with reference",
+      "w": 390,
+      "x": 940,
+      "y": 6500
+    },
+    "SUP-04.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "SUP-04 Ask us",
+      "w": 390,
+      "x": 1880,
+      "y": 6500
+    },
+    "SUP-05.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "SUP-05 Question sent",
+      "w": 390,
+      "x": 2350,
+      "y": 6500
+    },
+    "TAB-01.dc.html": {
+      "h": 834,
+      "is_interactive": true,
+      "title": "TAB-01 Service edit (tablet)",
+      "w": 1194,
+      "x": 0,
+      "y": 22100
+    },
+    "TAB-02.dc.html": {
+      "h": 834,
+      "is_interactive": true,
+      "title": "TAB-02 Campaign edit (tablet)",
+      "w": 1194,
+      "x": 1274,
+      "y": 22100
+    },
+    "TAB-03.dc.html": {
+      "h": 834,
+      "is_interactive": true,
+      "title": "TAB-03 Package edit (tablet)",
+      "w": 1194,
+      "x": 2548,
+      "y": 22100
+    },
+    "TAB-04.dc.html": {
+      "h": 834,
+      "is_interactive": true,
+      "title": "TAB-04 Professional edit (tablet)",
+      "w": 1194,
+      "x": 3822,
+      "y": 22100
+    },
+    "TAB-05.dc.html": {
+      "h": 834,
+      "is_interactive": true,
+      "title": "TAB-05 Booking and payment rules (tablet)",
+      "w": 1194,
+      "x": 5096,
+      "y": 22100
+    },
+    "TAB-06.dc.html": {
+      "h": 834,
+      "is_interactive": true,
+      "title": "TAB-06 Push message (tablet)",
+      "w": 1194,
+      "x": 6370,
+      "y": 22100
+    },
+    "TAB-07.dc.html": {
+      "h": 834,
+      "is_interactive": true,
+      "title": "TAB-07 Import review (tablet)",
+      "w": 1194,
+      "x": 7644,
+      "y": 22100
+    },
+    "TRT-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Treatments",
+      "w": 390,
+      "x": 0,
+      "y": 1300
+    },
+    "TRT-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Skin tightening treatments",
+      "w": 390,
+      "x": 470,
+      "y": 1300
+    },
+    "TRT-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Filters",
+      "w": 390,
+      "x": 940,
+      "y": 1300
+    },
+    "TRT-04.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Search, no results",
+      "w": 390,
+      "x": 1410,
+      "y": 1300
+    },
+    "TRT-05.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "12D HIFU",
+      "w": 390,
+      "x": 1880,
+      "y": 1300
+    },
+    "TRT-06.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Professional profile",
+      "w": 390,
+      "x": 2350,
+      "y": 1300
+    },
+    "TRT-07.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Treatment unavailable",
+      "w": 390,
+      "x": 2820,
+      "y": 1300
+    },
+    "VIS-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Visits",
+      "w": 390,
+      "x": 0,
+      "y": 13000
+    },
+    "VIS-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Visit detail",
+      "w": 390,
+      "x": 470,
+      "y": 13000
+    },
+    "VIS-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Reschedule",
+      "w": 390,
+      "x": 940,
+      "y": 13000
+    },
+    "VIS-04.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Cancel visit",
+      "w": 390,
+      "x": 1410,
+      "y": 13000
+    },
+    "VIS-05.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Visit cancelled",
+      "w": 390,
+      "x": 1880,
+      "y": 13000
+    },
+    "VIS-06.dc.html": {
+      "h": 844,
+      "radius": 44,
+      "title": "Late change",
+      "w": 390,
+      "x": 2350,
+      "y": 13000
+    },
+    "VIS-07.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Past visit",
+      "w": 390,
+      "x": 2820,
+      "y": 13000
+    },
+    "WAL-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Wallet",
+      "w": 390,
+      "x": 0,
+      "y": 14300
+    },
+    "WAL-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Clinic credit",
+      "w": 390,
+      "x": 470,
+      "y": 14300
+    },
+    "WAL-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Package",
+      "w": 390,
+      "x": 940,
+      "y": 14300
+    },
+    "WAL-04.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Gift card",
+      "w": 390,
+      "x": 1410,
+      "y": 14300
+    },
+    "WAL-05.dc.html": {
+      "h": 844,
+      "radius": 44,
+      "title": "Membership",
+      "w": 390,
+      "x": 1880,
+      "y": 14300
+    },
+    "WAL-06.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Receipts and history",
+      "w": 390,
+      "x": 2350,
+      "y": 14300
+    },
+    "WAL-07.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Buy a package",
+      "w": 390,
+      "x": 2820,
+      "y": 14300
+    },
+    "WAL-08.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Gift card: value",
+      "w": 390,
+      "x": 3290,
+      "y": 14300
+    },
+    "WAL-09.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Gift card: recipient",
+      "w": 390,
+      "x": 3760,
+      "y": 14300
+    },
+    "WAL-10.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Gift card: review",
+      "w": 390,
+      "x": 4230,
+      "y": 14300
+    },
+    "WAL-11.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Claim a gift card",
+      "w": 390,
+      "x": 4700,
+      "y": 14300
+    },
+    "WAL-12.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "Balance help",
+      "w": 390,
+      "x": 5170,
+      "y": 14300
+    },
+    "WAL-13.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "WAL-13 Gift design",
+      "w": 390,
+      "x": 5640,
+      "y": 14300
+    },
+    "WEB-01.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "WEB-01 Gift claim (web)",
+      "w": 390,
+      "x": 0,
+      "y": 23300
+    },
+    "WEB-02.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "WEB-02 Gift claimed (web)",
+      "w": 390,
+      "x": 470,
+      "y": 23300
+    },
+    "WEB-03.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "WEB-03 Delete account (web)",
+      "w": 390,
+      "x": 940,
+      "y": 23300
+    },
+    "WEB-04.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 44,
+      "title": "WEB-04 Deletion requested (web)",
+      "w": 390,
+      "x": 1410,
+      "y": 23300
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-09-24T23:05:48Z",
+    "v": 1
+  },
+  "designSystems": [
+    {
+      "artifact": "https://claude.ai/artifact/3uT3fESwWqALaQK6UjS3Uj",
+      "copiedAt": "2026-09-25T11:15:22Z",
+      "namespace": "nanobeauty",
+      "title": "Nano Beauty",
+      "version": "1790333761-65f6"
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "account": {
+      "kind": "title1",
+      "maxW": 5090,
+      "text": "Account and privacy",
+      "w": 240,
+      "x": 0,
+      "y": 4900
+    },
+    "auth": {
+      "kind": "title1",
+      "maxW": 3680,
+      "text": "Sign-in and account match",
+      "w": 240,
+      "x": 0,
+      "y": 3600
+    },
+    "booking": {
+      "kind": "title1",
+      "maxW": 5560,
+      "text": "Booking (hand-off and in-app modes, D33)",
+      "w": 240,
+      "x": 0,
+      "y": 10100
+    },
+    "entry": {
+      "kind": "title1",
+      "maxW": 1800,
+      "text": "Entry",
+      "w": 240,
+      "x": 0,
+      "y": 7500
+    },
+    "home": {
+      "kind": "title1",
+      "maxW": 1330,
+      "text": "Home",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "icon": {
+      "kind": "title1",
+      "maxW": 1180,
+      "text": "App icon (approved)",
+      "w": 240,
+      "x": 0,
+      "y": 16600
+    },
+    "motion": {
+      "kind": "title1",
+      "maxW": 3680,
+      "text": "Motion prototypes (press Play; Tweaks → motion: Reduced)",
+      "w": 240,
+      "x": 0,
+      "y": 15300
+    },
+    "offers": {
+      "kind": "title1",
+      "maxW": 1800,
+      "text": "Offers",
+      "w": 240,
+      "x": 0,
+      "y": 2300
+    },
+    "p9desk": {
+      "kind": "title1",
+      "maxW": 3680,
+      "text": "Staff: today, front desk and customers",
+      "w": 240,
+      "x": 0,
+      "y": 17900
+    },
+    "p9ntf": {
+      "kind": "title1",
+      "maxW": 5320,
+      "text": "Notification templates (spec 3)",
+      "w": 240,
+      "x": 0,
+      "y": 24300
+    },
+    "p9sell": {
+      "kind": "title1",
+      "maxW": 3680,
+      "text": "Staff: selling",
+      "w": 240,
+      "x": 0,
+      "y": 19200
+    },
+    "p9set": {
+      "kind": "title1",
+      "maxW": 5560,
+      "text": "Staff: content, people, settings and reports",
+      "w": 240,
+      "x": 0,
+      "y": 20500
+    },
+    "p9tab": {
+      "kind": "title1",
+      "maxW": 8000,
+      "text": "Staff tablet layouts (D39)",
+      "w": 240,
+      "x": 0,
+      "y": 21800
+    },
+    "p9web": {
+      "kind": "title1",
+      "maxW": 1800,
+      "text": "Mobile web pages (hosted outside the app)",
+      "w": 240,
+      "x": 0,
+      "y": 23000
+    },
+    "payment": {
+      "kind": "title1",
+      "maxW": 4150,
+      "text": "Payment (methods from settings, D37)",
+      "w": 240,
+      "x": 0,
+      "y": 11400
+    },
+    "staff": {
+      "kind": "title1",
+      "maxW": 6500,
+      "text": "Staff workspace: core (v2, roles D34)",
+      "w": 240,
+      "x": 0,
+      "y": 8800
+    },
+    "support": {
+      "kind": "title1",
+      "maxW": 2740,
+      "text": "Support and care",
+      "w": 240,
+      "x": 0,
+      "y": 6200
+    },
+    "treat": {
+      "kind": "title1",
+      "maxW": 3210,
+      "text": "Treatments",
+      "w": 240,
+      "x": 0,
+      "y": 1000
+    },
+    "visits": {
+      "kind": "title1",
+      "maxW": 3210,
+      "text": "Visits (hand-off and in-app modes, D33)",
+      "w": 240,
+      "x": 0,
+      "y": 12700
+    },
+    "wallet": {
+      "kind": "title1",
+      "maxW": 6030,
+      "text": "Wallet (sample rules A1–A8)",
+      "w": 240,
+      "x": 0,
+      "y": 14000
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "HOM-02.dc.html",
+    "HOM-03.dc.html",
+    "TRT-01.dc.html",
+    "TRT-02.dc.html",
+    "TRT-03.dc.html",
+    "TRT-04.dc.html",
+    "TRT-05.dc.html",
+    "TRT-06.dc.html",
+    "TRT-07.dc.html",
+    "OFR-01.dc.html",
+    "OFR-02.dc.html",
+    "OFR-03.dc.html",
+    "OFR-04.dc.html",
+    "AUT-01.dc.html",
+    "AUT-02.dc.html",
+    "AUT-03.dc.html",
+    "AUT-04.dc.html",
+    "AUT-05.dc.html",
+    "AUT-06.dc.html",
+    "AUT-07.dc.html",
+    "AUT-08.dc.html",
+    "ACC-01.dc.html",
+    "ACC-02.dc.html",
+    "ACC-03.dc.html",
+    "ACC-04.dc.html",
+    "ACC-05.dc.html",
+    "ACC-06.dc.html",
+    "ACC-07.dc.html",
+    "ACC-08.dc.html",
+    "ACC-09.dc.html",
+    "ACC-10.dc.html",
+    "ACC-11.dc.html",
+    "SUP-01.dc.html",
+    "SUP-02.dc.html",
+    "SUP-03.dc.html",
+    "CAR-01.dc.html",
+    "ENT-01.dc.html",
+    "ENT-02.dc.html",
+    "ENT-03.dc.html",
+    "ENT-04.dc.html",
+    "STF-01.dc.html",
+    "STF-02.dc.html",
+    "STF-03.dc.html",
+    "STF-04.dc.html",
+    "STF-05.dc.html",
+    "STF-06.dc.html",
+    "STF-07.dc.html",
+    "STF-08.dc.html",
+    "STF-09.dc.html",
+    "STF-10.dc.html",
+    "STF-11.dc.html",
+    "STF-12.dc.html",
+    "STF-13.dc.html",
+    "STF-14.dc.html",
+    "BKG-01.dc.html",
+    "BKG-02.dc.html",
+    "BKG-03.dc.html",
+    "BKG-04.dc.html",
+    "BKG-05.dc.html",
+    "BKG-06.dc.html",
+    "BKG-07.dc.html",
+    "BKG-08.dc.html",
+    "BKG-09.dc.html",
+    "PAY-01.dc.html",
+    "PAY-02.dc.html",
+    "PAY-03.dc.html",
+    "PAY-04.dc.html",
+    "PAY-05.dc.html",
+    "PAY-06.dc.html",
+    "PAY-07.dc.html",
+    "PAY-08.dc.html",
+    "PAY-09.dc.html",
+    "VIS-01.dc.html",
+    "VIS-02.dc.html",
+    "VIS-03.dc.html",
+    "VIS-04.dc.html",
+    "VIS-05.dc.html",
+    "VIS-06.dc.html",
+    "VIS-07.dc.html",
+    "WAL-01.dc.html",
+    "WAL-02.dc.html",
+    "WAL-03.dc.html",
+    "WAL-04.dc.html",
+    "WAL-05.dc.html",
+    "WAL-06.dc.html",
+    "WAL-07.dc.html",
+    "WAL-08.dc.html",
+    "WAL-09.dc.html",
+    "WAL-10.dc.html",
+    "WAL-11.dc.html",
+    "WAL-12.dc.html",
+    "MOT-01.dc.html",
+    "MOT-02.dc.html",
+    "MOT-03.dc.html",
+    "MOT-04.dc.html",
+    "MOT-05.dc.html",
+    "MOT-06.dc.html",
+    "MOT-07.dc.html",
+    "MOT-08.dc.html",
+    "ICN-01.dc.html",
+    "BKG-10.dc.html",
+    "BKG-11.dc.html",
+    "BKG-12.dc.html",
+    "WAL-13.dc.html",
+    "SUP-04.dc.html",
+    "SUP-05.dc.html",
+    "STF-23.dc.html",
+    "STF-24.dc.html",
+    "STF-25.dc.html",
+    "STF-26.dc.html",
+    "STF-27.dc.html",
+    "STF-28.dc.html",
+    "STF-29.dc.html",
+    "STF-30.dc.html",
+    "STF-15.dc.html",
+    "STF-16.dc.html",
+    "STF-17.dc.html",
+    "STF-18.dc.html",
+    "STF-19.dc.html",
+    "STF-20.dc.html",
+    "STF-34.dc.html",
+    "STF-35.dc.html",
+    "STF-21.dc.html",
+    "STF-22.dc.html",
+    "STF-38.dc.html",
+    "STF-36.dc.html",
+    "STF-40.dc.html",
+    "STF-41.dc.html",
+    "STF-42.dc.html",
+    "STF-39.dc.html",
+    "STF-31.dc.html",
+    "STF-32.dc.html",
+    "STF-33.dc.html",
+    "STF-37.dc.html",
+    "TAB-01.dc.html",
+    "TAB-02.dc.html",
+    "TAB-03.dc.html",
+    "TAB-04.dc.html",
+    "TAB-05.dc.html",
+    "TAB-06.dc.html",
+    "TAB-07.dc.html",
+    "WEB-01.dc.html",
+    "WEB-02.dc.html",
+    "WEB-03.dc.html",
+    "WEB-04.dc.html",
+    "NTF-01.dc.html",
+    "NTF-02.dc.html",
+    "NTF-03.dc.html",
+    "NTF-04.dc.html",
+    "NTF-05.dc.html",
+    "NTF-06.dc.html",
+    "NTF-07.dc.html",
+    "NTF-08.dc.html",
+    "NTF-09.dc.html",
+    "NTF-10.dc.html",
+    "NTF-11.dc.html",
+    "NTF-12.dc.html"
+  ],
+  "pages": [],
+  "title": "Nano Beauty App Screens"
+}

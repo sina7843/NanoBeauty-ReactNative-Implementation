@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home without a visit</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 16px; padding: 0 20px 16px;">
+<div style="display: flex; justify-content: space-between; align-items: center; min-height: 48px;">
+<x-import component-from-global-scope="NanoBeauty.Logo" height="{{logoH}}"></x-import>
+<div style="display: flex; gap: 4px;">
+<a href="ACC-04.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="bell" label="Messages"></x-import></a>
+<a href="ACC-01.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.IconButton" icon="user-circle" label="Account" variant="tonal"></x-import></a>
+</div>
+</div>
+<h1 class="display-md" style="margin: 0; color: var(--ink-display);">Welcome back, Maria</h1>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line);">
+<p class="overline" style="margin: 0; color: var(--ink-muted);">Last visit</p>
+<p class="headline" style="margin: 0;">Laser Hair Removal, 28 Aug</p>
+<p class="body" style="margin: 0; color: var(--ink-muted);">Next session usually due in 4 to 6 weeks.</p>
+<sc-if value="{{mode_inapp}}" hint-placeholder-val="{{true}}">
+<a href="BKG-03.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" icon="calendar-plus" full-width="{{yes}}">Book again</x-import></a>
+</sc-if><sc-if value="{{mode_handoff}}" hint-placeholder-val="{{true}}">
+<a href="BKG-12.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" icon="calendar-plus" icon-after="arrow-square-out" full-width="{{yes}}">Book again</x-import></a>
+</sc-if>
+</div>
+<a href="OFR-01.dc.html" style="text-decoration: none; display: block;"><x-import component-from-global-scope="NanoBeauty.OfferCard" photo="/_blob/97c35b0f4397d4f6ef8456f69c69ad9a" eyebrow="Autumn offer" title="15% off laser packages" ends-at="31 Oct, 11:59 pm PT"></x-import></a>
+</div>
+<div style="flex-shrink: 0; background: var(--surface);">
+<x-import component-from-global-scope="NanoBeauty.TabBar" value="home"></x-import>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"mode":{"editor": "enum", "options": ["handoff", "inapp"], "default": "handoff"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const mode = this.props.mode ?? 'handoff';
+return { theme: this.props.theme ?? 'light', yes: true, logoH: 30, mode, mode_handoff: mode === 'handoff', mode_inapp: mode === 'inapp' };
+}
+}
+</script>
+</body>
+</html>

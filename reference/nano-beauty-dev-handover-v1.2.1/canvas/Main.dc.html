@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Guest home</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nanobeauty/tokens.css">
+<link rel="stylesheet" href="ds/nanobeauty/components/bundle.css">
+<script src="ds/nanobeauty/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:'Fraunces';src:url(/_blob/6f18d9d1ccc0c664645e2a614e4b6be5) format('woff2');font-weight:100 900;font-style:normal}
+@font-face{font-family:'Fraunces';src:url(/_blob/9ef31c49535b7a4ffde4997ba7372961) format('woff2');font-weight:100 900;font-style:italic}
+@font-face{font-family:'Sora';src:url(/_blob/601fcfea98cab2239ee0b0c09edf077e) format('woff2');font-weight:100 800;font-style:normal}
+body{margin:0}
+a[href]{color:inherit}
+a[href] *{pointer-events:none}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--font-sans);">
+<div style="height: 54px; flex-shrink: 0;"></div>
+<div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 20px; padding: 0 20px 12px;">
+<div style="display: flex; justify-content: space-between; align-items: center; min-height: 48px;">
+<x-import component-from-global-scope="NanoBeauty.Logo" height="{{logoH}}"></x-import>
+<a href="AUT-01.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" variant="tertiary" size="sm">Sign in</x-import></a>
+</div>
+<sc-if value="{{state_offline}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="offline" title="You’re offline">Showing treatments saved on this phone. Booking needs a connection.</x-import>
+</sc-if>
+<sc-if value="{{state_oldlink}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Banner" tone="info" title="Link not found">That link is old or no longer available, so we brought you Home.</x-import>
+</sc-if>
+<sc-if value="{{state_loading}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.Skeleton" media="{{yes}}" lines="{{three}}"></x-import>
+</sc-if>
+<sc-if value="{{notLoading}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 16px;">
+<div style="border-radius: 28px; overflow: hidden;">
+<x-import component-from-global-scope="NanoBeauty.PhotoFrame" src="/_blob/b0858e93e8de27137ec94d6b1554c2c7" alt="Aesthetician giving a facial treatment at Nano Beauty" ratio="{{heroRatio}}"></x-import>
+</div>
+<h1 class="display-lg" style="margin: 0; color: var(--ink-display);">Skin care, by appointment.</h1>
+<p class="accent-italic" style="margin: 0; font-family: var(--font-serif); color: var(--ink-muted);">A medical spa in New Westminster</p>
+<sc-if value="{{rating_on}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="NanoBeauty.RatingSummary" rating="{{ratingVal}}" count="{{ratingCount}}" source="Fresha"></x-import>
+</sc-if>
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<a href="BKG-01.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" size="lg" full-width="{{yes}}">Book appointment</x-import></a>
+<a href="TRT-01.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Button" variant="secondary" full-width="{{yes}}">Explore treatments</x-import></a>
+</div>
+</div>
+</sc-if>
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<h2 class="title-md" style="margin: 0; color: var(--ink-display);">What would you like to work on?</h2>
+<div style="display: flex; gap: 8px; overflow-x: auto; margin: 0 -20px; padding: 0 20px; scrollbar-width: none;">
+<a href="TRT-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Chip">Pigmentation</x-import></a>
+<a href="TRT-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Chip">Skin tightening</x-import></a>
+<a href="TRT-02.dc.html" style="text-decoration: none;"><x-import component-from-global-scope="NanoBeauty.Chip">Unwanted hair</x-import></a>
+</div>
+</div>
+</div>
+<div style="flex-shrink: 0; background: var(--surface);">
+<x-import component-from-global-scope="NanoBeauty.TabBar" value="home"></x-import>
+<div style="height: 34px;"></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"state":{"editor": "enum", "options": ["ready", "loading", "offline", "oldlink"], "default": "ready"},"rating":{"editor": "enum", "options": ["off", "on"], "default": "off"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.props.state ?? 'ready';
+const rating = this.props.rating ?? 'off';
+return { ratingCount: 357, ratingVal: 4.9, heroRatio: ['offline','oldlink'].includes(this.props.state ?? 'ready') ? '16 / 5.6' : ((this.props.rating ?? 'off') === 'on' ? '16 / 9' : '16 / 11'), three: 3, theme: this.props.theme ?? 'light', yes: true, logoH: 38, state, state_ready: state === 'ready', state_loading: state === 'loading', state_offline: state === 'offline', state_oldlink: state === 'oldlink', notLoading: state !== 'loading', rating, rating_off: rating === 'off', rating_on: rating === 'on' };
+}
+}
+</script>
+</body>
+</html>

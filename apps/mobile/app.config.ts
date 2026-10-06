@@ -55,9 +55,20 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         monochromeImage: './assets/android-icon-monochrome.png',
       },
       predictiveBackGestureEnabled: true,
+      // Calendar uses the insert intent (guideline 08), so the module's calendar permissions are removed.
+      blockedPermissions: ['android.permission.READ_CALENDAR', 'android.permission.WRITE_CALENDAR'],
     },
-    plugins: ['expo-router', 'expo-status-bar', 'expo-secure-store'],
-    experiments: { typedRoutes: true },
+    plugins: [
+      'expo-router',
+      'expo-status-bar',
+      'expo-secure-store',
+      'expo-notifications',
+      // ENT-01: master frame artwork on logo plum (plum-800 #463E55) in both themes.
+      ['expo-splash-screen', { image: './assets/splash.png', imageWidth: 300, backgroundColor: '#463E55', dark: { image: './assets/splash.png', backgroundColor: '#463E55' } }],
+      // iOS 17+ write-only access for the system event sheet; never full calendar read access.
+      ['expo-calendar', { writeOnlyAccess: true, writeOnlyCalendarPermission: 'Allow Nano Beauty to add your visits to your calendar.' }],
+    ],
+    experiments: { typedRoutes: true, tsconfigPaths: false },
     extra: {
       appVariant: variant,
       apiUrl: apiUrl ?? null,

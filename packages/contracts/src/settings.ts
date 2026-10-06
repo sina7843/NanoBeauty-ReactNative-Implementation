@@ -86,6 +86,18 @@ export const clinicInfoSchema = z.object({
 });
 export type ClinicInfo = z.infer<typeof clinicInfoSchema>;
 
+const semver = z.string().regex(/^\d+\.\d+\.\d+$/, 'MAJOR.MINOR.PATCH');
+
+/** Remote entry gates (phase-7 route map: ENT-02 update required, ENT-03 maintenance). */
+export const appGateSchema = z.object({
+  minimumVersion: z.object({ ios: semver, android: semver }),
+  /** Store listing to open from "Update now". `null` until the listing exists. */
+  storeUrl: z.object({ ios: z.url().nullable(), android: z.url().nullable() }),
+  /** `null` = no maintenance. `until` is shown as clinic-local time. */
+  maintenance: z.object({ until: z.iso.datetime({ offset: true }) }).nullable(),
+});
+export type AppGate = z.infer<typeof appGateSchema>;
+
 /** `GET /v1/settings` body. `version` increments on every staff change. */
 export const settingsBootstrapSchema = z.object({
   version: z.number().int().positive(),
@@ -93,5 +105,6 @@ export const settingsBootstrapSchema = z.object({
   settings: settingsSchema,
   features: featuresSchema,
   clinic: clinicInfoSchema,
+  app: appGateSchema,
 });
 export type SettingsBootstrap = z.infer<typeof settingsBootstrapSchema>;

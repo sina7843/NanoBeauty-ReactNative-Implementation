@@ -115,8 +115,9 @@ export function buildApp({ config, db, integrations }: AppDeps) {
       settings: unknown;
       features: unknown;
       clinic: unknown;
+      app: unknown;
       updated_at: Date;
-    }>('SELECT version, settings, features, clinic, updated_at FROM app_settings WHERE id = 1');
+    }>('SELECT version, settings, features, clinic, app, updated_at FROM app_settings WHERE id = 1');
     if (!row) return sendError(request, reply, 503, 'service_unavailable', 'Settings are not initialised.');
 
     const etag = `"settings-v${row.version}"`;
@@ -129,6 +130,7 @@ export function buildApp({ config, db, integrations }: AppDeps) {
       settings: row.settings,
       features: row.features,
       clinic: row.clinic,
+      app: row.app,
     });
     if (!parsed.success) throw new Error(`Stored settings v${row.version} violate the contract: ${parsed.error.message}`);
     return parsed.data;

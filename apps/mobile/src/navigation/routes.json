@@ -1,0 +1,926 @@
+[
+  {
+    "route": "/",
+    "screens": "ENT-01..04",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/(tabs)/home",
+    "screens": "HOM-01..03",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/(tabs)/treatments",
+    "screens": "TRT-01",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/treatments/list",
+    "screens": "TRT-02,TRT-03",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/treatments/search",
+    "screens": "TRT-04",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/treatments/[id]",
+    "screens": "TRT-05,TRT-07",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/professionals/[id]",
+    "screens": "TRT-06",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/offers/[id]",
+    "screens": "OFR-01,OFR-04",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/offers/[id]/terms",
+    "screens": "OFR-02",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/promo",
+    "screens": "OFR-03",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/auth/phone",
+    "screens": "AUT-01",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/auth/code",
+    "screens": "AUT-02,AUT-08",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/auth/consents",
+    "screens": "AUT-03",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/auth/profile",
+    "screens": "AUT-04",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/auth/match",
+    "screens": "AUT-05..07",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/book/service",
+    "screens": "BKG-01",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/book/professional",
+    "screens": "BKG-02",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "inapp"
+  },
+  {
+    "route": "/book/time",
+    "screens": "BKG-03",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "inapp"
+  },
+  {
+    "route": "/book/details",
+    "screens": "BKG-04",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "inapp"
+  },
+  {
+    "route": "/book/review",
+    "screens": "BKG-05",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "inapp"
+  },
+  {
+    "route": "/book/result",
+    "screens": "BKG-06,BKG-07",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "inapp"
+  },
+  {
+    "route": "/book/fresha",
+    "screens": "BKG-08",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "handoff"
+  },
+  {
+    "route": "/book/fresha-return",
+    "screens": "BKG-09",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "handoff"
+  },
+  {
+    "route": "/pay/method",
+    "screens": "PAY-01",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/pay/card",
+    "screens": "PAY-02",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/pay/provider",
+    "screens": "PAY-03",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/pay/status",
+    "screens": "PAY-04..08",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/pay/receipt/[id]",
+    "screens": "PAY-09",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/(tabs)/visits",
+    "screens": "VIS-01",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/visits/[id]",
+    "screens": "VIS-02,VIS-04,VIS-07",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both",
+    "modeNote": "VIS-04 (cancel in the app) is in-app only; in hand-off VIS-02 sends changes to Fresha and late changes to VIS-06"
+  },
+  {
+    "route": "/visits/[id]/reschedule",
+    "screens": "VIS-03",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "inapp"
+  },
+  {
+    "route": "/visits/[id]/cancelled",
+    "screens": "VIS-05",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/visits/[id]/late-change",
+    "screens": "VIS-06",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/care/[visitId]",
+    "screens": "CAR-01",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/(tabs)/wallet",
+    "screens": "WAL-01",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/wallet/credit",
+    "screens": "WAL-02",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/wallet/packages/[id]",
+    "screens": "WAL-03",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/wallet/gift-cards/[id]",
+    "screens": "WAL-04",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/wallet/membership",
+    "screens": "WAL-05",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/wallet/history",
+    "screens": "WAL-06",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/wallet/buy-package",
+    "screens": "WAL-07",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/wallet/gift/value",
+    "screens": "WAL-08",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/wallet/gift/recipient",
+    "screens": "WAL-09",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/wallet/gift/review",
+    "screens": "WAL-10",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/wallet/claim",
+    "screens": "WAL-11",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/wallet/help",
+    "screens": "WAL-12",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/account",
+    "screens": "ACC-01",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/account/profile",
+    "screens": "ACC-02",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/account/notifications",
+    "screens": "ACC-03",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/account/inbox",
+    "screens": "ACC-04",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/account/inbox/[id]",
+    "screens": "ACC-05",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/account/privacy",
+    "screens": "ACC-06",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/account/data-request",
+    "screens": "ACC-07",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/account/delete",
+    "screens": "ACC-08..10",
+    "signIn": true,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/legal/[doc]",
+    "screens": "ACC-11",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/support",
+    "screens": "SUP-01",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/support/[article]",
+    "screens": "SUP-02",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/support/contact",
+    "screens": "SUP-03",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/staff",
+    "screens": "STF-01",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor",
+      "Front desk"
+    ]
+  },
+  {
+    "route": "/staff/services",
+    "screens": "STF-02",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/services/[id]",
+    "screens": "STF-03",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/taxonomy",
+    "screens": "STF-04",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/campaigns",
+    "screens": "STF-05",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/campaigns/[id]",
+    "screens": "STF-06",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/campaigns/[id]/preview",
+    "screens": "STF-07",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/approvals",
+    "screens": "STF-08",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner"
+    ]
+  },
+  {
+    "route": "/staff/approvals/[id]",
+    "screens": "STF-09",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner"
+    ]
+  },
+  {
+    "route": "/staff/support-content",
+    "screens": "STF-10",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/lookup",
+    "screens": "STF-11",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Front desk"
+    ]
+  },
+  {
+    "route": "/staff/audit",
+    "screens": "STF-12",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner"
+    ]
+  },
+  {
+    "route": "/staff/team",
+    "screens": "STF-13",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner"
+    ]
+  },
+  {
+    "route": "/staff/denied",
+    "screens": "STF-14",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor",
+      "Front desk"
+    ]
+  },
+  {
+    "route": "/book/areas",
+    "screens": "BKG-10",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both",
+    "modeNote": "Hand-off: area prices, then Continue in Fresha (BKG-12)"
+  },
+  {
+    "route": "/book/basket",
+    "screens": "BKG-11",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "inapp",
+    "modeNote": "Hand-off skips the basket; Fresha handles several services"
+  },
+  {
+    "route": "/book/how-it-works",
+    "screens": "BKG-12",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "handoff"
+  },
+  {
+    "route": "/wallet/gift/design",
+    "screens": "WAL-13",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/support/ask",
+    "screens": "SUP-04",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/support/ask/sent",
+    "screens": "SUP-05",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both"
+  },
+  {
+    "route": "/staff/packages",
+    "screens": "STF-15",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/packages/[id]",
+    "screens": "STF-16",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/gift-cards/settings",
+    "screens": "STF-17",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner"
+    ]
+  },
+  {
+    "route": "/staff/gift-cards/[id]",
+    "screens": "STF-18",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Front desk"
+    ]
+  },
+  {
+    "route": "/staff/promo-codes",
+    "screens": "STF-19",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/promo-codes/[id]",
+    "screens": "STF-20",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/professionals",
+    "screens": "STF-21",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/professionals/[id]",
+    "screens": "STF-22",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/today",
+    "screens": "STF-23",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Front desk"
+    ]
+  },
+  {
+    "route": "/staff/requests/[id]",
+    "screens": "STF-24",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Front desk"
+    ],
+    "modeNote": "Hand-off: move it in Fresha, then mark done"
+  },
+  {
+    "route": "/staff/redeem",
+    "screens": "STF-25",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Front desk"
+    ]
+  },
+  {
+    "route": "/staff/customers",
+    "screens": "STF-26",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Front desk"
+    ]
+  },
+  {
+    "route": "/staff/customers/[id]",
+    "screens": "STF-27",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Front desk"
+    ]
+  },
+  {
+    "route": "/staff/customers/[id]/match",
+    "screens": "STF-28",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Front desk"
+    ]
+  },
+  {
+    "route": "/staff/inbox",
+    "screens": "STF-29",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Front desk"
+    ]
+  },
+  {
+    "route": "/staff/inbox/[id]",
+    "screens": "STF-30",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Front desk"
+    ]
+  },
+  {
+    "route": "/staff/settings/clinic",
+    "screens": "STF-31",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner"
+    ]
+  },
+  {
+    "route": "/staff/settings/rules",
+    "screens": "STF-32",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner"
+    ]
+  },
+  {
+    "route": "/staff/policies",
+    "screens": "STF-33",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/home-layout",
+    "screens": "STF-34",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/push",
+    "screens": "STF-35",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner"
+    ]
+  },
+  {
+    "route": "/staff/media",
+    "screens": "STF-36",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/reports",
+    "screens": "STF-37",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner"
+    ]
+  },
+  {
+    "route": "/staff/team/[id]",
+    "screens": "STF-38",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner"
+    ]
+  },
+  {
+    "route": "(dialog) archive / delete / restore",
+    "screens": "STF-39",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/services/[id]/faq",
+    "screens": "STF-40",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/import",
+    "screens": "STF-41",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "/staff/import/review",
+    "screens": "STF-42",
+    "signIn": true,
+    "staffRole": true,
+    "bookingMode": "both",
+    "roles": [
+      "Owner",
+      "Editor"
+    ]
+  },
+  {
+    "route": "https://app.nanobeautystar.com/gift/[code]",
+    "screens": "WEB-01,WEB-02",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both",
+    "web": true,
+    "hostProposed": true
+  },
+  {
+    "route": "https://app.nanobeautystar.com/delete",
+    "screens": "WEB-03,WEB-04",
+    "signIn": false,
+    "staffRole": false,
+    "bookingMode": "both",
+    "web": true,
+    "hostProposed": true
+  }
+]

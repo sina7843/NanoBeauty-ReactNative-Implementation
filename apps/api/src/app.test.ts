@@ -56,6 +56,11 @@ describe('GET /v1/settings', () => {
     expect(body.settings.gift.expiry).toBeNull();
     expect(body.settings.sample).toBe(true);
     expect(body.clinic.timezone).toBe('America/Vancouver');
+    expect(body.app).toEqual({
+      minimumVersion: { ios: '1.0.0', android: '1.0.0' },
+      storeUrl: { ios: null, android: null },
+      maintenance: null,
+    });
   });
 
   it('answers 304 for a matching ETag', async () => {

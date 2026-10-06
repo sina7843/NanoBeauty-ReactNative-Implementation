@@ -77,6 +77,27 @@ Runtime boundaries:
 - `src/i18n/` — all user-facing strings (English only now, localization-ready).
 - Root `ErrorBoundary` in `src/app/_layout.tsx` — never shows raw error text.
 
+## Design system (NANO-01)
+
+- **Tokens:** `packages/design-tokens` is a verbatim copy of the handover `export/nano-tokens.ts`. `npm test` fails if it
+  drifts; re-copy with `npm run sync -w @nano/design-tokens` after a design change. Components use semantic roles only.
+- **Theme:** `src/theme/ThemeProvider` follows the OS light/dark setting. `useTheme()` gives `colors`, `type(style)` and
+  `elevation`; `<Text variant tone strong>` applies typography. Serif display styles cap at 1.3× font scale.
+- **Fonts (optional, owner-supplied):** drop licensed static TTFs into `apps/mobile/assets/fonts/` with the names in
+  that folder's README and restart Metro with `--clear`. Missing files fall back to system faces (Georgia/serif and
+  the platform sans) with the same size, line height and weight. Nothing is downloaded automatically.
+- **Components:** `src/components` (Button, IconButton, Badge/RoleBadge/SampleBadge, Banner, Card, ListRow/ListGroup,
+  TextField, Switch, Chip, SegmentedControl, Sheet, Dialog/ConfirmDialog, Toast, Skeleton, EmptyState, AsyncStatus,
+  PriceTag, PhotoFrame, Logo, StaffBar, PermissionNotice, TabBar, Screen, Icon).
+- **Showcase:** open `/dev` in a development or staging build (deep link `nanobeauty-dev://dev`). It renders every
+  component and state with a Light/Dark/System switch. Production builds redirect `/dev` to Home.
+- **Platform boundaries:** `src/platform/haptics.ts` (selection/confirmed/failed roles), `calendar.ts` (iOS write-only
+  event sheet, Android insert intent), `otp.ts` (one-time-code autofill props), `notifications.ts` (OS permission only).
+- **Navigation:** Option B tabs in `src/app/(tabs)`; `book/` and `pay/` are modal stacks; routes for the other booking
+  mode redirect to Home with "Link not found"; unknown links do the same (`+not-found`). Entry gates (`/`) read
+  `app.minimumVersion` / `app.maintenance` from `/v1/settings`.
+- Deviations from the boards are listed in `docs/deviations.md`.
+
 ## Troubleshooting
 
 - **`FATAL ERROR: Zone Allocation failed - process out of memory`** when PGlite starts (tests or `api:dev`): the

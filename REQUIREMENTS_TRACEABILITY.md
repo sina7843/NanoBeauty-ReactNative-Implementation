@@ -20,3 +20,15 @@ Add/update mappings as implementation progresses. Preserve requirement IDs from 
 | NFR 14 Maintainability (env config, API contracts) | NANO-00 | `packages/contracts`, `docs/development.md`, `docs/eas-builds.md` | — | Foundation |
 | NFR 15 Truth first | NANO-00 | no bundled settings defaults; dev payment adapter never `paid`; Fresha/legacy `not_connected` | `app.test.ts`, `bootstrap.test.ts` | Foundation |
 | ICN-01 app icon | NANO-00 | handover icon set wired in `app.config.ts` | — | Icon done; splash in NANO-01 |
+| Build plan M0-2 design tokens and theme (light/dark, Fraunces + Sora, Phosphor) | NANO-01 | `packages/design-tokens`, `apps/mobile/src/theme/*`, `src/components/Icon.tsx` | `src/theme/theme.test.ts` (contrast both themes, font fallback), token drift check | Done (brand fonts await owner files) |
+| Build plan M0-3 core components | NANO-01 | `apps/mobile/src/components/*`, showcase `src/app/dev/index.tsx` | `src/components/components.test.tsx` | Done |
+| Build plan M0-4 navigation shell (D28 Option B), modal stacks, unknown deep link → Home with note | NANO-01 | `src/app/(tabs)`, `src/app/book`, `src/app/pay`, `src/app/+not-found.tsx`, `src/navigation/routes.ts` | `src/navigation/routes.test.ts`, `src/navigation/router.test.tsx` | Done (screens are placeholders until their prompts) |
+| D33 in-app routes unreachable in hand-off | NANO-01 | `src/navigation/routes.ts`, `book/_layout.tsx`, `pay/_layout.tsx` | `routes.test.ts`, `router.test.tsx` | Done |
+| ENT-01 splash | NANO-01 | `expo-splash-screen` config + `src/app/index.tsx` in-app continuation | — | Done (verify on release build) |
+| ENT-02 update required, ENT-03 maintenance | NANO-01 | contract `app` gate, migration 0002, `src/entry/*`, root layout gate | `decide.test.ts`, `router.test.tsx`, API `app.test.ts` | Done |
+| ENT-04 notification primer | NANO-01 | `src/app/index.tsx`, `src/platform/notifications.ts` | `decide.test.ts` | Done (push registration NANO-09) |
+| ICN-01 app icon + splash wiring | NANO-01 | `app.config.ts`, `assets/icon.png`, `assets/splash.png`, Android adaptive layers | `config:check` | Done |
+| Guideline 08 platform differences (back, sheets, system bars, press feedback, switch, OTP metadata, calendar, haptics, predictive back, no dynamic colour) | NANO-01 | native Stack/formSheet, `components/press.ts`, `Field.tsx` Switch, `src/platform/*`, `app.config.ts` | component tests; device checks pending | Implemented; device verification pending |
+| NFR 01 accessibility basics (48 dp targets, labels, text scaling, reduced motion) | NANO-01 | components (`hitSlopFor`, a11y roles/labels, `maxFontSizeMultiplier` on display styles, `useReducedMotion`) | `components.test.tsx`, `theme.test.ts` | Foundation; VoiceOver/TalkBack pass pending (NANO-10) |
+| NFR 16 design fidelity / deviations log | NANO-01 | `docs/deviations.md` | — | Started |
+| ADMIN 01/07 staff visual boundary | NANO-01 | `StaffBar`, `RoleBadge`, `PermissionNotice` | `components.test.tsx` | Components done; workspace NANO-07 |

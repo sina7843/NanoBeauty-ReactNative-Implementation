@@ -1,0 +1,16 @@
+# Deviations from the boards
+
+Every place the build differs from a board or component spec, with the reason (handover CLAUDE.md →
+"Working conventions"). Design QA (Phase 8) checks against this list.
+
+| Board / component | Deviation | Reason | Revisit |
+| --- | --- | --- | --- |
+| ENT-02, ENT-03 "Call the clinic" | Opens the dialer with `clinic.phone` instead of linking to SUP-03; hidden while `clinic.phone` is `null`. | SUP-03 is built in NANO-03; the clinic phone is still a placeholder (open-items C7), and dialling nothing would be a dead end. | NANO-03 (route to SUP-03 if preferred) |
+| ENT-02 "Update now" | Disabled on iOS until the server supplies `app.storeUrl.ios`. Android falls back to `market://details?id=<package>`. | The App Store ID doesn't exist yet. | NANO-11 |
+| ENT-03 maintenance time | "about 11 pm PT" on the board is rendered from the server's `app.maintenance.until` in the clinic time zone. | Times come from server data, never constants. | — |
+| ENT-04 timing | Shown once after first launch, only while the OS notification permission is undetermined. | Board doesn't specify timing; avoids repeated prompts. | NANO-09 (may move after first booking) |
+| TopBar `large` | Top-level tabs render a static serif large title in content; it doesn't collapse into the bar on scroll yet. | Native large titles can't use the serif token on Android; collapse behaviour lands with the real tab screens. | NANO-03 |
+| TabBar label weight | Unselected labels use the same 12/16 semibold `overline` metrics as selected ones (web reference uses 500). | No 12 px medium token exists; selection is still carried by fill icon, pill and colour. | Design QA |
+| Badge text | Uses `overline` size/weight in sentence case. | Badge spec is 12/16 semibold; `overline` is the only 12 px token. | — |
+| Motion | React Native `Animated` + token durations/easings instead of Reanimated. | Only the toast animates in NANO-01; avoids a native dependency until needed. | When a screen needs gesture-driven motion |
+| Storybook | Dev-only route `/dev` (component showcase with light/dark/system switch) instead of Storybook. | Storybook for React Native adds a second app entry and native config for little gain here. | — |

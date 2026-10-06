@@ -1,33 +1,100 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, type ErrorBoundaryProps } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import * as SystemUI from 'expo-system-ui';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { Button, EmptyState, ToastProvider } from '../components';
 import { t } from '../i18n';
 import { wireQueryToDevice } from '../lib/network';
+import { loadBrandFonts } from '../theme/fonts';
+import { ThemeProvider, useTheme } from '../theme/ThemeProvider';
+import { getEnv } from '../config/env';
+import { Maintenance, UpdateRequired } from '../entry/GateScreens';
+import { useHardGate } from '../entry/useEntry';
 
 wireQueryToDevice();
+// ENT-01: keep the native splash (plum + master frame) until fonts are resolved; the entry route then
+// continues the same splash in-app while the remote gate is checked.
+SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 /** Root crash screen. Never shows `error.message` — it can carry internals. */
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   if (__DEV__) console.error(error);
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={styles.center}>
-        <Text accessibilityRole="header" style={styles.title}>
-          {t('error.title')}
-        </Text>
-        <Text style={styles.body}>{t('error.body')}</Text>
-        <Pressable accessibilityRole="button" onPress={retry} style={styles.button}>
-          <Text>{t('error.retry')}</Text>
-        </Pressable>
-      </SafeAreaView>
+      <ThemeProvider>
+        <CrashScreen retry={retry} />
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }
 
+function CrashScreen({ retry }: { retry: () => void }) {
+  const { colors } = useTheme();
+  return (
+    <SafeAreaView style={[styles.flex, styles.center, { backgroundColor: colors.bg }]}>
+      <EmptyState
+        icon="warning-circle"
+        title={t('error.title')}
+        actions={
+          <Button fullWidth onPress={retry}>
+            {t('error.retry')}
+          </Button>
+        }
+      >
+        {t('error.body')}
+      </EmptyState>
+    </SafeAreaView>
+  );
+}
+
+function Navigator() {
+  const { colors, scheme } = useTheme();
+  useEffect(() => {
+    // Window background behind screens/transitions follows the theme (no white flash in dark mode).
+    SystemUI.setBackgroundColorAsync(colors.bg).catch(() => undefined);
+  }, [colors.bg]);
+  const devTools = getEnv().appVariant !== 'production';
+  const gate = useHardGate();
+  if (gate) {
+    return (
+      <>
+        {gate === 'update' ? <UpdateRequired /> : <Maintenance />}
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      </>
+    );
+  }
+  return (
+    <View style={[styles.flex, { backgroundColor: colors.bg }]}>
+      <Stack
+        screenOptions={{
+          contentStyle: { backgroundColor: colors.bg },
+          headerStyle: { backgroundColor: colors.bg },
+          headerTintColor: colors.primary,
+          headerTitleStyle: { color: colors.ink },
+          headerShadowVisible: false,
+          headerBackButtonDisplayMode: 'default',
+        }}
+      >
+        <Stack.Screen name="index" options={{ headerShown: false, animation: 'none' }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'none' }} />
+        {/* Modal stacks for booking and payment (phase-7 route map). */}
+        <Stack.Screen name="book" options={{ headerShown: false, presentation: 'modal' }} />
+        <Stack.Screen name="pay" options={{ headerShown: false, presentation: 'modal' }} />
+        <Stack.Screen name="account/index" options={{ title: t('nav.account') }} />
+        <Stack.Screen name="dev" options={{ headerShown: false }} redirect={!devTools} />
+        <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+      </Stack>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+    </View>
+  );
+}
+
 export default function RootLayout() {
+  const [fonts, setFonts] = useState<ReadonlySet<string> | null>(null);
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -38,23 +105,29 @@ export default function RootLayout() {
         },
       }),
   );
+
+  useEffect(() => {
+    loadBrandFonts().then(setFonts);
+  }, []);
+  useEffect(() => {
+    if (fonts) SplashScreen.hideAsync().catch(() => undefined);
+  }, [fonts]);
+
+  if (!fonts) return null; // native splash is still covering the screen
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        <View style={styles.flex}>
-          <Stack screenOptions={{ headerShown: false }} />
-        </View>
-        <StatusBar style="auto" />
+        <ThemeProvider fonts={fonts}>
+          <ToastProvider>
+            <Navigator />
+          </ToastProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
   );
 }
 
-// ponytail: un-themed placeholder styles; NANO-01 replaces them with nano-tokens.
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
-  title: { fontSize: 20, fontWeight: '600' },
-  body: { fontSize: 16 },
-  button: { minHeight: 48, minWidth: 48, justifyContent: 'center', paddingHorizontal: 16 },
+  center: { justifyContent: 'center' },
 });

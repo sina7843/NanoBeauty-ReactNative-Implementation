@@ -4,7 +4,7 @@ Mark a prompt complete only after implementation is reviewed, relevant checks pa
 
 ## Implementation prompts
 - [x] NANO-00
-- [ ] NANO-01
+- [x] NANO-01
 - [ ] NANO-02
 - [ ] NANO-03
 - [ ] NANO-04
@@ -17,6 +17,6 @@ Mark a prompt complete only after implementation is reviewed, relevant checks pa
 - [ ] NANO-11
 
 ## Current work
-- Active item: `NANO-01`
-- Last completed item: `NANO-00` (2026-10-06; independent review: approve with notes, fixes applied)
-- Blockers: none for NANO-01. Open placeholders: client-owned bundle ID/package name, API hosting URLs, EAS project/account (see DECISIONS.md, docs/eas-builds.md).
+- Active item: `NANO-02`
+- Last completed item: `NANO-01` (2026-10-06; independent review: needs changes → all findings fixed and re-tested)
+- Blockers: none for NANO-02. Open: on-device iOS/Android smoke test of navigation/entry (no Android SDK on the build machine; iOS via EAS), owner-supplied font files, client-owned app IDs, API hosting URLs, EAS account (see DECISIONS.md, docs/eas-builds.md, docs/deviations.md).

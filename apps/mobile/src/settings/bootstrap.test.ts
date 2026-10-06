@@ -35,6 +35,11 @@ const sample: SettingsBootstrap = {
     directionsUrl: null,
     supportReplyTime: null,
   },
+  app: {
+    minimumVersion: { ios: '1.0.0', android: '1.0.0' },
+    storeUrl: { ios: null, android: null },
+    maintenance: null,
+  },
 };
 
 function memoryStore(initial: Record<string, string> = {}): KeyValueStore & { data: Record<string, string> } {

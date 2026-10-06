@@ -1,64 +1,57 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { getEnv } from '../config/env';
+import { Redirect, useRouter } from 'expo-router';
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Button, EmptyState, Logo } from '../components';
+import { EntryLayout } from '../entry/GateScreens';
+import { markPrimerSeen, useEntry } from '../entry/useEntry';
 import { t } from '../i18n';
-import { useIsOnline } from '../lib/network';
-import { useSettings } from '../settings/useSettings';
+import { requestNotificationPermission } from '../platform/notifications';
+import { useTheme } from '../theme/ThemeProvider';
 
-/**
- * Temporary NANO-00 boot screen proving the providers, settings boundary and network status work.
- * NANO-01 replaces it with ENT-01 (splash) and the Option B navigation shell.
- */
-export default function FoundationScreen() {
-  const online = useIsOnline();
-  const settings = useSettings();
+/** `/` — ENT-01 splash and ENT-04 notification primer (ENT-02/03 are root-level gates). */
+export default function Entry() {
+  const screen = useEntry();
+  // Update/maintenance are rendered by the root layout over everything; keep the splash underneath.
+  if (screen === null || screen === 'update' || screen === 'maintenance') return <Splash />;
+  if (screen === 'primer') return <NotificationPrimer />;
+  return <Redirect href="/home" />;
+}
 
+/** ENT-01, continued in-app after the native splash so the hand-over is seamless. */
+function Splash() {
+  const { colors } = useTheme();
   return (
-    <SafeAreaView style={styles.screen}>
-      {online === false && (
-        <View accessibilityRole="alert" style={styles.banner}>
-          <Text>{t('offline.banner')}</Text>
-        </View>
-      )}
-      <Text accessibilityRole="header" style={styles.title}>
-        {t('app.name')}
-      </Text>
-      <Text>{t('foundation.title')}</Text>
-      <Text>{t('foundation.variant', { variant: getEnv().appVariant })}</Text>
+    <View style={[styles.splash, { backgroundColor: colors.surfaceBrand }]} accessibilityLabel={t('app.name')}>
+      <Logo variant="frame" height={300} />
+    </View>
+  );
+}
 
-      {settings.isPending && (
-        <View accessibilityLiveRegion="polite" style={styles.row}>
-          <ActivityIndicator />
-          <Text>{t('foundation.loading')}</Text>
-        </View>
-      )}
-      {settings.isError && (
-        <View accessibilityLiveRegion="polite" style={styles.block}>
-          <Text>{t('foundation.settingsError')}</Text>
-          <Pressable accessibilityRole="button" onPress={() => settings.refetch()} style={styles.button}>
-            <Text>{t('error.retry')}</Text>
-          </Pressable>
-        </View>
-      )}
-      {settings.data && (
-        <View style={styles.block}>
-          <Text>
-            {settings.data.source === 'cache'
-              ? t('foundation.settingsFromCache', { version: settings.data.data.version })
-              : t('foundation.settingsLive', { version: settings.data.data.version })}
-          </Text>
-          <Text>{t('foundation.bookingMode', { mode: settings.data.data.settings.bookingMode })}</Text>
-        </View>
-      )}
-    </SafeAreaView>
+/** ENT-04 — asks only for the OS permission; offers stay off (marketing consent is separate). */
+function NotificationPrimer() {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const finish = async (ask: boolean) => {
+    setBusy(true);
+    if (ask) await requestNotificationPermission();
+    await markPrimerSeen();
+    router.replace('/home');
+  };
+  return (
+    <EntryLayout align="end">
+      <EmptyState icon="bell" title={t('ent.primer.title')}>
+        {t('ent.primer.body')}
+      </EmptyState>
+      <Button size="lg" fullWidth loading={busy} onPress={() => finish(true)}>
+        {t('ent.primer.turnOn')}
+      </Button>
+      <Button variant="tertiary" fullWidth disabled={busy} onPress={() => finish(false)}>
+        {t('ent.primer.notNow')}
+      </Button>
+    </EntryLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, padding: 24, gap: 8 },
-  title: { fontSize: 24, fontWeight: '600' },
-  banner: { padding: 12, borderRadius: 8, borderWidth: StyleSheet.hairlineWidth },
-  row: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  block: { gap: 8, marginTop: 16 },
-  button: { minHeight: 48, justifyContent: 'center' },
+  splash: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 });

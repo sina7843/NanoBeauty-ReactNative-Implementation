@@ -1,18 +1,46 @@
-import { useLocalSearchParams } from 'expo-router';
-import { NotBuiltYet, Screen, Text } from '../../components';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
+import { Banner, Screen, SupportContext } from '../../components';
+import { hoursLabel, isOpenNow } from '../../content/clinic';
 import { t } from '../../i18n';
+import { useSettings } from '../../settings/useSettings';
 
-/** SUP-03 contact (NANO-03). Arrives with the case reference from the account match (SUP 04). */
+/**
+ * `/support/contact` — SUP-03 contextual help (SUP 02–04): the reference travels with the person so they don't
+ * explain from scratch. Open/closed is only claimed when the clinic has published its hours.
+ */
 export default function SupportContact() {
-  const { reference } = useLocalSearchParams<{ reference?: string }>();
+  const params = useLocalSearchParams<{ reference?: string; topic?: string }>();
+  // Display only; accept reference-shaped values so a link can't inject arbitrary text.
+  const reference = /^[A-Z0-9-]{4,24}$/.test(params.reference ?? '') ? params.reference : undefined;
+  const topic = params.topic && params.topic.length <= 60 ? params.topic : undefined;
+  const settings = useSettings().data?.data;
+  const [now] = useState(() => Date.now());
+  const hours = settings?.settings.clinicHours ?? null;
+  const open = settings ? isOpenNow(hours, settings.clinic.timezone, now) : null;
+  const reply = settings?.clinic.supportReplyTime;
   return (
-    <Screen topInset={false}>
-      <NotBuiltYet screen="SUP-03 Contact" prompt="NANO-03" />
-      {reference ? (
-        <Text variant="body" selectable>
-          {t('async.reference', { reference })}
-        </Text>
-      ) : null}
-    </Screen>
+    <>
+      <Stack.Screen options={{ title: t('sup.contactTitle') }} />
+      <Screen topInset={false}>
+        <SupportContext
+          topic={topic ?? t('support.generalTopic')}
+          reference={reference}
+          hours={hoursLabel(hours) ?? t('sup.hoursPending')}
+          response={reply ? t('sup.replies', { time: reply }) : undefined}
+          phone={settings?.clinic.phone ?? null}
+        />
+        {open === false ? (
+          <Banner tone="info" title={t('support.closed.title')}>
+            {t('support.closed.body')}
+          </Banner>
+        ) : null}
+        {open === true ? (
+          <Banner tone="success" title={t('support.open.title')}>
+            {t('support.open.body')}
+          </Banner>
+        ) : null}
+      </Screen>
+    </>
   );
 }

@@ -3,6 +3,7 @@ export { Badge, RoleBadge, SampleBadge, type StaffRole, type Tone } from './Badg
 export { Banner, type BannerTone } from './Banner';
 export { Button, IconButton } from './Button';
 export { Card, ListGroup, ListRow } from './Card';
+export { CareTimeline, FAQBlock, OfferCard, RatingSummary, SearchField, ServiceCard, SupportContext, UrgentLine } from './Discovery';
 export { NotBuiltYet, Screen, TabBar, TABS } from './Chrome';
 export { Chip, SegmentedControl, Switch, TextField } from './Field';
 export { Icon, type IconName } from './Icon';

@@ -6,7 +6,7 @@ Mark a prompt complete only after implementation is reviewed, relevant checks pa
 - [x] NANO-00
 - [x] NANO-01
 - [x] NANO-02
-- [ ] NANO-03
+- [x] NANO-03
 - [ ] NANO-04
 - [ ] NANO-05
 - [ ] NANO-06
@@ -17,6 +17,6 @@ Mark a prompt complete only after implementation is reviewed, relevant checks pa
 - [ ] NANO-11
 
 ## Current work
-- Active item: `NANO-03`
-- Last completed item: `NANO-02` (2026-10-06; independent review: approve with notes, all nine findings fixed and re-tested)
-- Blockers: none for NANO-03. Open: SMS OTP vendor (E3), session lengths confirmation (E3), old-app export for real account matching (C3), terms/privacy text (R1), biometric re-entry design (NANO-05), on-device iOS/Android smoke test, plus earlier items (fonts, app IDs, API hosting, EAS account).
+- Active item: `NANO-04`
+- Last completed item: `NANO-03` (2026-10-06; independent review: approve with notes, all nine findings fixed and re-tested)
+- Blockers: none for NANO-04 (Fresha prefill/read-back E2 is designed as "not synced" states). Open: real clinic content and photo rights (C5, R07), clinic hours/phone/parking (C7), terms/privacy text (R1), SMS vendor (E3), old-app export (C3), on-device smoke test, fonts, app IDs, API hosting, EAS account.

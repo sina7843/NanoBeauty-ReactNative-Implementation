@@ -1,4 +1,5 @@
 export * from './auth';
+export * from './content';
 export * from './http';
 export * from './phone';
 export * from './settings';

@@ -1,6 +1,6 @@
 # Nano Beauty Implementation Status
 
-NANO-00 (foundation), NANO-01 (design system, navigation, entry) and NANO-02 (sign-in, sessions, consents, account match, permissions) are implemented. Product content screens start in NANO-03; routes that later prompts build show a visibly-marked "Not built yet" placeholder (Sample badge).
+NANO-00 (foundation), NANO-01 (design system, navigation, entry) NANO-02 (sign-in, sessions, consents, account match, permissions) and NANO-03 (home, treatments, offers, promo codes, support, legal) are implemented. Booking hand-off and visits start in NANO-04; routes that later prompts build show a visibly-marked "Not built yet" placeholder (Sample badge).
 
 ## Build targets
 - Android QA: installable APK — EAS profile `qa` (also `development` dev-client APK)
@@ -16,9 +16,10 @@ NANO-00 (foundation), NANO-01 (design system, navigation, entry) and NANO-02 (si
 - Navigation: Option B tabs (Home, Treatments, Visits, Wallet) + Book action + profile button; `book/` and `pay/` modal stacks; D33 booking-mode route gating; unknown/old links → Home with "Link not found"
 - Entry: ENT-01 native + in-app splash, ENT-02 update required and ENT-03 maintenance as root-level gates from `/v1/settings → app`, ENT-04 notification primer (once)
 - Platform boundaries: haptics roles, calendar (iOS write-only sheet / Android insert intent), OTP autofill props, notification permission
-- API: Fastify 5 + TypeScript, PostgreSQL (node-postgres) with forward-only SQL migrations (0001 settings, 0002 app gate, 0003 identity); PGlite in-memory for tests and no-Docker dev
+- API: Fastify 5 + TypeScript, PostgreSQL (node-postgres) with forward-only SQL migrations (0001 settings, 0002 app gate, 0003 identity, 0004 content); PGlite in-memory for tests and no-Docker dev
 - Variants: development / staging / production with side-by-side placeholder IDs `com.nanobeauty.app[.dev|.staging]`
 - Booking default: Fresha hand-off (`settings.bookingMode = handoff`); in-app booking routes unreachable in hand-off
+- Discovery (NANO-03): server content with ETag caching and 7-day offline copies; on-device search/filters; server-clock offers; sample content badged
 - Identity (NANO-02): phone + 6-digit code, rotating opaque sessions with replay revoke, append-only versioned consents, server-side role→permission map, legacy match cases with audited staff resolution (no value moved)
 - Integrations: deterministic dev adapters only (OTP with dev sink, messages, payments, Fresha, legacy — sample records only in local dev); analytics boundary on mobile is consent-gated with a dev sink
 - CI: `.github/workflows/ci.yml` — typecheck, lint, tests (PGlite + real Postgres service), token drift, Expo config, expo-doctor, JS bundle export, API build
@@ -29,6 +30,7 @@ NANO-00 (foundation), NANO-01 (design system, navigation, entry) and NANO-02 (si
 - Auth: `POST /v1/auth/otp/start|verify`, `/v1/auth/refresh`, `/v1/auth/logout`
 - Me: `GET /v1/me`, `POST /v1/me/consents`, `PUT /v1/me/profile`, `POST /v1/me/legacy-match` (+ `/decision`)
 - Staff: `GET /v1/staff/match-cases`, `POST /v1/staff/match-cases/:id/resolve` (permission-checked, audited)
+- Content: `GET /v1/catalog`, `GET /v1/content/home`, `GET /v1/offers/:id`, `POST /v1/promo/validate`, `GET /v1/support`, `GET /v1/support/articles/:id`, `GET /v1/policies/:id`, `POST /v1/support/questions`
 - Dev only: `GET /v1/dev/otp` (`DEV_OTP_SINK`, local development)
 
 ## Verification gaps

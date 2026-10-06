@@ -60,11 +60,11 @@ describe('loadSettings', () => {
     const store = memoryStore();
     const result = await loadSettings(store, async () => ok(sample));
     expect(result).toEqual({ data: sample, source: 'network' });
-    expect(JSON.parse(store.data[SETTINGS_CACHE_KEY]!)).toEqual({ etag: '"settings-v3"', data: sample });
+    expect(JSON.parse(store.data[SETTINGS_CACHE_KEY]!)).toMatchObject({ etag: '"settings-v3"', data: sample });
   });
 
   it('revalidates with If-None-Match and reuses the cache on 304', async () => {
-    const store = memoryStore({ [SETTINGS_CACHE_KEY]: JSON.stringify({ etag: '"settings-v3"', data: sample }) });
+    const store = memoryStore({ [SETTINGS_CACHE_KEY]: JSON.stringify({ etag: '"settings-v3"', savedAt: '2026-10-06T10:00:00.000Z', data: sample }) });
     const request = jest.fn(async () => ({ status: 304, headers: new Headers(), body: null }));
     const result = await loadSettings(store, request);
     expect(request).toHaveBeenCalledWith('/v1/settings', { headers: { 'if-none-match': '"settings-v3"' } });
@@ -72,7 +72,7 @@ describe('loadSettings', () => {
   });
 
   it('falls back to the last server copy when offline', async () => {
-    const store = memoryStore({ [SETTINGS_CACHE_KEY]: JSON.stringify({ etag: null, data: sample }) });
+    const store = memoryStore({ [SETTINGS_CACHE_KEY]: JSON.stringify({ etag: null, savedAt: '2026-10-06T10:00:00.000Z', data: sample }) });
     const result = await loadSettings(store, async () => {
       throw new ApiError('network', null, null);
     });

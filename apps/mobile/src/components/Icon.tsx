@@ -41,6 +41,16 @@ import { WarningCircleIcon } from 'phosphor-react-native/src/icons/WarningCircle
 import { WifiSlashIcon } from 'phosphor-react-native/src/icons/WifiSlash';
 import { XIcon } from 'phosphor-react-native/src/icons/X';
 import { View } from 'react-native';
+import { ArrowSquareOutIcon } from 'phosphor-react-native/src/icons/ArrowSquareOut';
+import { CalendarPlusIcon } from 'phosphor-react-native/src/icons/CalendarPlus';
+import { SlidersHorizontalIcon } from 'phosphor-react-native/src/icons/SlidersHorizontal';
+import { CreditCardIcon } from 'phosphor-react-native/src/icons/CreditCard';
+import { MapTrifoldIcon } from 'phosphor-react-native/src/icons/MapTrifold';
+import { MapPinIcon } from 'phosphor-react-native/src/icons/MapPin';
+import { CarIcon } from 'phosphor-react-native/src/icons/Car';
+import { StarIcon } from 'phosphor-react-native/src/icons/Star';
+import { CaretDownIcon } from 'phosphor-react-native/src/icons/CaretDown';
+import { CaretUpIcon } from 'phosphor-react-native/src/icons/CaretUp';
 import { useTheme } from '../theme/ThemeProvider';
 
 // Names follow Phosphor (and the handover boards). Add an import + entry when a screen needs a new one.
@@ -84,6 +94,16 @@ const ICONS = {
   'warning-circle': WarningCircleIcon,
   'wifi-slash': WifiSlashIcon,
   x: XIcon,
+  'arrow-square-out': ArrowSquareOutIcon,
+  'calendar-plus': CalendarPlusIcon,
+  'sliders-horizontal': SlidersHorizontalIcon,
+  'credit-card': CreditCardIcon,
+  'map-trifold': MapTrifoldIcon,
+  'map-pin': MapPinIcon,
+  'car': CarIcon,
+  'star': StarIcon,
+  'caret-down': CaretDownIcon,
+  'caret-up': CaretUpIcon,
 } satisfies Record<string, PhosphorIcon>;
 
 export type IconName = keyof typeof ICONS;

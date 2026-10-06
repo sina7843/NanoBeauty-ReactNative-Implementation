@@ -12,6 +12,7 @@ import { ZodError } from 'zod';
 import type { Config } from './config';
 import type { Db } from './db';
 import { registerAuthRoutes } from './auth/routes';
+import { registerContentRoutes } from './content/routes';
 import { HttpError } from './errors';
 import type { Integrations } from './integrations';
 
@@ -109,6 +110,8 @@ export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
   app.register(async (scope) => {
     await scope.register(rateLimit, { global: false });
     registerAuthRoutes(scope, { now: auth.now ?? Date.now, devOtpSink: auth.devOtpSink });
+    // Public discovery content (NANO-03): catalogue, offers, promo checks, support, policies.
+    registerContentRoutes(scope, { now: auth.now ?? Date.now });
   });
 
   app.get('/health/live', async () => ({ status: 'ok' as const }));

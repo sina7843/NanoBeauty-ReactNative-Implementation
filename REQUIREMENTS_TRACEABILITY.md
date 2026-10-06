@@ -42,3 +42,15 @@ Add/update mappings as implementation progresses. Preserve requirement IDs from 
 | AUTH 10 Legal destinations | NANO-02 | "Read the terms" → `/legal/terms` (ACC-11 placeholder) | — | Blocked by R1 (terms text) |
 | AUTH 11 / AUT-05…07 Legacy account match | NANO-02 | `/v1/me/legacy-match`, decision cases, staff resolve with audit, `AccountMatch` | `auth.test.ts` (matched, mismatch, notfound, unavailable, self-resolve, repeat) | Done (real data awaits C3) |
 | D34 Server-side permission map | NANO-02 | `role_permissions`, `staff_roles`, `/v1/me.permissions`, `requirePermission` (403 + `missingPermission`), `useAuth().can()` | `auth.test.ts` (Owner vs Editor) | Done |
+| DISC 01 / DISC 11 / HOM-01…03 Home | NANO-03 | `src/app/(tabs)/home.tsx`, `GET /v1/content/home` | `discovery.test.tsx`, API `content.test.ts` | Guest home done; signed-in shows hand-off card + offers (visits/value NANO-04/06) |
+| DISC 02 / DISC 09 Catalogue | NANO-03 | `services`/`categories` tables, `GET /v1/catalog` (no drafts) | `content.test.ts` | Done (sample content) |
+| DISC 03 / DISC 10 / TRT-04 Search | NANO-03 | `src/catalog/search.ts`, `treatments/search.tsx` | `search.test.ts`, `discovery.test.tsx` | Done |
+| DISC 04 / DISC 05 / TRT-01…03 Browse and filters | NANO-03 | `(tabs)/treatments.tsx`, `treatments/list.tsx` | `search.test.ts`, `discovery.test.tsx` | Done |
+| DISC 06 / DISC 07 / DISC 12 / TRT-05, TRT-07 Detail | NANO-03 | `treatments/[id].tsx`, `PriceTag`, `FAQBlock`, `CareTimeline` | `discovery.test.tsx`, `components.test.tsx` | Done (CAR-01 per visit in NANO-04) |
+| DISC 13 / DISC 14 Rating and financing lines | NANO-03 | `RatingSummary` (settings `ratingLine`), financing from `financingLine` + payment switches | `discovery.test.tsx` | Done |
+| TRT-06 Professional | NANO-03 | `professionals/[id].tsx`, consent-gated `profile` | `content.test.ts` | Done |
+| PROMO 02–05, 09, 11 / OFR-01, 02, 04 Offers | NANO-03 | `campaigns`, `GET /v1/offers/:id`, `offers/[id]/*`, `offerClock.ts` | `content.test.ts`, `discovery.test.tsx` | Done (staff publishing NANO-08) |
+| PROMO 06 / OFR-03 Promo codes | NANO-03 | `POST /v1/promo/validate`, `promo.tsx` | `content.test.ts`, `discovery.test.tsx` | Done (redemption NANO-06) |
+| SUP 01–06 / SUP-01…05 Support | NANO-03 | `support/*`, `GET /v1/support`, `POST /v1/support/questions`, `SupportContext`, `clinic.ts` | `content.test.ts`, `clinic.test.ts`, `discovery.test.tsx` | Done (in-app messaging NANO-05) |
+| ACC-11 Legal | NANO-03 | `policies`, `GET /v1/policies/:id`, `legal/[doc].tsx` | `content.test.ts`, `discovery.test.tsx` | Done (real text R1) |
+| NFR 09 Offline reads | NANO-03 | `content/cache.ts`, `ContentGate` | `cache.test.ts`, `discovery.test.tsx` | Done for public content |

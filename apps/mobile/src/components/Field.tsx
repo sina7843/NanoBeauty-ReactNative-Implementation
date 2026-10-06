@@ -141,14 +141,19 @@ export interface ChipProps {
   onPress?: () => void;
 }
 
-/** Selected = tint fill + primary border + check mark, so selection never relies on colour alone. */
-export function Chip({ children, selected = false, count, icon, disabled, onPress }: ChipProps) {
+/**
+ * Selected = tint fill + primary border + check mark, so selection never relies on colour alone.
+ * Filters and choices pass `selected` (toggle semantics); navigation chips leave it out (button semantics).
+ */
+export function Chip({ children, selected: selectedProp, count, icon, disabled, onPress }: ChipProps) {
+  const toggle = selectedProp !== undefined;
+  const selected = selectedProp ?? false;
   const { colors } = useTheme();
   const fg = disabled ? colors.inkDisabled : selected ? colors.onTint : colors.ink;
   return (
     <Pressable
-      accessibilityRole="togglebutton"
-      accessibilityState={{ checked: selected, disabled: !!disabled }}
+      accessibilityRole={toggle ? 'togglebutton' : 'button'}
+      accessibilityState={toggle ? { checked: selected, disabled: !!disabled } : { disabled: !!disabled }}
       accessibilityLabel={count == null ? children : `${children}, ${count}`}
       disabled={disabled}
       onPress={onPress}

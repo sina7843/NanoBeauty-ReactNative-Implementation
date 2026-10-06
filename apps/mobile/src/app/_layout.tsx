@@ -89,6 +89,8 @@ function Navigator() {
         <Stack.Screen name="account/index" options={{ title: t('nav.account') }} />
         <Stack.Screen name="legal/[doc]" options={{ title: '' }} />
         <Stack.Screen name="support/contact" options={{ title: '' }} />
+        {/* OFR-02 terms as a native sheet (iOS page sheet with detents, Android bottom sheet). */}
+        <Stack.Screen name="offers/[id]/terms" options={{ headerShown: false, presentation: 'formSheet', sheetAllowedDetents: [0.6, 1], sheetGrabberVisible: true }} />
         <Stack.Screen name="dev" options={{ headerShown: false }} redirect={!devTools} />
         <Stack.Screen name="+not-found" options={{ headerShown: false }} />
       </Stack>

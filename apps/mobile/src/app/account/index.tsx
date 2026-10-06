@@ -11,6 +11,7 @@ export default function Account() {
     <Screen topInset={false}>
       <NotBuiltYet screen="ACC-01 Account" prompt="NANO-05" />
       <ListGroup>
+        <ListRow icon="question" title={t('sup.title')} onPress={() => router.push('/support')} />
         <ListRow
           title={t('account.signOut')}
           chevron={false}

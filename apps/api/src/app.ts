@@ -17,6 +17,8 @@ import { registerContentRoutes } from './content/routes';
 import { registerVisitRoutes } from './visits/routes';
 import { HttpError } from './errors';
 import type { Integrations } from './integrations';
+import { registerEntityRoutes, type ApprovalHandler } from './staff/entities';
+import { registerOpsRoutes } from './staff/ops';
 import { registerStaffRoutes } from './staff/routes';
 import { registerWalletRoutes, type WalletKit } from './wallet/routes';
 
@@ -26,6 +28,8 @@ declare module 'fastify' {
     integrations: Integrations;
     /** Background work the server runs on a timer (gift sends, payment reconciliation); set once routes load. */
     jobs: { wallet?: WalletKit };
+    /** Approvals queue dispatch for NANO-08 draftable items (services are handled in staff/routes.ts). */
+    approvalHandlers: Map<string, ApprovalHandler>;
   }
 }
 
@@ -92,6 +96,7 @@ export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
   app.decorate('db', db);
   app.decorate('integrations', integrations);
   app.decorate('jobs', {});
+  app.decorate('approvalHandlers', new Map<string, ApprovalHandler>());
   app.addHook('onRequest', async (request, reply) => {
     reply.header(REQUEST_ID_HEADER, request.id);
   });
@@ -133,6 +138,9 @@ export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
     app.jobs.wallet = registerWalletRoutes(scope, { now: auth.now ?? Date.now, kit });
     // Staff workspace core and content governance (NANO-07).
     registerStaffRoutes(scope, { now: auth.now ?? Date.now });
+    // Staff selling, operations, settings and reports (NANO-08).
+    registerEntityRoutes(scope, { now: auth.now ?? Date.now });
+    registerOpsRoutes(scope, { now: auth.now ?? Date.now });
   });
 
   app.get('/health/live', async () => ({ status: 'ok' as const }));

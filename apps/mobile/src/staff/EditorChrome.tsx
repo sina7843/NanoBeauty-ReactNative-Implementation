@@ -2,9 +2,21 @@ import { useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { Banner, Button, Dialog, Text, useToast } from '../components';
 import { t } from '../i18n';
-import type { useServiceEditor } from './useServiceEditor';
+import type { Permission } from '@nano/contracts';
 
-type Editor = ReturnType<typeof useServiceEditor>;
+/** What the shared chrome needs from an editor: services (useServiceEditor) and NANO-08 items (useEntityEditor). */
+type Editor = {
+  service: { missing: string[]; highRiskChanges: string[]; state: string } | null;
+  problem: 'conflict' | 'offline' | 'failed' | 'invalid' | null;
+  readOnly: boolean;
+  restored: boolean;
+  busy: string | null;
+  dirty: boolean;
+  loadLatest: () => unknown;
+  save: () => Promise<unknown>;
+  submit: () => Promise<unknown>;
+  publish: () => Promise<'published' | 'waiting' | null>;
+};
 
 /** STF-03 shared states on every staff edit screen: conflict, offline (read only), savefailed, restored edits. */
 export function EditorBanners({ editor }: { editor: Editor }) {
@@ -47,19 +59,36 @@ export function EditorBanners({ editor }: { editor: Editor }) {
  * Save draft, then Publish (Owner, after a confirm step — STF-09 self-publish) or Submit (Editor). An Editor never
  * sees Publish (D35); the server enforces the same.
  */
-export function EditorActions({ editor, name, secondApprover }: { editor: Editor; name: string; secondApprover: boolean }) {
+export function EditorActions({
+  editor,
+  name,
+  secondApprover,
+  publishPermission = 'content.publish',
+}: {
+  editor: Editor;
+  name: string;
+  secondApprover: boolean;
+  publishPermission?: Permission;
+}) {
   const { me } = useAuth();
   const toast = useToast();
   const [confirming, setConfirming] = useState(false);
-  const canPublish = !!me?.permissions.includes('content.publish');
+  const canPublish = !!me?.permissions.includes(publishPermission);
   const off = editor.readOnly || editor.problem === 'conflict' || !editor.service || editor.service.state === 'archived';
   const s = editor.service;
-  const price = s?.highRiskChanges.includes('price');
+  const risky = s?.highRiskChanges ?? [];
+  const price = risky.includes('price') && publishPermission === 'content.publish';
+  const other = price ? [] : (risky.filter((r) => r === 'price' || r === 'offerTerms' || r === 'policy') as ('price' | 'offerTerms' | 'policy')[]);
   return (
     <>
       {price ? (
         <Banner tone="info" title={t('svc.priceChange')}>
           {canPublish ? (secondApprover ? t('svc.priceChangeSecond') : t('svc.priceChangeOwner')) : t('svc.priceChangeEditor')}
+        </Banner>
+      ) : null}
+      {other.length ? (
+        <Banner tone="info" title={t('stf.highRisk')}>
+          {[...other.map((r) => t(`stf.highRisk.${r}`)), canPublish ? (secondApprover ? t('stf.secondApprover') : null) : t('stf.editorSubmit')].filter(Boolean).join(' ')}
         </Banner>
       ) : null}
       <Button

@@ -92,7 +92,7 @@ export const moveServiceSchema = z.object({ version, categoryId: z.string().min(
 
 export const approvalSchema = z.object({
   id: z.string(),
-  itemType: z.literal('service'),
+  itemType: z.enum(['service', 'package', 'campaign', 'promo', 'professional', 'policy']),
   itemId: z.string(),
   itemName: z.string(),
   summary: z.string(),

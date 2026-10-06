@@ -92,7 +92,7 @@ export function registerContentRoutes(app: FastifyInstance, { now }: { now: () =
            FROM services WHERE status <> 'draft' ORDER BY sort`,
       ),
       db.query<{ id: string; name: string; title: string | null; bio: string | null; photo: string | null; profile_consent: boolean; sample: boolean }>(
-        'SELECT id, name, title, bio, photo, profile_consent, sample FROM professionals ORDER BY name',
+        `SELECT id, name, title, bio, photo, profile_consent, sample FROM professionals WHERE NOT hidden AND status = 'live' ORDER BY name`,
       ),
     ]);
     const catalog: Catalog = catalogSchema.parse({
@@ -149,9 +149,13 @@ export function registerContentRoutes(app: FastifyInstance, { now }: { now: () =
   app.get('/v1/offers/:id', async (request) => {
     const { id } = z.object({ id: z.string().min(1).max(80) }).parse(request.params);
     const t = now();
-    const [row] = await db.query<CampaignRow>(`SELECT ${CAMPAIGN_COLUMNS} FROM campaigns WHERE id = $1 AND published`, [id]);
+    // Once customers have seen an offer, a link to it keeps working: archived (unpublished) ones show as ended (OFR-04).
+    const [row] = await db.query<CampaignRow & { published: boolean }>(
+      `SELECT ${CAMPAIGN_COLUMNS}, published FROM campaigns WHERE id = $1 AND (published OR first_published_at IS NOT NULL)`,
+      [id],
+    );
     if (!row) throw new HttpError(404, 'not_found', 'Offer not found.');
-    const offer = toOffer(row, t);
+    const offer = row.published ? toOffer(row, t) : { ...toOffer(row, t), state: 'expired' as const };
     const others =
       offer.state === 'live'
         ? []
@@ -179,7 +183,7 @@ export function registerContentRoutes(app: FastifyInstance, { now }: { now: () =
       used: number;
       per_person: number;
       archived: boolean;
-    }>('SELECT * FROM promo_codes WHERE code = $1', [code]);
+    }>('SELECT * FROM promo_codes WHERE code = $1 AND live', [code]);
     const result = (state: PromoValidation['state'], extra: Partial<PromoValidation> = {}): PromoValidation => ({
       state,
       code,
@@ -231,7 +235,7 @@ export function registerContentRoutes(app: FastifyInstance, { now }: { now: () =
   app.get('/v1/policies/:id', async (request, reply) => {
     const { id } = z.object({ id: z.string().min(1).max(40) }).parse(request.params);
     const [p] = await db.query<{ id: string; title: string; version: string; updated_on: Date | string; sections: unknown; sample: boolean }>(
-      'SELECT id, title, version, updated_on, sections, sample FROM policies WHERE id = $1',
+      'SELECT id, title, version_label AS version, updated_on, sections, sample FROM policies WHERE id = $1',
       [id],
     );
     if (!p) throw new HttpError(404, 'not_found', 'Policy not found.');

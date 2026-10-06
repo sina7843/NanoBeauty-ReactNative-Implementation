@@ -212,6 +212,21 @@ Runtime boundaries:
   `/v1/staff/imports[/:id/mapping|review|decisions|publish|submit]`, `/v1/staff/team[/invites|/:id/roles|/:id/remove]`,
   `/v1/staff/audit`, `/v1/staff/summary`, public `GET /v1/media/:id`.
 
+## Staff selling, operations, settings and reports (NANO-08)
+
+- **Roles:** Owner = everything; Editor drafts and submits services, packages, campaigns, promo codes, professionals
+  and policies (never publishes); Front desk = Today, requests, redeem, lookup, customers, account checks, inbox, gift
+  resend/change recipient.
+- **Selling items** follow the services model (version, draft, submit/publish, approvals, archive rules). New packages
+  and promo codes are drafts customers can't buy or use until published; campaigns start from a template (last year's
+  dates moved forward) and can be paused, ended or reused for next year.
+- **Settings** (clinic, rules, gift settings, Home layout) save against `/v1/settings` `version`; a stale copy gets 409.
+  Apps see changes on their next settings fetch (ETag), no rebuild.
+- **Counter redemption:** `/staff/redeem` → find by mobile or gift code → choose → amount → confirm. The ledger
+  changes only on confirm; the receipt is the server's answer.
+- **Push:** `/staff/push` schedules a message for customers who said yes to offers; nothing is delivered until NANO-09.
+- **Endpoints:** see IMPLEMENTATION_STATUS.md → "Staff selling and operations".
+
 ## Troubleshooting
 
 - **`FATAL ERROR: Zone Allocation failed - process out of memory`** when PGlite starts (tests or `api:dev`): the

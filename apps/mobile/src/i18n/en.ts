@@ -1,6 +1,8 @@
+import { enOps } from './en.ops';
 // User-facing English strings. Product copy is verbatim from the handover boards (canvas/*.dc.html) and the
 // web reference components; the board ID is noted where it comes from a board.
 export const en = {
+  ...enOps,
   'app.name': 'Nano Beauty',
 
   'common.cancel': 'Cancel',

@@ -3,6 +3,7 @@ import {
   attemptConfirmSchema,
   attemptCreateSchema,
   balanceHelpSchema,
+  giftActionSchema,
   giftCodeSchema,
   giftSendTimeSchema,
   maskPhone,
@@ -23,6 +24,7 @@ import {
   type Package,
   type PaymentMethod,
   type Receipt,
+  type StaffGift,
 } from '@nano/contracts';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
@@ -402,6 +404,11 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
           [`refund:${refundId}`],
         );
         for (const h of held) {
+          // A voided gift's refund failing: the value goes back onto a card nobody can use, so staff must sort it out.
+          const [w] = await tx.query<{ status: string }>('SELECT status FROM wallet_instruments WHERE id = $1', [h.instrument_id]);
+          if (w?.status === 'voided') {
+            await notify(tx, { audience: 'staff', permission: 'payments.refund', template: 'voided_gift_refund_failed', data: { reference: r.reference, instrumentId: h.instrument_id }, now: t });
+          }
           await ledger(tx, h.instrument_id, 'reverse', h.amount_cents !== null ? { amount: -h.amount_cents } : { sessions: -h.sessions! }, 'Refund failed, value returned', r.reference, o!.id, null, `reverse:${refundId}`, t);
         }
       } else if (o!.paid_attempt_id === a!.id) {
@@ -511,7 +518,7 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
 
   app.get('/v1/packages', async (): Promise<Package[]> => {
     const rows = await db.query<{ id: string; name: string; service_id: string | null; sessions: number; price_cents: number; regular_cents: number | null; validity_months: number | null; status: Package['status']; terms: string[]; sample: boolean }>(
-      `SELECT * FROM packages WHERE status <> 'archived' ORDER BY sort`,
+      `SELECT * FROM packages WHERE status IN ('live', 'unavailable') ORDER BY sort`,
     );
     return rows.map((p) => ({
       id: p.id,
@@ -959,6 +966,124 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
     const r = await refund(attemptId, body.amountCents, body.reason, ctx.customerId, `staff:${attemptId}:${body.idempotencyKey}`, true);
     await db.transaction((tx) => audit(tx, request, `refund:${r.reference}`, 'status', null, String(r.status), body.reason));
     return r;
+  });
+
+  // ---------- Staff gift-card actions (STF-17): resend, change recipient, void ----------
+
+  type StaffGiftRow = InstrumentRow & { order_amount: number | null; paid_attempt_id: string | null; buyer_name: string | null };
+  async function staffGift(tx: Queryable, id: string, lock = false): Promise<StaffGiftRow> {
+    const [row] = await tx.query<StaffGiftRow>(
+      `SELECT w.*, o.amount_cents AS order_amount, o.paid_attempt_id, NULLIF(TRIM(CONCAT(c.first_name, ' ', c.last_name)), '') AS buyer_name
+         FROM wallet_instruments w LEFT JOIN orders o ON o.id = w.order_id LEFT JOIN customers c ON c.id = w.buyer_id
+        WHERE w.id = $1 AND w.kind = 'gift_card' ${lock ? 'FOR UPDATE OF w' : ''}`,
+      [id],
+    );
+    if (!row) throw new HttpError(404, 'not_found', 'Gift card not found.');
+    return row;
+  }
+  async function giftView(tx: Queryable, id: string): Promise<StaffGift> {
+    const g = await staffGift(tx, id);
+    const remaining = (await ledgerSums(tx, [g.id])).get(g.id)?.amount ?? 0;
+    let refunded = 0;
+    if (g.paid_attempt_id) {
+      const [r] = await tx.query<{ n: string }>(`SELECT COALESCE(SUM(amount_cents), 0)::text AS n FROM refunds WHERE attempt_id = $1 AND status <> 'failed'`, [g.paid_attempt_id]);
+      refunded = Number(r!.n);
+    }
+    return {
+      id: g.id,
+      reference: `GC-${g.code_last4 ?? g.id.slice(0, 4).toUpperCase()}`,
+      remainingCents: remaining,
+      originalCents: g.order_amount ?? 0,
+      recipientName: g.recipient_name,
+      recipientPhoneMasked: g.recipient_phone ? maskPhone(g.recipient_phone) : null,
+      buyerName: g.buyer_name,
+      delivery: g.delivery,
+      sendAt: g.send_at?.toISOString() ?? null,
+      sentAt: g.sent_at?.toISOString() ?? null,
+      claimed: !!g.claimed_at,
+      voided: g.status === 'voided',
+      refundableCents: g.paid_attempt_id && g.status !== 'voided' ? Math.max(0, Math.min(remaining, (g.order_amount ?? 0) - refunded)) : 0,
+    };
+  }
+
+  app.get('/v1/staff/gifts', { preHandler: staffOnly('giftcard.actions') }, async (request) => {
+    const { q } = z.object({ q: z.string().trim().max(60).optional() }).parse(request.query);
+    const term = q?.replace(/^GC-/i, '').toLowerCase() || null;
+    const rows = await db.query<{ id: string }>(
+      `SELECT id FROM wallet_instruments WHERE kind = 'gift_card'
+          AND ($1::text IS NULL OR position($1 in lower(COALESCE(recipient_name, ''))) > 0 OR lower(code_last4) = $1)
+        ORDER BY created_at DESC LIMIT 50`,
+      [term],
+    );
+    return Promise.all(rows.map((r) => giftView(db, r.id)));
+  });
+  app.get('/v1/staff/gifts/:id', { preHandler: staffOnly('giftcard.actions') }, async (request) => giftView(db, z.object({ id: z.uuid() }).parse(request.params).id));
+
+  // Resend = a new code by text; the old code stops working (that is also how a lost code is reissued).
+  app.post('/v1/staff/gifts/:id/resend', { preHandler: staffOnly('giftcard.actions'), ...throttled }, async (request) => {
+    const { id } = z.object({ id: z.uuid() }).parse(request.params);
+    const body = giftActionSchema.parse(request.body);
+    const g = await staffGift(db, id);
+    if (g.buyer_id === auth(request).customerId) throw new HttpError(403, 'forbidden', 'Another staff member must act on your own gift card.');
+    if (g.claimed_at) throw new HttpError(409, 'conflict', 'This gift card is already in a Wallet: nothing to resend.');
+    if (g.status === 'voided') throw new HttpError(409, 'conflict', 'This gift card was voided.');
+    await db.transaction((tx) => audit(tx, request, `gift:${id}`, 'code', g.code_last4, 'new code sent', body.reason ?? 'resent by staff'));
+    // A scheduled gift is sent now; a sent (or failed) one gets a fresh code.
+    await deliverGift(id, { resend: g.delivery !== 'scheduled' });
+    return giftView(db, id);
+  });
+
+  app.post('/v1/staff/gifts/:id/recipient', { preHandler: staffOnly('giftcard.actions') }, async (request) => {
+    const { id } = z.object({ id: z.uuid() }).parse(request.params);
+    const body = giftActionSchema.parse(request.body);
+    const phone = normalizePhone(body.recipientPhone ?? '');
+    if (!body.recipientName || !phone) throw new HttpError(400, 'validation_failed', 'Give the new recipient’s name and mobile number.');
+    if (!body.reason) throw new HttpError(400, 'validation_failed', 'A reason is required to change the recipient.');
+    // Redirecting value to yourself (or a card you bought) needs another staff member.
+    const [actor] = await db.query<{ phone_e164: string }>('SELECT phone_e164 FROM customers WHERE id = $1', [auth(request).customerId]);
+    if (actor?.phone_e164 === phone) throw new HttpError(403, 'forbidden', 'Another staff member must send a gift card to you.');
+    const resend = await db.transaction(async (tx) => {
+      const g = await staffGift(tx, id, true);
+      if (g.buyer_id === auth(request).customerId) throw new HttpError(403, 'forbidden', 'Another staff member must act on your own gift card.');
+      if (g.claimed_at) throw new HttpError(409, 'conflict', 'This gift card is already in a Wallet: the recipient can’t change.');
+      if (g.status === 'voided') throw new HttpError(409, 'conflict', 'This gift card was voided.');
+      if (g.recipient_name === body.recipientName && g.recipient_phone === phone) return false;
+      await tx.query('UPDATE wallet_instruments SET recipient_name = $2, recipient_phone = $3 WHERE id = $1', [id, body.recipientName, phone]);
+      const was = [g.recipient_name, g.recipient_phone ? maskPhone(g.recipient_phone) : null].filter(Boolean).join(' ');
+      await audit(tx, request, `gift:${id}`, 'recipient', was || null, `${body.recipientName} ${maskPhone(phone)}`, body.reason ?? 'recipient changed');
+      return g.delivery !== 'scheduled';
+    });
+    // Already sent: the old code stops working and the new person gets their own.
+    if (resend) await deliverGift(id, { resend: true });
+    return giftView(db, id);
+  });
+
+  // Void stops the card. With `refund`, the unused value goes back to the buyer's payment first (refund holds it).
+  app.post('/v1/staff/gifts/:id/void', { preHandler: staffOnly('giftcard.void') }, async (request) => {
+    const { id } = z.object({ id: z.uuid() }).parse(request.params);
+    const body = giftActionSchema.parse(request.body);
+    if (!body.reason) throw new HttpError(400, 'validation_failed', 'A reason is required to void a gift card.');
+    const ctx = auth(request);
+    const before = await giftView(db, id);
+    if (before.voided) return before;
+    const g = await staffGift(db, id);
+    if (g.buyer_id === ctx.customerId || g.customer_id === ctx.customerId) throw new HttpError(403, 'forbidden', 'Another staff member must void your own gift card.');
+    if (body.refund && before.refundableCents > 0) {
+      if (!ctx.permissions.includes('payments.refund')) throw new HttpError(403, 'forbidden', 'Your role can’t do this.', { missingPermission: 'payments.refund' });
+      await refund(g.paid_attempt_id!, before.refundableCents, body.reason, ctx.customerId, `void:${id}:${body.idempotencyKey}`, true);
+    }
+    const t = now();
+    await db.transaction(async (tx) => {
+      const locked = await staffGift(tx, id, true);
+      if (locked.status === 'voided') return;
+      const left = (await ledgerSums(tx, [id])).get(id)?.amount ?? 0;
+      // Whatever wasn't refunded leaves the card too; the ledger says why.
+      if (left > 0) await ledger(tx, id, 'adjust', { amount: -left }, 'Gift card voided', null, null, ctx.customerId, `void:${id}`, t);
+      await tx.query(`UPDATE wallet_instruments SET status = 'voided', delivery = CASE WHEN delivery = 'scheduled' THEN 'cancelled' ELSE delivery END WHERE id = $1`, [id]);
+      await audit(tx, request, `gift:${id}`, 'status', 'active', 'voided', body.reason!);
+      if (locked.customer_id) await notify(tx, { audience: 'customer', customerId: locked.customer_id, template: 'gift_voided', data: { instrumentId: id }, now: t });
+    });
+    return giftView(db, id);
   });
 
   /**

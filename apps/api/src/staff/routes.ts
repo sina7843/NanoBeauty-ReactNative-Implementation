@@ -16,7 +16,9 @@ import {
   rolesUpdateSchema,
   saveDraftSchema,
   versionedSchema,
+  ENTITY_TYPES,
   type Approval,
+  type EntityType,
   type AuditEntry,
   type CategoryRow,
   type ImportField,
@@ -38,6 +40,7 @@ import { authenticate, type AuthContext } from '../auth/session';
 import type { Db, Queryable } from '../db';
 import { HttpError } from '../errors';
 import { notify } from '../visits/routes';
+import { ENTITY_PERMS } from './entities';
 
 const iso = (ms: number) => new Date(ms).toISOString();
 const DAY = 24 * 3600_000;
@@ -177,6 +180,9 @@ export function registerStaffRoutes(app: FastifyInstance, { now }: { now: () => 
     );
   };
   const conflict = () => new HttpError(409, 'conflict', 'Someone else changed this. Load the latest version to continue.');
+  const requirePermission = (request: FastifyRequest, p: Permission) => {
+    if (!auth(request).permissions.includes(p)) throw new HttpError(403, 'forbidden', 'Your role can’t do this.', { missingPermission: p });
+  };
 
   async function settings() {
     const [s] = await db.query<{ settings: { secondApprover: { on: boolean; fields: string[] } } }>('SELECT settings FROM app_settings WHERE id = 1');
@@ -522,26 +528,44 @@ export function registerStaffRoutes(app: FastifyInstance, { now }: { now: () => 
 
   // ---------- Approvals (STF-08/09) ----------
 
-  app.get('/v1/staff/approvals', pre('content.publish'), async (request) => {
+  /** Who may decide an approval: the publish permission of its item type (services: content.publish). */
+  const publishPerm = (type: string): Permission => (type === 'service' ? 'content.publish' : ENTITY_PERMS[type as EntityType].publish);
+  const publishable = (request: FastifyRequest) => ['service', ...ENTITY_TYPES].filter((t) => auth(request).permissions.includes(publishPerm(t)));
+  const approverGate = {
+    onRequest: async (request: FastifyRequest) => {
+      await can()(request);
+      if (!publishable(request).length) throw new HttpError(403, 'forbidden', 'Your role can’t do this.', { missingPermission: 'content.publish' });
+    },
+  };
+
+  app.get('/v1/staff/approvals', approverGate, async (request) => {
     const me = auth(request).customerId;
-    const waiting = await db.query<{ id: string; item_id: string; summary: string; fields: string[]; submitted_by: string; created_at: Date; name: string; by: string | null }>(
+    const types = publishable(request);
+    const waiting = await db.query<{ id: string; item_type: string; item_id: string; item_name: string | null; summary: string; fields: string[]; submitted_by: string; created_at: Date; name: string | null; by: string | null }>(
       `SELECT a.*, COALESCE(s.draft->>'name', s.name) AS name, NULLIF(TRIM(CONCAT(c.first_name, ' ', c.last_name)), '') AS by
-         FROM approvals a JOIN services s ON s.id = a.item_id JOIN customers c ON c.id = a.submitted_by
-        WHERE a.status = 'waiting' ORDER BY a.created_at`,
+         FROM approvals a LEFT JOIN services s ON a.item_type = 'service' AND s.id = a.item_id JOIN customers c ON c.id = a.submitted_by
+        WHERE a.status = 'waiting' AND a.item_type = ANY($1) ORDER BY a.created_at`,
+      [types],
     );
     const recent = await db.query<{ item: string; by: string | null; at: Date }>(
       `SELECT DISTINCT ON (e.item) e.item, NULLIF(TRIM(CONCAT(c.first_name, ' ', c.last_name)), '') AS by, e.at FROM audit_entries e LEFT JOIN customers c ON c.id = e.actor_id
-        WHERE e.reason IN ('published', 'approved') AND e.item LIKE 'service:%' ORDER BY e.item, e.at DESC`,
+        WHERE e.reason IN ('published', 'approved') AND e.field = 'state' AND split_part(e.item, ':', 1) = ANY($1) ORDER BY e.item, e.at DESC`,
+      [types],
     );
-    const names = new Map((await db.query<{ id: string; name: string }>('SELECT id, name FROM services')).map((s) => [s.id, s.name]));
+    const names = new Map((await db.query<{ id: string; name: string }>('SELECT id, name FROM services')).map((s) => [`service:${s.id}`, s.name]));
+    const nameOf = async (item: string) => {
+      const [type, ...rest] = item.split(':');
+      return names.get(item) ?? (await app.approvalHandlers.get(type!)?.name(rest.join(':'))) ?? item;
+    };
+    const recentRows = recent.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, 20);
     return {
       secondApprover: (await settings()).secondApprover.on,
       waiting: waiting.map(
         (a): Approval => ({
           id: a.id,
-          itemType: 'service',
+          itemType: a.item_type as Approval['itemType'],
           itemId: a.item_id,
-          itemName: a.name,
+          itemName: a.name ?? a.item_name ?? a.item_id,
           summary: a.summary,
           fields: a.fields,
           submittedBy: a.by ?? 'Staff member',
@@ -549,29 +573,39 @@ export function registerStaffRoutes(app: FastifyInstance, { now }: { now: () => 
           createdAt: a.created_at.toISOString(),
         }),
       ),
-      recent: recent
-        .sort((a, b) => b.at.getTime() - a.at.getTime())
-        .slice(0, 20)
-        .map((r) => ({ item: names.get(r.item.slice(8)) ?? r.item, by: r.by ?? 'Staff member', at: r.at.toISOString() })),
+      recent: await Promise.all(recentRows.map(async (r) => ({ item: await nameOf(r.item), by: r.by ?? 'Staff member', at: r.at.toISOString() }))),
     };
   });
 
   // The approver is never the submitter (D35); sending back needs a reason the submitter is told.
-  app.post('/v1/staff/approvals/:id/decide', pre('content.publish'), async (request) => {
+  app.post('/v1/staff/approvals/:id/decide', approverGate, async (request) => {
     const { id } = z.object({ id: z.uuid() }).parse(request.params);
     const body = approvalDecisionSchema.parse(request.body);
     const me = auth(request).customerId;
     return db.transaction(async (tx) => {
-      const [a] = await tx.query<{ id: string; item_id: string; submitted_by: string; status: string }>('SELECT * FROM approvals WHERE id = $1 FOR UPDATE', [id]);
+      const [a] = await tx.query<{ id: string; item_type: string; item_id: string; item_name: string | null; submitted_by: string; status: string }>(
+        'SELECT * FROM approvals WHERE id = $1 FOR UPDATE',
+        [id],
+      );
       if (!a) throw new HttpError(404, 'not_found', 'Approval not found.');
+      requirePermission(request, publishPerm(a.item_type));
       if (a.status !== 'waiting') throw conflict();
       if (a.submitted_by === me) throw new HttpError(403, 'forbidden', 'Someone other than the submitter must decide.');
-      const row = await loadService(tx, a.item_id, true);
-      if (body.decision === 'approve') {
-        await publishRow(tx, request, row, 'approved');
+      let itemName: string;
+      if (a.item_type === 'service') {
+        const row = await loadService(tx, a.item_id, true);
+        itemName = row.draft?.name ?? row.name;
+        if (body.decision === 'approve') {
+          await publishRow(tx, request, row, 'approved');
+        } else {
+          await tx.query('UPDATE services SET in_review = false, version = version + 1, updated_at = $2 WHERE id = $1', [row.id, iso(now())]);
+          await audit(tx, request, `service:${row.id}`, 'state', 'review', 'draft', `sent back: ${body.reason}`);
+        }
       } else {
-        await tx.query('UPDATE services SET in_review = false, version = version + 1, updated_at = $2 WHERE id = $1', [row.id, iso(now())]);
-        await audit(tx, request, `service:${row.id}`, 'state', 'review', 'draft', `sent back: ${body.reason}`);
+        const handler = app.approvalHandlers.get(a.item_type)!;
+        itemName = a.item_name ?? a.item_id;
+        if (body.decision === 'approve') await handler.publish(tx, request, a.item_id);
+        else await handler.reject(tx, request, a.item_id, body.reason!);
       }
       await tx.query('UPDATE approvals SET status = $2, reason = $3, decided_by = $4, decided_at = $5 WHERE id = $1', [
         id,
@@ -582,16 +616,23 @@ export function registerStaffRoutes(app: FastifyInstance, { now }: { now: () => 
       ]);
       await notify(tx, {
         audience: 'staff',
-        permission: 'content.draft',
+        permission: a.item_type === 'service' ? 'content.draft' : ENTITY_PERMS[a.item_type as EntityType].draft,
         template: body.decision === 'approve' ? 'approval_approved' : 'approval_sent_back',
-        data: { item: row.draft?.name ?? row.name, ...(body.reason ? { reason: body.reason } : {}), submitter: a.submitted_by },
+        data: { item: itemName, ...(body.reason ? { reason: body.reason } : {}), submitter: a.submitted_by },
         now: now(),
       });
       return { status: body.decision === 'approve' ? 'approved' : 'rejected' };
     });
   });
 
-  app.get('/v1/staff/summary', pre('content.draft'), async (request) => {
+  // Any staff member: every kind of editor reads it for the second-approver hint.
+  const anyStaff = {
+    onRequest: async (request: FastifyRequest) => {
+      await can()(request);
+      if (!auth(request).permissions.length) throw new HttpError(403, 'forbidden', 'Your role can’t do this.', { missingPermission: 'content.draft' });
+    },
+  };
+  app.get('/v1/staff/summary', anyStaff, async (request) => {
     const me = auth(request).customerId;
     const [{ mine, all }] = (await db.query<{ mine: string; all: string }>(
       `SELECT COUNT(*) FILTER (WHERE submitted_by = $1)::text AS mine, COUNT(*)::text AS all FROM approvals WHERE status = 'waiting'`,

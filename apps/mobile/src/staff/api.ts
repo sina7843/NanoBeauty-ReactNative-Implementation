@@ -1,4 +1,4 @@
-import type { Permission } from '@nano/contracts';
+import { PERMISSIONS, type Permission } from '@nano/contracts';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
@@ -7,16 +7,7 @@ import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 
 /** Staff permissions that open the workspace (D34). Customers have none, so the workspace never appears for them. */
-export const STAFF_PERMISSIONS: Permission[] = [
-  'today.view',
-  'requests.manage',
-  'value.redeem',
-  'value.lookup',
-  'content.draft',
-  'content.publish',
-  'team.manage',
-  'audit.view',
-];
+export const STAFF_PERMISSIONS: Permission[] = PERMISSIONS.filter((p) => p !== 'value.adjust' && p !== 'payments.refund');
 export const isStaff = (permissions: readonly string[] | undefined) => !!permissions?.some((p) => STAFF_PERMISSIONS.includes(p as Permission));
 
 /** A 403 from the server opens STF-14 with the missing permission; the app never assumes access. */

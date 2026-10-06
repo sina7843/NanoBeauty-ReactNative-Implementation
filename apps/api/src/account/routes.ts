@@ -38,7 +38,8 @@ export const DELETION_PLAN = {
     { label: 'Your profile, sign-in and devices', tables: ['sessions', 'used_refresh_tokens', 'otp_challenges', 'auth_locks', 'staff_roles'] },
     { label: 'Your preferences and app messages', tables: ['customer_preferences', 'notifications'] },
     { label: 'Visits, booking hand-offs and change requests shown in the app', tables: ['visits', 'booking_handoffs', 'visit_requests'] },
-    { label: 'Questions you sent us in the app', tables: ['support_questions', 'balance_help_cases'] },
+    // support_replies go with their question (ON DELETE CASCADE).
+    { label: 'Questions you sent us in the app and the clinic’s replies', tables: ['support_questions', 'balance_help_cases'] },
   ],
   deidentify: [{ label: 'Your customer record: name, mobile number and email removed', tables: ['customers', 'privacy_requests'] }],
   retain: [
@@ -126,6 +127,18 @@ const INBOX: Record<string, (d: Record<string, string>) => Omit<InboxItem, 'id' 
     body: `${d.label}${d.reference ? ` · ${d.reference}` : ''}.`,
     href: '/wallet',
     hrefLabel: 'Open Wallet',
+  }),
+  'NTF-10.support_reply': (d) => ({
+    title: 'The clinic replied',
+    body: `Reference ${d.reference}. ${d.message}`,
+    href: '/support',
+    hrefLabel: 'Ask another question',
+  }),
+  gift_voided: () => ({
+    title: 'A gift card was cancelled',
+    body: 'The clinic cancelled this gift card. Contact them if you have questions.',
+    href: '/support/contact',
+    hrefLabel: 'Contact the clinic',
   }),
   data_request_received: (d) => ({
     title: 'We’re preparing your data',

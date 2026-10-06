@@ -8,6 +8,8 @@ import { t } from '../../../i18n';
 import { problemOf, useStaffQuery } from '../../../staff/api';
 import { StaffScreen } from '../../../staff/StaffScreen';
 
+const ITEM_PATH = { service: 'services', package: 'packages', campaign: 'campaigns', promo: 'promo-codes', professional: 'professionals', policy: 'policies' } as const;
+
 /** `/staff/approvals/[id]` — STF-09 (approve, reject). Sending back needs a reason; never decide your own submission. */
 export default function ApprovalDetail() {
   const router = useRouter();
@@ -60,7 +62,7 @@ export default function ApprovalDetail() {
           {t('appr.by', { name: a!.submittedBy })}
         </Text>
       </Card>
-      <Button variant="tertiary" onPress={() => router.push(`/staff/services/${a!.itemId}` as Href)}>
+      <Button variant="tertiary" onPress={() => router.push(`/staff/${ITEM_PATH[a!.itemType]}/${encodeURIComponent(a!.itemId)}` as Href)}>
         {t('svc.preview')}
       </Button>
       {a!.submittedByMe ? (

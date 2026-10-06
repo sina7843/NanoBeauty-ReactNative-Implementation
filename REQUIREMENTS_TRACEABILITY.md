@@ -7,7 +7,7 @@ Add/update mappings as implementation progresses. Preserve requirement IDs from 
 | D33 `settings.bookingMode` (default `handoff`) | NANO-00 | `packages/contracts/src/settings.ts`, `apps/api/migrations/0001_app_settings.sql`, `GET /v1/settings`, `apps/mobile/src/settings/` | `apps/api/src/app.test.ts` | Flag served; route gating in NANO-01/04 |
 | D35 `settings.secondApprover.on` (default `false`) | NANO-00 | same as above | `apps/api/src/app.test.ts` | Flag served; flow in NANO-07 |
 | D38 `features.legacyMembership` (default `false`) | NANO-00 | same as above | `apps/api/src/app.test.ts` | Flag served; UI in NANO-06 |
-| D37 / Spec 1 rules A1–A8, payment switches, gift, consultation, rating/financing lines, grace periods | NANO-00 | settings contract + seeded sample row (`sample: true`) | `apps/api/src/app.test.ts`, `apps/mobile/src/settings/bootstrap.test.ts` | Read path done; staff editing in NANO-08 |
+| D37 / Spec 1 rules A1–A8, payment switches, gift, consultation, rating/financing lines, grace periods | NANO-00 | settings contract + seeded sample row (`sample: true`) | `apps/api/src/app.test.ts`, `apps/mobile/src/settings/bootstrap.test.ts` | Done; staff editing STF-17/31/32 (NANO-08) |
 | Clinic info (STF-31 / SUP-01 source) | NANO-00 | `clinicInfoSchema`, seeded row | `apps/api/src/app.test.ts` | Read path done |
 | Build plan M0-1 repo, environments, CI, EAS | NANO-00 | root workspace, `apps/mobile/app.config.ts`, `apps/mobile/eas.json`, `.github/workflows/ci.yml` | `apps/mobile/scripts/check-config.mjs` | Done (EAS cloud build not yet run) |
 | Build plan M0-5 settings fetch with cached fallback | NANO-00 | `apps/mobile/src/settings/bootstrap.ts`, `useSettings.ts` | `bootstrap.test.ts` | Done |
@@ -49,7 +49,7 @@ Add/update mappings as implementation progresses. Preserve requirement IDs from 
 | DISC 06 / DISC 07 / DISC 12 / TRT-05, TRT-07 Detail | NANO-03 | `treatments/[id].tsx`, `PriceTag`, `FAQBlock`, `CareTimeline` | `discovery.test.tsx`, `components.test.tsx` | Done (CAR-01 per visit done in NANO-04) |
 | DISC 13 / DISC 14 Rating and financing lines | NANO-03 | `RatingSummary` (settings `ratingLine`), financing from `financingLine` + payment switches | `discovery.test.tsx` | Done |
 | TRT-06 Professional | NANO-03 | `professionals/[id].tsx`, consent-gated `profile` | `content.test.ts` | Done |
-| PROMO 02–05, 09, 11 / OFR-01, 02, 04 Offers | NANO-03 | `campaigns`, `GET /v1/offers/:id`, `offers/[id]/*`, `offerClock.ts` | `content.test.ts`, `discovery.test.tsx` | Done (staff publishing NANO-08) |
+| PROMO 02–05, 09, 11 / OFR-01, 02, 04 Offers | NANO-03 | `campaigns`, `GET /v1/offers/:id`, `offers/[id]/*`, `offerClock.ts` | `content.test.ts`, `discovery.test.tsx` | Done; staff publishing NANO-08 |
 | PROMO 06 / OFR-03 Promo codes | NANO-03 | `POST /v1/promo/validate`, `promo.tsx` | `content.test.ts`, `discovery.test.tsx` | Done (redemption NANO-06) |
 | SUP 01–06 / SUP-01…05 Support | NANO-03 | `support/*`, `GET /v1/support`, `POST /v1/support/questions`, `SupportContext`, `clinic.ts` | `content.test.ts`, `clinic.test.ts`, `discovery.test.tsx` | Done (in-app messaging NANO-05) |
 | ACC-11 Legal | NANO-03 | `policies`, `GET /v1/policies/:id`, `legal/[doc].tsx` | `content.test.ts`, `discovery.test.tsx` | Done (real text R1) |
@@ -85,7 +85,7 @@ Add/update mappings as implementation progresses. Preserve requirement IDs from 
 | WALT 05–07 Packages | NANO-06 | `packages`, `wallet/buy-package.tsx`, `wallet/packages/[id].tsx` | `wallet.test.ts`, `navigation/wallet.test.tsx` | Done (redeem at booking in in-app mode NANO-09) |
 | WALT 08 / WALT 11 History and ledger reconciliation | NANO-06 | `ledger_entries` (append-only), `GET /v1/wallet/history`, `wallet/history.tsx`, `wallet/help.tsx`, `balance_help_cases` | `wallet.test.ts`, `navigation/wallet.test.tsx` | Done |
 | WALT 10 Clinic credit | NANO-06 | `POST /v1/staff/adjustments` (`value.adjust`), `wallet/credit.tsx` | `wallet.test.ts` | Done |
-| WALT 15 / STF-11, STF-25 Counter lookup and redemption | NANO-06 | `GET /v1/staff/lookup`, `POST /v1/staff/redemptions` | `wallet.test.ts` | API done; staff screens NANO-07/08 |
+| WALT 15 / STF-11, STF-25 Counter lookup and redemption | NANO-06 | `GET /v1/staff/lookup`, `POST /v1/staff/redemptions` | `wallet.test.ts`, `navigation/staffOps.test.tsx` | Done (screens `staff/redeem.tsx`, `staff/lookup.tsx`, NANO-08) |
 | WAL-05 / D38 Membership | NANO-06 | `wallet/membership.tsx` behind `features.legacyMembership` | `navigation/wallet.test.tsx` | Done |
 | WALT 12 Legacy value continuity | NANO-06 | `wallet_instruments.source = 'legacy'`, `status = 'reconciling'` hides values | — | Ready for the C3 import (NANO-07/08) |
 | ADMIN 01/07 / STF-01 / STF-14 Staff workspace and access | NANO-07 | `app/staff/_layout.tsx` gate, `staff/index.tsx`, `staff/denied.tsx`, `StaffBar`, `StaffScreen`; server `can(...)` on every `/v1/staff/*` route | `staff.test.ts`, `navigation/staff.test.tsx` | Done (Today/selling sections NANO-08) |
@@ -98,3 +98,19 @@ Add/update mappings as implementation progresses. Preserve requirement IDs from 
 | STF-12 Audit log viewer | NANO-07 | `GET /v1/staff/audit`, `staff/audit.tsx`; entries append-only | `staff.test.ts`, `navigation/staff.test.tsx` | Done |
 | STF-13 / STF-38 Team and roles | NANO-07 | `staff_invites`, `/v1/staff/team*`, `acceptStaffInvite`, `staff/team/*` | `staff.test.ts`, `navigation/staff.test.tsx` | Done |
 | D39 Tablet two-column layout | NANO-07 | `StaffScreen` (`useTablet`: 768 pt iOS / 600 dp Android, form left, preview/actions right) on STF-03, STF-40, STF-42 | — | Done; verify on a tablet |
+| STF-05 / STF-06 / STF-07 Campaigns (list, calendar, editor, templates, preview, pause/end/reuse) | NANO-08 | migration 0009, `staff/entities.ts` (campaign), `/v1/staff/campaigns*`, `/v1/staff/campaign-templates/:t`, `staff/campaigns/*` | `staff/ops.test.ts` | Done |
+| PROMO 11 / STF-34 Home layout (max two offers, ordered; rating line) | NANO-08 | `GET|PUT /v1/staff/home-layout` (`selling.publish` to save), `staff/home-layout.tsx` | `staff/ops.test.ts` | Done |
+| STF-19 / STF-20 Promo codes | NANO-08 | promo def in `staff/entities.ts` (code immutable, `live` = published once), `staff/promo-codes/*` | `staff/ops.test.ts` | Done |
+| STF-15 / STF-16 Packages | NANO-08 | package def (draft not buyable; price/sessions high-risk), `staff/packages/*` | `staff/ops.test.ts`, `navigation/staffOps.test.tsx` | Done |
+| STF-17 / STF-18 Gift-card settings and actions | NANO-08 | `PUT /v1/staff/settings/gifts`, `/v1/staff/gifts*` (resend = new code, change recipient before claim, void + optional refund), `staff/gift-cards/*` | `staff/ops.test.ts`, `navigation/staffOps.test.tsx` | Done |
+| STF-21 / STF-22 Professionals (bio, photo, consent) | NANO-08 | professional def (publish blocked without consent when a photo/bio is set; hidden leave the catalogue), `staff/professionals/*` | `staff/ops.test.ts` | Done |
+| STF-23 / STF-24 Today and request detail (late rule, hand-off "move it in Fresha, then mark done") | NANO-08 | `GET /v1/staff/today`, `GET /v1/staff/requests/:id`, existing transition, `staff/today.tsx`, `staff/requests/[id].tsx` | `staff/ops.test.ts`, `navigation/staffOps.test.tsx` | Done (Fresha diary not readable: E2) |
+| STF-26 / STF-27 / STF-28 Customers, profile, account-match review | NANO-08 | `/v1/staff/customers[/:id]`, `GET /v1/staff/match-cases/:id`, `staff/customers/*` | `staff/ops.test.ts` | Done (old-app data C3) |
+| STF-29 / STF-30 / NTF-10 Support inbox and replies | NANO-08 | `support_replies`, `/v1/staff/inbox*` (text/email/app; failed sends recorded as failed), inbox template | `staff/ops.test.ts` | Done (SMS/email vendor E3) |
+| STF-31 Clinic info and hours | NANO-08 | `PUT /v1/staff/settings/clinic` (closure notice), `staff/settings/clinic.tsx` | `staff/ops.test.ts` | Done |
+| STF-32 Rules, payment switches, booking mode, second approver, membership flag | NANO-08 | `PUT /v1/staff/settings/rules` (version bump → apps refetch; in-app booking refused), `staff/settings/rules.tsx` | `staff/ops.test.ts`, `navigation/staffOps.test.tsx` | Done |
+| STF-33 / ACC-11 Versioned policies | NANO-08 | policy def + `policy_versions`, `staff/policies/*`; customers read the newest | `staff/ops.test.ts` | Done (real text R1) |
+| STF-08 / STF-09 Approvals for every content type | NANO-08 | approvals list/decide dispatch by `item_type` (`app.approvalHandlers`), item publish permission enforced | `staff/ops.test.ts` | Done |
+| STF-35 Marketing push composer (opted-in audience only) | NANO-08 | `push_messages`, `/v1/staff/push*`, `staff/push.tsx` | `staff/ops.test.ts`, `navigation/staffOps.test.tsx` | Composer done; delivery NANO-09 |
+| STF-37 Reports from server data | NANO-08 | `GET /v1/staff/reports` (unavailable metrics carry a reason), `staff/reports.tsx` | `staff/ops.test.ts`, `navigation/staffOps.test.tsx` | Done (views/taps need NANO-09 analytics) |
+| STF-01 Staff home sections by permission | NANO-08 | `staff/index.tsx` (Front desk, Content, Selling, People, Settings and reports) | `navigation/staffOps.test.tsx` | Done (STF-10 support text not built) |

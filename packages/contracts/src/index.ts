@@ -5,5 +5,6 @@ export * from './http';
 export * from './phone';
 export * from './settings';
 export * from './staff';
+export * from './staffOps';
 export * from './visits';
 export * from './wallet';

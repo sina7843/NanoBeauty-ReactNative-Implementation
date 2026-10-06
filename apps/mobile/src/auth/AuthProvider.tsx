@@ -6,6 +6,7 @@ import { clearPrivateCache } from '../lib/private-cache';
 import { giftDraft } from '../payments/giftDraft';
 import { secureSessionStore } from '../lib/session-storage';
 import { SessionManager } from './session';
+import { unregisterPushDevice } from '../platform/push';
 
 type Status = 'loading' | 'guest' | 'signedIn';
 
@@ -74,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       refreshMe,
       async signOut() {
+        await unregisterPushDevice(session);
         await session.signOut();
         await clearPrivateCache();
         giftDraft.clear(); // a half-written gift (recipient, message) never carries over to the next person

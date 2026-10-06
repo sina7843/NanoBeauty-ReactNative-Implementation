@@ -23,6 +23,7 @@ import type { Queryable } from '../db';
 import { HttpError } from '../errors';
 import { notify } from '../visits/routes';
 import { walletFor } from '../wallet/routes';
+import { effectiveBookingMode } from '../bookingGate';
 import { diffFields, iso, staffKit } from './kit';
 
 const DAY = 24 * 3600_000;
@@ -88,7 +89,7 @@ export function registerOpsRoutes(app: FastifyInstance, { now }: { now: () => nu
   app.put('/v1/staff/settings/rules', pre('rules.manage'), async (request) => {
     const body = rulesUpdateSchema.parse(request.body);
     // D33: there's no Fresha booking API, so in-app booking can't be switched on (NANO-09 owns the gate).
-    if (body.settings.bookingMode === 'inapp') throw new HttpError(409, 'conflict', 'In-app booking needs a booking connection that doesn’t exist yet. It stays on hand-off to Fresha.');
+    if (body.settings.bookingMode === 'inapp' && !integrations.booking.selected()) throw new HttpError(409, 'conflict', 'In-app booking needs a booking connection that doesn’t exist yet. It stays on hand-off to Fresha.');
     if (body.settings.slotHoldWarningMinutes >= body.settings.slotHoldMinutes) throw new HttpError(400, 'validation_failed', 'The hold warning must come before the hold ends.');
     return db.transaction(async (tx) => {
       const before = await lockSettings(tx, body.version);
@@ -183,7 +184,7 @@ export function registerOpsRoutes(app: FastifyInstance, { now }: { now: () => nu
         WHERE r.status IN ('submitted', 'in_progress', 'call_needed', 'approved') ORDER BY r.created_at`,
     );
     return {
-      bookingMode: settings.bookingMode,
+      bookingMode: effectiveBookingMode(settings.bookingMode, integrations),
       synced: integrations.fresha.isConnected(),
       visits: visits
         .filter((v) => day(v.starts_at) === day(t))

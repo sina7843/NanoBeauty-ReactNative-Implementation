@@ -5,7 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { useConsentHistory } from '../../account/queries';
 import { useAuth } from '../../auth/AuthProvider';
 import { SignInGate } from '../../auth/SignInGate';
-import { ListGroup, ListRow, Screen, Skeleton, Text } from '../../components';
+import { ListGroup, ListRow, Screen, Skeleton, Switch, Text, useToast } from '../../components';
 import { t } from '../../i18n';
 import { clinicDate, clinicDateTime } from '../../i18n/format';
 import { useSettings } from '../../settings/useSettings';
@@ -26,13 +26,16 @@ export default function Privacy() {
 
 function Hub() {
   const router = useRouter();
-  const { me } = useAuth();
+  const { me, session, refreshMe } = useAuth();
+  const toast = useToast();
+  const [savingUsage, setSavingUsage] = useState(false);
+  const usage = me?.consents.find((c) => c.purpose === 'analytics')?.granted ?? false;
   const zone = useSettings().data?.data.clinic.timezone ?? 'America/Vancouver';
   const [showHistory, setShowHistory] = useState(false);
   const history = useConsentHistory(showHistory);
   const terms = me?.consents.find((c) => c.purpose === 'terms' && c.granted);
   const offers = me?.consents.find((c) => c.purpose === 'marketing')?.granted ?? false;
-  const purpose = { terms: t('priv.purpose.terms'), transactional: t('priv.purpose.transactional'), marketing: t('priv.purpose.marketing') };
+  const purpose = { terms: t('priv.purpose.terms'), transactional: t('priv.purpose.transactional'), marketing: t('priv.purpose.marketing'), analytics: t('priv.purpose.analytics') };
 
   return (
     <>
@@ -53,6 +56,24 @@ function Hub() {
         />
         <ListRow icon="bell" title={t('acc.notifications')} onPress={() => router.push('/account/notifications')} />
       </ListGroup>
+      {/* Spec 4 "Usage" analytics: off until the person turns it on; never names, numbers or what they wrote. */}
+      <Switch
+        label={t('priv.usage')}
+        detail={t('priv.usageSub')}
+        value={usage}
+        disabled={savingUsage}
+        onValueChange={async (granted) => {
+          setSavingUsage(true);
+          try {
+            await session.authed('/v1/me/consents/analytics', { method: 'PUT', body: { granted } });
+            await refreshMe();
+          } catch {
+            toast({ tone: 'warning', message: t('error.body') });
+          } finally {
+            setSavingUsage(false);
+          }
+        }}
+      />
       {showHistory ? (
         <View style={styles.history} accessibilityLabel={t('priv.history')}>
           <Text variant="label">{t('priv.history')}</Text>

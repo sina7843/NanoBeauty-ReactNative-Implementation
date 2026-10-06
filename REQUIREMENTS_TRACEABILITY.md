@@ -4,7 +4,7 @@ Add/update mappings as implementation progresses. Preserve requirement IDs from 
 
 | Requirement / board ID | NANO prompt | Implementation | Tests | Status |
 |---|---|---|---|---|
-| D33 `settings.bookingMode` (default `handoff`) | NANO-00 | `packages/contracts/src/settings.ts`, `apps/api/migrations/0001_app_settings.sql`, `GET /v1/settings`, `apps/mobile/src/settings/` | `apps/api/src/app.test.ts` | Flag served; route gating in NANO-01/04 |
+| D33 `settings.bookingMode` (default `handoff`) | NANO-00, NANO-09 | `packages/contracts/src/settings.ts`, `apps/api/migrations/0001_app_settings.sql`, `GET /v1/settings`, `apps/mobile/src/settings/`; NANO-09 `bookingGate.ts` (`inapp` effective only with a selected `BookingProvider`) | `apps/api/src/app.test.ts`, `notifications.test.ts`, `navigation/links.test.ts` | Gate proven; in-app booking intentionally not built (no provider) |
 | D35 `settings.secondApprover.on` (default `false`) | NANO-00 | same as above | `apps/api/src/app.test.ts` | Flag served; flow in NANO-07 |
 | D38 `features.legacyMembership` (default `false`) | NANO-00 | same as above | `apps/api/src/app.test.ts` | Flag served; UI in NANO-06 |
 | D37 / Spec 1 rules A1–A8, payment switches, gift, consultation, rating/financing lines, grace periods | NANO-00 | settings contract + seeded sample row (`sample: true`) | `apps/api/src/app.test.ts`, `apps/mobile/src/settings/bootstrap.test.ts` | Done; staff editing STF-17/31/32 (NANO-08) |
@@ -114,3 +114,13 @@ Add/update mappings as implementation progresses. Preserve requirement IDs from 
 | STF-35 Marketing push composer (opted-in audience only) | NANO-08 | `push_messages`, `/v1/staff/push*`, `staff/push.tsx` | `staff/ops.test.ts`, `navigation/staffOps.test.tsx` | Composer done; delivery NANO-09 |
 | STF-37 Reports from server data | NANO-08 | `GET /v1/staff/reports` (unavailable metrics carry a reason), `staff/reports.tsx` | `staff/ops.test.ts`, `navigation/staffOps.test.tsx` | Done (views/taps need NANO-09 analytics) |
 | STF-01 Staff home sections by permission | NANO-08 | `staff/index.tsx` (Front desk, Content, Selling, People, Settings and reports) | `navigation/staffOps.test.tsx` | Done (STF-10 support text not built) |
+| NOTIF 01 / NOTIF 06 / NTF-01–12 Templates and channels | NANO-09 | `notifications/templates.ts` (inbox + push/text/email copy, channels per spec 3), `notifications/dispatch.ts`, migration 0010 | `notifications/notifications.test.ts` | Done (vendors E5) |
+| NOTIF 02 / NOTIF 07 / NTF-02 Reminders, one sender | NANO-09 | `settings.reminderSender` (Fresha default), `reminderHours`, `queueReminders` (dedupe key), dispatcher re-check, STF-32 control | `notifications.test.ts` | Done; sender decision E6 open |
+| NOTIF 04 Preferences / quiet hours | NANO-09 | reminders preference, `settings.quietHours` (texts and non-urgent pushes wait), marketing only to opted-in | `notifications.test.ts` | Done |
+| NOTIF 05 Inbox after dismissal | NANO-05, NANO-09 | every customer outbox row is the inbox copy; delivery state per channel | `account.test.ts`, `notifications.test.ts` | Done |
+| PROMO 07 / STF-35 Push delivery to opted-in only | NANO-09 | `deliverPushMessages` (consent re-checked at send, quiet hours, sent once) | `notifications.test.ts` | Done (push vendor E5) |
+| NTF-01 / NTF-03 / NTF-04 from the Fresha read-back | NANO-09 | `visits/routes.ts` upsert triggers (future visits only, once each) | `notifications.test.ts` | Done (read-back E2) |
+| Push devices | NANO-09 | `push_devices`, `/v1/me/devices[/remove]`, `platform/push.ts`, `NotificationBridge` | `notifications.test.ts` | Done; needs EAS project ID for tokens |
+| Spec 4 analytics event map, consent split | NANO-09 | `lib/analytics.ts` (allowlist, shapes, bands), `PUT /v1/me/consents/analytics`, ACC-06 toggle, events wired on TRT/BKG/PAY/OFR/WAL/SUP/STF screens | `lib/observability.test.ts`, `notifications.test.ts` | Done (vendor E5) |
+| NFR 08 Crash/error telemetry with redaction | NANO-09 | `redactText` (contracts), API `ErrorReporter` on 500s, mobile `lib/telemetry.ts` (global handler, ErrorBoundary, route patterns) | `notifications.test.ts`, `lib/observability.test.ts` | Done (vendor E5) |
+| PROMO 05 / LEG 07 Deep links | NANO-09 | `navigation/links.ts`, `app/+native-intent.tsx` (scheme, web domain, gift links), offer CTAs and notification taps through the resolver | `navigation/links.test.ts`, `navigation/notifications.test.tsx` | Done; universal/app links need the domain (NANO-11) |

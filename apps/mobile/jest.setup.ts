@@ -11,3 +11,19 @@ jest.mock('expo-secure-store', () => {
     deleteItemAsync: jest.fn(async (key: string) => void data.delete(key)),
   };
 });
+// expo-notifications: permission undetermined, no push token, and a tap can be simulated from a test.
+jest.mock('expo-notifications', () => {
+  const listeners = new Set<(mockResponse: unknown) => void>();
+  return {
+    getPermissionsAsync: jest.fn(async () => ({ status: 'undetermined' })),
+    requestPermissionsAsync: jest.fn(async () => ({ status: 'undetermined' })),
+    getExpoPushTokenAsync: jest.fn(async () => ({ data: 'ExponentPushToken[test]' })),
+    setNotificationHandler: jest.fn(),
+    getLastNotificationResponseAsync: jest.fn(async () => null),
+    addNotificationResponseReceivedListener: jest.fn((fn: (mockResponse: unknown) => void) => {
+      listeners.add(fn);
+      return { remove: () => listeners.delete(fn) };
+    }),
+    __tap: (href: string, recipient?: string) => listeners.forEach((fn) => fn({ notification: { request: { identifier: `n-${Math.random()}`, content: { data: { href, ...(recipient ? { recipient } : {}) } } } } })),
+  };
+});

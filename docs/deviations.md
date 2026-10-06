@@ -81,3 +81,5 @@ Every place the build differs from a board or component spec, with the reason (h
 | STF-32 booking mode | Shown locked to hand-off with the reason. | No in-app booking connection exists (D33). | NANO-09 |
 | STF-34 Home layout | Editors see it read only. | Changing what customers see on Home is a publish action (`selling.publish`). | — |
 | STF-01 "Support text" (STF-10) | Not built. | Not in the NANO-08 scope; support articles stay as seeded. | Later prompt |
+| ACC-06 analytics opt-in | "Help improve the app" switch added to the privacy hub. | Spec 4 needs an analytics consent; AUT-03's board has exactly three choices, so it isn't added there. | Design QA |
+| NTF boards "[short link]" | Text and email links use `https://app.nanobeautystar.com/<path>`; the app opens them only once universal/app links are configured. | Domain not confirmed (spec 3). | NANO-11 |

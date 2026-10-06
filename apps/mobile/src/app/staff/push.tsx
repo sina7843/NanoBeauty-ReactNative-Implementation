@@ -10,6 +10,7 @@ import { useSettings } from '../../settings/useSettings';
 import { problemOf, useStaffQuery } from '../../staff/api';
 import { StaffScreen } from '../../staff/StaffScreen';
 import { WallTimeField } from '../../staff/WallTimeField';
+import { analytics, sizeBand } from '../../lib/analytics';
 
 /** `/staff/push` — STF-35. Only people who said yes to offers; delivery (quiet hours, devices) is the notification service. */
 export default function Push() {
@@ -31,6 +32,8 @@ export default function Push() {
     try {
       const p = pushMessageSchema.parse((await session.authed('/v1/staff/push', { method: 'POST', body: { text: text.trim(), opens: opens.trim(), sendAt, idempotencyKey: key } })).body);
       toast({ tone: 'success', message: t('push.scheduled', { count: p.audienceCount }) });
+      const offer = /^\/offers\/([^/?]+)/.exec(p.opens)?.[1];
+      analytics.track('push_sent', { audience_size_band: sizeBand(p.audienceCount), ...(offer ? { offer_id: offer } : {}) });
       setText('');
       setKey(newIdempotencyKey());
       queryClient.invalidateQueries({ queryKey: ['staff', 'push'] });

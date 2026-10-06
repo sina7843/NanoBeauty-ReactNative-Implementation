@@ -10,6 +10,7 @@ import { StaffScreen } from '../../../staff/StaffScreen';
 import { useSettingsSave } from '../../../staff/useSettingsSave';
 
 const OUTCOMES = ['keepDeposit', 'credit', 'none'] as const;
+const SENDERS = ['fresha', 'app'] as const;
 const METHODS = [
   ['card', 'Card'],
   ['applePay', 'Apple Pay'],
@@ -71,6 +72,37 @@ export default function Rules() {
           <TextField label={t('rules.consultation')} value={String(f.settings.consultation.priceCAD)} onChangeText={(v) => set({ consultation: { ...f.settings.consultation, priceCAD: num(v) } })} keyboardType="decimal-pad" disabled={ro} />
           <Switch label={t('rules.consultationCredited')} value={f.settings.consultation.credited} disabled={ro} onValueChange={(v) => set({ consultation: { ...f.settings.consultation, credited: v } })} />
 
+          <Text variant="headline">{t('rules.reminders')}</Text>
+          <SegmentedControl
+            label={t('rules.reminderSender')}
+            options={SENDERS.map((x) => t(`rules.sender.${x}`))}
+            value={t(`rules.sender.${f.settings.reminderSender}`)}
+            onChange={(v) => !ro && set({ reminderSender: SENDERS.find((x) => t(`rules.sender.${x}`) === v)! })}
+          />
+          <Text variant="caption" tone="inkMuted">
+            {t('rules.reminderOne')}
+          </Text>
+          {f.settings.reminderSender === 'app' ? (
+            <TextField
+              label={t('rules.reminderHours')}
+              value={f.settings.reminderHours.join(', ')}
+              onChangeText={(v) => {
+                const hours = v.split(',').map((x) => Number.parseInt(x.trim(), 10)).filter((n) => n > 0 && n <= 168).slice(0, 3);
+                if (hours.length) set({ reminderHours: hours });
+              }}
+              keyboardType="numbers-and-punctuation"
+              disabled={ro}
+            />
+          ) : null}
+          <View style={styles.row}>
+            <View style={styles.flex}>
+              <TextField label={t('rules.quietFrom')} value={f.settings.quietHours.start} onChangeText={(v) => set({ quietHours: { ...f.settings.quietHours, start: v } })} disabled={ro} />
+            </View>
+            <View style={styles.flex}>
+              <TextField label={t('rules.quietTo')} value={f.settings.quietHours.end} onChangeText={(v) => set({ quietHours: { ...f.settings.quietHours, end: v } })} disabled={ro} />
+            </View>
+          </View>
+
           <Text variant="headline">{t('rules.payments')}</Text>
           {METHODS.map(([key, label]) => (
             <Switch key={key} label={label} value={f.settings.paymentMethods[key]} disabled={ro} onValueChange={(v) => set({ paymentMethods: { ...f.settings.paymentMethods, [key]: v } })} />
@@ -93,9 +125,9 @@ export default function Rules() {
             loading={s.busy}
             disabled={ro}
             onPress={async () => {
-              const { bookingMode, deposit, freeChangeHours, lateCancelOutcome, lateChangeOutcome, noShowOutcome, slotHoldMinutes, slotHoldWarningMinutes, paymentMethods, financingLine, consultation, secondApprover, ratingLine, deletionGraceDays } = f.settings;
+              const { bookingMode, deposit, freeChangeHours, lateCancelOutcome, lateChangeOutcome, noShowOutcome, slotHoldMinutes, slotHoldWarningMinutes, paymentMethods, financingLine, consultation, secondApprover, ratingLine, deletionGraceDays, reminderSender, reminderHours, quietHours } = f.settings;
               const ok = await s.save({
-                settings: { bookingMode, deposit, freeChangeHours, lateCancelOutcome, lateChangeOutcome, noShowOutcome, slotHoldMinutes, slotHoldWarningMinutes, paymentMethods, financingLine, consultation, secondApprover, ratingLine, deletionGraceDays },
+                settings: { bookingMode, deposit, freeChangeHours, lateCancelOutcome, lateChangeOutcome, noShowOutcome, slotHoldMinutes, slotHoldWarningMinutes, paymentMethods, financingLine, consultation, secondApprover, ratingLine, deletionGraceDays, reminderSender, reminderHours, quietHours },
                 features: f.features,
               });
               if (ok) setForm(null);

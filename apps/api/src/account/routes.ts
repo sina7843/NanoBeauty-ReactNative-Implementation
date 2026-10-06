@@ -1,6 +1,8 @@
 import { randomBytes } from 'node:crypto';
 import {
+  analyticsConsentSchema,
   dataRequestCreateSchema,
+  deviceRegisterSchema,
   deletionConfirmSchema,
   maskPhone,
   phoneChangeStartSchema,
@@ -22,6 +24,7 @@ import type { Db, Queryable } from '../db';
 import { HttpError } from '../errors';
 import type { Integrations } from '../integrations';
 import { notify } from '../visits/routes';
+import { INBOX } from '../notifications/templates';
 import { walletFor } from '../wallet/routes';
 
 const iso = (ms: number) => new Date(ms).toISOString();
@@ -35,7 +38,7 @@ const EXPORT_DUE_DAYS = 30;
  */
 export const DELETION_PLAN = {
   delete: [
-    { label: 'Your profile, sign-in and devices', tables: ['sessions', 'used_refresh_tokens', 'otp_challenges', 'auth_locks', 'staff_roles'] },
+    { label: 'Your profile, sign-in and devices', tables: ['sessions', 'used_refresh_tokens', 'otp_challenges', 'auth_locks', 'staff_roles', 'push_devices'] },
     { label: 'Your preferences and app messages', tables: ['customer_preferences', 'notifications'] },
     { label: 'Visits, booking hand-offs and change requests shown in the app', tables: ['visits', 'booking_handoffs', 'visit_requests'] },
     // support_replies go with their question (ON DELETE CASCADE).
@@ -57,96 +60,6 @@ export const DELETION_PLAN = {
   ],
 } as const;
 
-/** Inbox wording per customer notification template (ACC-04/05). Unknown templates are not shown. */
-const INBOX: Record<string, (d: Record<string, string>) => Omit<InboxItem, 'id' | 'createdAt' | 'read'>> = {
-  visit_request_submitted: (d) => ({
-    title: 'Request sent to the clinic',
-    body: `Reference ${d.reference}. The clinic will reply by text; your visit stays as it is until they confirm.`,
-    href: d.visitId ? `/visits/${d.visitId}` : null,
-    hrefLabel: d.visitId ? 'See your visit' : null,
-  }),
-  'NTF-03.visit_request_approved': (d) => ({
-    title: 'Your change was approved',
-    body: `Reference ${d.reference}. Open your visit to see the latest details.`,
-    href: d.visitId ? `/visits/${d.visitId}` : null,
-    hrefLabel: d.visitId ? 'See your visit' : null,
-  }),
-  visit_request_declined: (d) => ({
-    title: 'The clinic couldn’t make that change',
-    body: `Reference ${d.reference}.${d.reason ? ` ${d.reason}` : ''} Your visit stays as it was.`,
-    href: d.visitId ? `/visits/${d.visitId}` : null,
-    hrefLabel: d.visitId ? 'Need to change it?' : null,
-  }),
-  visit_request_call_needed: (d) => ({
-    title: 'The clinic would like to talk',
-    body: `Reference ${d.reference}. They’ll call you, or you can call them.`,
-    href: '/support/contact',
-    hrefLabel: 'Contact the clinic',
-  }),
-  payment_receipt: (d) => ({
-    title: 'Payment received',
-    body: `Reference ${d.reference}. Your receipt is in your Wallet.`,
-    href: d.orderId ? `/pay/receipt/${d.orderId}` : null,
-    hrefLabel: d.orderId ? 'View receipt' : null,
-  }),
-  refund_status: (d) => ({
-    title: d.status === 'succeeded' ? 'Refund sent' : 'Refund didn’t go through',
-    body:
-      d.status === 'succeeded'
-        ? `Reference ${d.reference}. It can take up to 5 business days to show on your statement.`
-        : `Reference ${d.reference}. The clinic will contact you; nothing has been lost.`,
-    href: d.orderId ? `/pay/receipt/${d.orderId}` : null,
-    hrefLabel: d.orderId ? 'View receipt' : null,
-  }),
-  gift_scheduled: (d) => ({
-    title: `Gift card for ${d.name}`,
-    body: 'Paid. We’ll text it at the time you chose.',
-    href: d.instrumentId ? `/wallet/gift-cards/${d.instrumentId}` : null,
-    hrefLabel: 'See the gift',
-  }),
-  gift_sent: (d) => ({
-    title: `Gift card sent to ${d.name}`,
-    body: 'They got a link and a code by text.',
-    href: d.instrumentId ? `/wallet/gift-cards/${d.instrumentId}` : null,
-    hrefLabel: 'See the gift',
-  }),
-  gift_claimed: (d) => ({
-    title: `${d.name} added your gift card`,
-    body: 'It’s now in their Wallet.',
-    href: d.instrumentId ? `/wallet/gift-cards/${d.instrumentId}` : null,
-    hrefLabel: 'See the gift',
-  }),
-  'NTF-09.package_session_used': (d) => ({
-    title: 'Package session used',
-    body: `${d.label}${d.reference ? ` · ${d.reference}` : ''}.`,
-    href: d.instrumentId ? `/wallet/packages/${d.instrumentId}` : null,
-    hrefLabel: 'See your package',
-  }),
-  value_used: (d) => ({
-    title: 'Balance used at your visit',
-    body: `${d.label}${d.reference ? ` · ${d.reference}` : ''}.`,
-    href: '/wallet',
-    hrefLabel: 'Open Wallet',
-  }),
-  'NTF-10.support_reply': (d) => ({
-    title: 'The clinic replied',
-    body: `Reference ${d.reference}. ${d.message}`,
-    href: '/support',
-    hrefLabel: 'Ask another question',
-  }),
-  gift_voided: () => ({
-    title: 'A gift card was cancelled',
-    body: 'The clinic cancelled this gift card. Contact them if you have questions.',
-    href: '/support/contact',
-    hrefLabel: 'Contact the clinic',
-  }),
-  data_request_received: (d) => ({
-    title: 'We’re preparing your data',
-    body: `Reference ${d.reference}. We’ll email you when it’s ready, usually within 30 days.`,
-    href: '/account/data-request',
-    hrefLabel: 'See your request',
-  }),
-};
 
 type RequestRow = { id: string; reference: string; kind: 'export' | 'delete'; status: PrivacyRequest['status']; created_at: Date; due_at: Date; completed_at: Date | null };
 const toRequest = (r: RequestRow): PrivacyRequest => ({
@@ -186,6 +99,7 @@ export async function carryOutDeletion(db: Db, integrations: Integrations, reque
     await tx.query('DELETE FROM staff_invites WHERE phone_e164 = $1 AND accepted_at IS NULL', [c!.phone_e164]);
     await tx.query('DELETE FROM staff_roles WHERE customer_id = $1', [id]);
     await tx.query('DELETE FROM customer_preferences WHERE customer_id = $1', [id]);
+    await tx.query('DELETE FROM push_devices WHERE customer_id = $1', [id]);
     await tx.query('DELETE FROM notifications WHERE customer_id = $1', [id]);
     await tx.query('DELETE FROM visit_requests WHERE customer_id = $1', [id]);
     await tx.query('DELETE FROM booking_handoffs WHERE customer_id = $1', [id]);
@@ -353,6 +267,41 @@ export function registerAccountRoutes(app: FastifyInstance, { now, kit }: { now:
     const item = row ? toItem(row) : null;
     if (!item) throw new HttpError(404, 'not_found', 'Message not found.');
     return item;
+  });
+
+  // Push devices (NANO-09). A token moves to whoever signed in on that phone last; sign-out removes it.
+  app.post('/v1/me/devices', signedIn, async (request) => {
+    const body = deviceRegisterSchema.parse(request.body);
+    const t = iso(now());
+    await db.query(
+      `INSERT INTO push_devices (token, customer_id, platform, created_at, last_seen_at) VALUES ($1, $2, $3, $4, $4)
+       ON CONFLICT (token) DO UPDATE SET customer_id = EXCLUDED.customer_id, platform = EXCLUDED.platform, last_seen_at = EXCLUDED.last_seen_at`,
+      [body.token, auth(request).customerId, body.platform, t],
+    );
+    return { registered: true };
+  });
+  app.post('/v1/me/devices/remove', signedIn, async (request) => {
+    const { token } = deviceRegisterSchema.pick({ token: true }).parse(request.body);
+    await db.query('DELETE FROM push_devices WHERE token = $1 AND customer_id = $2', [token, auth(request).customerId]);
+    return { removed: true };
+  });
+
+  // ACC-06 "Help improve the app" (spec 4 Usage events). Append-only like every consent; recorded only on change.
+  app.put('/v1/me/consents/analytics', signedIn, async (request) => {
+    const { granted } = analyticsConsentSchema.parse(request.body);
+    const id = auth(request).customerId;
+    const [current] = await db.query<{ granted: boolean }>(`SELECT granted FROM consents WHERE customer_id = $1 AND purpose = 'analytics' ORDER BY recorded_at DESC, id DESC LIMIT 1`, [id]);
+    if ((current?.granted ?? false) !== granted) {
+      await db.query('INSERT INTO consents (customer_id, purpose, granted, version, channel, recorded_at) VALUES ($1, $2, $3, $4, $5, $6)', [
+        id,
+        'analytics',
+        granted,
+        CONSENT_VERSIONS.analytics,
+        'app',
+        iso(now()),
+      ]);
+    }
+    return { granted };
   });
 
   // ACC-06 consent history (PRIV 02).

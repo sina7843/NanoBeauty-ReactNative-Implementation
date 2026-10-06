@@ -1,4 +1,4 @@
-import { errorEnvelopeSchema, handoffStatusSchema, otpVerifyResponseSchema, visitRequestSchema, visitsResponseSchema } from '@nano/contracts';
+import { handoffStatusSchema, otpVerifyResponseSchema, visitRequestSchema, visitsResponseSchema } from '@nano/contracts';
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app';
 import { openDb } from '../db';
@@ -103,8 +103,9 @@ describe('Fresha hand-off (BOOK 15, BOOK 16)', () => {
     expect((await laser(['Upper lip', 'Underarms'])).statusCode).toBe(200);
     expect((await laser(['Beard'])).statusCode).toBe(400); // a men's area under the women's set
     expect((await laser(['Upper lip', 'Chin', 'Underarms', 'Bikini line', 'Lower leg'])).statusCode).toBe(400); // over the max of 4
+    // D33 (NANO-09): a stored in-app mode without a selected booking provider is still hand-off, so hand-off works.
     await t.db.exec(`UPDATE app_settings SET settings = settings || '{"bookingMode":"inapp"}'::jsonb WHERE id = 1;`);
-    expect(errorEnvelopeSchema.parse((await t.handoff(token, 'k-inapp-mode')).json()).error.code).toBe('conflict');
+    expect((await t.handoff(token, 'k-inapp-mode')).statusCode).toBe(200);
   });
 
   it('returning from Fresha alone never confirms: no read-back → "not yet"', async () => {
@@ -190,7 +191,8 @@ describe('visit requests (BOOK 18)', () => {
     expect((await t.req('POST', `/v1/visits/${visit.id}/requests`, maria, { ...body, type: 'cancel', idempotencyKey: 'req-key-0003' })).statusCode).toBe(409);
     expect((await t.visits(maria)).upcoming[0]!.openRequest?.id).toBe(created.id);
 
-    const notes = await t.db.query<{ audience: string; template: string }>('SELECT audience, template FROM notifications ORDER BY id');
+    // NTF-01 rows come from the read-back (NANO-09); this test is about the request's notices.
+    const notes = await t.db.query<{ audience: string; template: string }>(`SELECT audience, template FROM notifications WHERE template NOT LIKE 'NTF-01%' ORDER BY id`);
     expect(notes).toEqual([
       { audience: 'staff', template: 'NTF-11.request_needs_you' },
       { audience: 'customer', template: 'visit_request_submitted' },
@@ -218,7 +220,7 @@ describe('visit requests (BOOK 18)', () => {
       { item: `visit_request:${created.id}`, old_value: 'submitted', new_value: 'approved' },
       { item: `visit_request:${created.id}`, old_value: 'approved', new_value: 'done' },
     ]);
-    const told = await t.db.query<{ template: string }>("SELECT template FROM notifications WHERE audience = 'customer' ORDER BY id");
+    const told = await t.db.query<{ template: string }>("SELECT template FROM notifications WHERE audience = 'customer' AND template NOT LIKE 'NTF-01%' ORDER BY id");
     expect(told.map((n) => n.template)).toEqual(['visit_request_submitted', 'NTF-03.visit_request_approved']);
   });
 

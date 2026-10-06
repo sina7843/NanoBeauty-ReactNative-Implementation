@@ -3,6 +3,7 @@ import {
   handoffRequestSchema,
   visitRequestCreateSchema,
   visitRequestTransitionSchema,
+  type BookingMode,
   type HandoffStatus,
   type Visit,
   type VisitRequest,
@@ -14,6 +15,7 @@ import { authenticate, type AuthContext } from '../auth/session';
 import type { Queryable } from '../db';
 import { toAreas } from '../content/routes';
 import { HttpError } from '../errors';
+import { effectiveBookingMode } from '../bookingGate';
 import type { FreshaVisit } from '../integrations';
 
 const iso = (ms: number) => new Date(ms).toISOString();
@@ -141,7 +143,15 @@ export function registerVisitRoutes(app: FastifyInstance, { now }: { now: () => 
     return true;
   }
 
+  /**
+   * NTF-01/03/04 from the read-back: a new upcoming booking, a moved one, a cancelled one. Each event is queued once
+   * (dedupe key); bookings already in the past when first seen don't notify.
+   */
   async function upsert(tx: Queryable, customerId: string, v: FreshaVisit, t: string) {
+    const [before] = await tx.query<{ id: string; starts_at: Date; status: string }>('SELECT id, starts_at, status FROM visits WHERE customer_id = $1 AND external_ref = $2', [
+      customerId,
+      v.ref,
+    ]);
     {
       await tx.query(
         `INSERT INTO visits (customer_id, external_ref, source, service_id, service_name, detail, professional_name, starts_at, duration_min, status, deposit_cad, synced_at, first_seen_at)
@@ -153,6 +163,19 @@ export function registerVisitRoutes(app: FastifyInstance, { now }: { now: () => 
         [customerId, v.ref, v.serviceId, v.serviceName, v.detail, v.professional, v.startsAt, v.durationMin, v.status, v.depositCAD, t],
       );
     }
+    const [after] = await tx.query<{ id: string; starts_at: Date }>('SELECT id, starts_at FROM visits WHERE customer_id = $1 AND external_ref = $2', [customerId, v.ref]);
+    const startsAt = after!.starts_at.getTime();
+    if (startsAt <= now()) return;
+    const when = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Vancouver', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(after!.starts_at);
+    const data = { visitId: after!.id, service: v.serviceName, when };
+    const queue = (template: string, key: string) =>
+      tx.query(
+        `INSERT INTO notifications (audience, customer_id, template, data, created_at, dedupe_key) VALUES ('customer', $1, $2, $3, $4, $5) ON CONFLICT (dedupe_key) DO NOTHING`,
+        [customerId, template, JSON.stringify(data), t, key],
+      );
+    if (!before && (v.status === 'confirmed' || v.status === 'pending')) await queue('NTF-01.booking_confirmed', `confirmed:${after!.id}`);
+    else if (before && v.status === 'cancelled' && before.status !== 'cancelled') await queue('NTF-04.visit_cancelled', `cancelled:${after!.id}`);
+    else if (before && before.starts_at.getTime() !== startsAt && v.status !== 'cancelled') await queue('NTF-03.visit_changed', `changed:${after!.id}:${after!.starts_at.toISOString()}`);
   }
 
   async function visitsFor(customerId: string): Promise<Visit[]> {
@@ -190,8 +213,8 @@ export function registerVisitRoutes(app: FastifyInstance, { now }: { now: () => 
   app.post('/v1/bookings/handoffs', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (request) => {
     const ctx = await auth(request.headers.authorization);
     const body = handoffRequestSchema.parse(request.body);
-    const [settings] = await db.query<{ settings: { bookingMode: string } }>('SELECT settings FROM app_settings WHERE id = 1');
-    if (settings?.settings.bookingMode !== 'handoff') throw new HttpError(409, 'conflict', 'Booking hand-off is not in use.');
+    const [settings] = await db.query<{ settings: { bookingMode: BookingMode } }>('SELECT settings FROM app_settings WHERE id = 1');
+    if (!settings || effectiveBookingMode(settings.settings.bookingMode, integrations) !== 'handoff') throw new HttpError(409, 'conflict', 'Booking hand-off is not in use.');
     const ids = [...new Set(body.items.map((i) => i.serviceId))];
     const live = await db.query<{ id: string; areas: unknown }>(`SELECT id, areas FROM services WHERE id = ANY($1) AND status = 'live'`, [ids]);
     if (live.length !== ids.length) throw new HttpError(409, 'conflict', 'A treatment in the basket is not bookable right now.');

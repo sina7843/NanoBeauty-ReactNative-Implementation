@@ -147,6 +147,9 @@ export const rulesUpdateSchema = z.object({
     secondApprover: true,
     ratingLine: true,
     deletionGraceDays: true,
+    reminderSender: true,
+    reminderHours: true,
+    quietHours: true,
   }),
   features: featuresSchema,
 });

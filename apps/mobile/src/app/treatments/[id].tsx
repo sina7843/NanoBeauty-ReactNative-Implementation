@@ -1,7 +1,7 @@
 import type { Catalog, Service } from '@nano/contracts';
 import { space } from '@nano/design-tokens';
 import { Redirect, Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, View } from 'react-native';
 import {
   Badge,
@@ -28,6 +28,7 @@ import { money } from '../../i18n/format';
 import { OLD_LINK_HREF } from '../../navigation/routes';
 import { useSettings } from '../../settings/useSettings';
 import { useTheme } from '../../theme/ThemeProvider';
+import { analytics } from '../../lib/analytics';
 
 /** `/treatments/[id]` — TRT-05 detail (standard, FAQ, per-area, consultation, promo) and TRT-07 unavailable/archived. */
 export default function TreatmentDetail() {
@@ -57,6 +58,9 @@ function Detail({ service, catalog }: { service: Service; catalog: Catalog }) {
   const settings = useSettings().data?.data.settings;
   const [care, setCare] = useState(false);
   const category = catalog.categories.find((c) => c.id === service.categoryId)?.name;
+  useEffect(() => {
+    analytics.track('treatment_viewed', { service_id: service.id, category: service.categoryId, price_kind: service.price.kind.toLowerCase(), source: 'detail' });
+  }, [service.id, service.categoryId, service.price.kind]);
   const performers = catalog.professionals.filter((p) => service.professionals.includes(p.id));
   const withProfile = performers.filter((p) => p.profile);
   const consult = service.price.kind === 'consultation';

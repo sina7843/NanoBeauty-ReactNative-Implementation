@@ -103,12 +103,28 @@ export interface LegacyDirectory {
   ): Promise<{ status: 'not_connected' } | { status: 'not_found' } | { status: 'found'; record: LegacyRecord; sample: boolean }>;
 }
 
+/**
+ * D33 gate. In-app booking (BKG-02–07, BKG-11, VIS-03) needs a booking system with a supported API. None has been
+ * selected (E2: Fresha has no booking API), so no adapter reports one and `bookingMode = inapp` can't take effect.
+ */
+export interface BookingProvider {
+  /** Name of the formally selected provider, or null. Only a real adapter may return a value. */
+  selected(): string | null;
+}
+
+/** Crash/error telemetry boundary (NFR 08). Vendor not chosen (E5); reports are redacted before they leave. */
+export interface ErrorReporter {
+  capture(report: { message: string; code: string; requestId?: string; where: string }): void;
+}
+
 export interface Integrations {
   otp: OtpProvider;
   messages: MessageSender;
   payments: PaymentProvider;
   fresha: FreshaGateway;
   legacy: LegacyDirectory;
+  booking: BookingProvider;
+  errors: ErrorReporter;
 }
 
 const DEV_OTP_TTL_MS = 10 * 60_000;
@@ -169,6 +185,8 @@ export function createDevIntegrations(
   const freshaBookings = new Map<string, FreshaVisit[]>(Object.entries(SAMPLE_FRESHA).map(([k, v]) => [k, [...v]]));
   /** Captured instead of delivered; tests and local tooling read it. */
   const outbox: OutboundMessage[] = [];
+  /** Captured error reports (already redacted); tests read it. */
+  const errorReports: Parameters<ErrorReporter['capture']>[0][] = [];
   let sequence = 0;
 
   const { provider: devPayments, control: paymentControl } = createDevPayments(options.paymentCapabilities);
@@ -197,6 +215,8 @@ export function createDevIntegrations(
       },
     },
     payments: devPayments,
+    booking: { selected: () => null },
+    errors: { capture: (report) => void errorReports.push(report) },
     fresha: {
       handoffUrl: () => options.freshaBookingUrl ?? null,
       isConnected: () => !!options.sampleFresha,
@@ -214,7 +234,7 @@ export function createDevIntegrations(
       },
     },
   };
-  return { integrations, outbox, otpSink, freshaBookings, paymentControl };
+  return { integrations, outbox, otpSink, freshaBookings, paymentControl, errorReports };
 }
 
 /** Development-only webhook secret: the dev provider signs, the API verifies, exactly like a real provider would. */

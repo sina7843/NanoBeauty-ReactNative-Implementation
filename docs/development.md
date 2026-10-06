@@ -227,6 +227,19 @@ Runtime boundaries:
 - **Push:** `/staff/push` schedules a message for customers who said yes to offers; nothing is delivered until NANO-09.
 - **Endpoints:** see IMPLEMENTATION_STATUS.md → "Staff selling and operations".
 
+## Notifications, analytics and deep links (NANO-09)
+
+- **Delivery:** every minute the API queues reminders (only if `settings.reminderSender = app`), dispatches the
+  outbox and sends due marketing pushes. Dev adapters capture messages in memory; nothing leaves the machine.
+- **Delivery state:** `notification_deliveries` (one row per recipient and channel: sent / failed / skipped + reason).
+- **Push on a phone:** needs notification permission and an EAS project ID (`extra.eas.projectId`) for the Expo push
+  token; without one the app doesn't register and the inbox still works.
+- **Analytics:** `apps/mobile/src/lib/analytics.ts` holds the event map; unmapped events/properties are dropped. Usage
+  events need the ACC-06 opt-in. The dev sink logs in dev builds only.
+- **Links:** `nanobeauty-dev://visits/<id>` (dev variant) or `https://app.nanobeautystar.com/<path>` (once app links are
+  configured). Check a link with `resolveLink()` in `src/navigation/links.ts`.
+- **In-app booking:** stays off. `bookingMode = inapp` is ignored until a booking provider adapter is selected (D33).
+
 ## Troubleshooting
 
 - **`FATAL ERROR: Zone Allocation failed - process out of memory`** when PGlite starts (tests or `api:dev`): the

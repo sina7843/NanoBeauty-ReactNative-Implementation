@@ -1,6 +1,7 @@
 import type { Offer, OfferResponse } from '@nano/contracts';
 import { space } from '@nano/design-tokens';
 import { Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Badge, Banner, Button, EmptyState, Icon, ListGroup, ListRow, OfferCard, PhotoFrame, Screen, Skeleton, Text } from '../../../components';
 import { ContentGate } from '../../../content/ContentGate';
@@ -10,6 +11,8 @@ import { useOffer } from '../../../content/queries';
 import { t } from '../../../i18n';
 import { clinicDate, clinicDateTime, money } from '../../../i18n/format';
 import { useSettings } from '../../../settings/useSettings';
+import { analytics } from '../../../lib/analytics';
+import { resolveLink } from '../../../navigation/links';
 
 /** `/offers/[id]` — OFR-01 (live, upcoming, paused, returning-audience) and OFR-04 (ended → safe destination). */
 export default function OfferScreen() {
@@ -31,19 +34,27 @@ export default function OfferScreen() {
 
 function Live({ offer, state }: { offer: Offer; state: Offer['state'] }) {
   const router = useRouter();
-  const zone = useSettings().data?.data.clinic.timezone ?? 'America/Vancouver';
+  const settings = useSettings().data?.data;
+  const zone = settings?.clinic.timezone ?? 'America/Vancouver';
+  const mode = settings?.settings.bookingMode;
   const live = state === 'live';
+  useEffect(() => {
+    analytics.track('offer_viewed', { offer_id: offer.id, placement: 'offer_page' });
+  }, [offer.id]);
   return (
     <Screen
       topInset={false}
       footer={
         <View style={styles.footer}>
           {live ? (
-            <Button size="lg" fullWidth onPress={() => router.push(offer.cta.href as Href)}>
+            <Button size="lg" fullWidth onPress={() => {
+              analytics.track('offer_tapped', { offer_id: offer.id, cta: 'primary' });
+              router.push(resolveLink(offer.cta.href, mode) as Href);
+            }}>
               {offer.cta.label}
             </Button>
           ) : (
-            <Button size="lg" variant="secondary" fullWidth onPress={() => router.push(offer.fallback.href as Href)}>
+            <Button size="lg" variant="secondary" fullWidth onPress={() => router.push(resolveLink(offer.fallback.href, mode) as Href)}>
               {offer.fallback.label}
             </Button>
           )}
@@ -105,11 +116,12 @@ function Ended({ data }: { data: OfferResponse }) {
   const router = useRouter();
   const zone = useSettings().data?.data.clinic.timezone ?? 'America/Vancouver';
   const current = data.alternatives[0];
+  const mode = useSettings().data?.data.settings.bookingMode;
   return (
     <Screen
       topInset={false}
       footer={
-        <Button size="lg" fullWidth onPress={() => router.push(data.offer.fallback.href as Href)}>
+        <Button size="lg" fullWidth onPress={() => router.push(resolveLink(data.offer.fallback.href, mode) as Href)}>
           {data.offer.fallback.label}
         </Button>
       }

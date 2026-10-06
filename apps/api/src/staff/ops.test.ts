@@ -220,8 +220,8 @@ describe('settings change app behaviour without a rebuild (STF-17/31/32/34)', ()
     const owner = await t.signIn(...OWNER, 'Owner');
     const editor = await t.signIn(...EDITOR, 'Editor');
     const boot = (await t.req('GET', '/v1/settings')).json();
-    const pick = ({ bookingMode, deposit, freeChangeHours, lateCancelOutcome, lateChangeOutcome, noShowOutcome, slotHoldMinutes, slotHoldWarningMinutes, paymentMethods, financingLine, consultation, secondApprover, ratingLine, deletionGraceDays }: Record<string, unknown>) => ({
-      bookingMode, deposit, freeChangeHours, lateCancelOutcome, lateChangeOutcome, noShowOutcome, slotHoldMinutes, slotHoldWarningMinutes, paymentMethods, financingLine, consultation, secondApprover, ratingLine, deletionGraceDays,
+    const pick = ({ bookingMode, deposit, freeChangeHours, lateCancelOutcome, lateChangeOutcome, noShowOutcome, slotHoldMinutes, slotHoldWarningMinutes, paymentMethods, financingLine, consultation, secondApprover, ratingLine, deletionGraceDays, reminderSender, reminderHours, quietHours }: Record<string, unknown>) => ({
+      bookingMode, deposit, freeChangeHours, lateCancelOutcome, lateChangeOutcome, noShowOutcome, slotHoldMinutes, slotHoldWarningMinutes, paymentMethods, financingLine, consultation, secondApprover, ratingLine, deletionGraceDays, reminderSender, reminderHours, quietHours,
     });
     const body = (over: Record<string, unknown> = {}) => ({ version: boot.version, settings: { ...pick(boot.settings), ...over }, features: { legacyMembership: true } });
     expect((await t.req('PUT', '/v1/staff/settings/rules', editor, body())).json().error.missingPermission).toBe('rules.manage');

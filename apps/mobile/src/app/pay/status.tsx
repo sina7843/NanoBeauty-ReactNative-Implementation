@@ -7,7 +7,7 @@ import { useAuth } from '../../auth/AuthProvider';
 import { SignInGate } from '../../auth/SignInGate';
 import { AsyncStatus, Button, Screen } from '../../components';
 import { t } from '../../i18n';
-import { analytics } from '../../lib/analytics';
+import { amountBand, analytics } from '../../lib/analytics';
 import { OLD_LINK_HREF } from '../../navigation/routes';
 import { giftDraft } from '../../payments/giftDraft';
 import { clearPendingPayment } from '../../payments/pendingPayment';
@@ -62,7 +62,10 @@ function Status({ attemptId, orderId }: { attemptId: string; orderId: string }) 
       if (order?.kind === 'gift') giftDraft.clear();
       queryClient.invalidateQueries({ queryKey: ['wallet'] });
       queryClient.invalidateQueries({ queryKey: ['inbox'] });
-      analytics.track('payment_succeeded', { context: order?.kind ?? 'unknown', method: a.method });
+      const band = order ? amountBand(order.amountCents) : undefined;
+      analytics.track('payment_succeeded', { context: order?.kind ?? 'unknown', method: a.method, ...(band ? { amount_band: band } : {}) });
+      if (order?.kind === 'gift') analytics.track('gift_purchased', { ...(band ? { amount_band: band } : {}), scheduled: order.detail?.includes('chosen time') ?? false });
+      if (order?.kind === 'package') analytics.track('package_purchased', { method: a.method });
     } else {
       analytics.track('payment_failed', { context: order?.kind ?? 'unknown', method: a.method, reason: a.status === 'cancelled' ? 'cancelled' : 'declined' });
     }

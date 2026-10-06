@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import {
   REQUEST_ID_HEADER,
+  redactText,
+  type BookingMode,
   settingsBootstrapSchema,
   type ErrorCode,
   type ErrorEnvelope,
@@ -16,6 +18,7 @@ import { registerAuthRoutes } from './auth/routes';
 import { registerContentRoutes } from './content/routes';
 import { registerVisitRoutes } from './visits/routes';
 import { HttpError } from './errors';
+import { effectiveBookingMode } from './bookingGate';
 import type { Integrations } from './integrations';
 import { registerEntityRoutes, type ApprovalHandler } from './staff/entities';
 import { registerOpsRoutes } from './staff/ops';
@@ -121,6 +124,8 @@ export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
       return sendError(request, reply, status, STATUS_CODES[status] ?? 'bad_request', err.message ?? 'Bad request.');
     }
     request.log.error({ err: error }, 'unhandled error');
+    // Crash/error telemetry: message redacted (no contact details, codes or tokens), traced by request ID.
+    integrations.errors.capture({ message: redactText(error instanceof Error ? error.message : String(error)), code: 'internal_error', requestId: request.id, where: redactUrl(request.url) });
     return sendError(request, reply, 500, 'internal_error', 'Something went wrong. Try again.');
   });
 
@@ -174,10 +179,12 @@ export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
     reply.header('etag', etag).header('cache-control', 'no-cache');
     if (request.headers['if-none-match'] === etag) return reply.status(304).send();
 
+    const stored = row.settings as { bookingMode: BookingMode };
     const parsed = settingsBootstrapSchema.safeParse({
       version: row.version,
       updatedAt: row.updated_at.toISOString(),
-      settings: row.settings,
+      // D33: apps only ever see the mode that can really work (in-app needs a selected booking provider).
+      settings: { ...stored, bookingMode: effectiveBookingMode(stored.bookingMode, integrations) },
       features: row.features,
       clinic: row.clinic,
       app: row.app,

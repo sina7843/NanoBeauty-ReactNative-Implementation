@@ -11,6 +11,7 @@ import { useCatalog } from '../../content/queries';
 import { t } from '../../i18n';
 import { useSettings } from '../../settings/useSettings';
 import { useTheme } from '../../theme/ThemeProvider';
+import { analytics } from '../../lib/analytics';
 
 /**
  * `/book/service` — BKG-01. Pick one or more live treatments for one visit (BOOK 17); laser goes to BKG-10 for
@@ -49,7 +50,11 @@ export default function BookService() {
             fullWidth
             iconAfter={mode === 'handoff' && !summary?.needsAreas ? 'arrow-square-out' : undefined}
             disabled={!summary?.lines.length || summary.tooLong}
-            onPress={() => router.push(next())}
+            onPress={() => {
+              analytics.track('booking_started', { entry_point: service ? 'treatment' : 'book', service_count: summary?.lines.length ?? 0, mode });
+              analytics.track('booking_step_completed', { step: 'service', mode });
+              router.push(next());
+            }}
           >
             {label}
           </Button>

@@ -10,6 +10,7 @@ import { useSupportHub } from '../../../content/queries';
 import { t } from '../../../i18n';
 import { useIsOnline } from '../../../lib/network';
 import { useSettings } from '../../../settings/useSettings';
+import { analytics } from '../../../lib/analytics';
 
 const CHANNELS = [
   ['text', 'ask.channel.text'],
@@ -49,6 +50,7 @@ export default function AskUs() {
     try {
       const res = await session.authed('/v1/support/questions', { method: 'POST', body: { topic: chosenTopic, channel, message: message.trim(), idempotencyKey } });
       const { reference } = supportQuestionResponseSchema.parse(res.body);
+      analytics.track('support_contact', { topic: (chosenTopic ?? 'other').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 32), channel });
       router.replace({ pathname: '/support/ask/sent', params: { reference, channel } });
     } catch {
       setFailed(true); // nothing was sent; the text stays so it can be retried

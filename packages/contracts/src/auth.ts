@@ -71,7 +71,7 @@ export const PERMISSIONS = [
 export const permissionSchema = z.enum(PERMISSIONS);
 export type Permission = z.infer<typeof permissionSchema>;
 
-export const consentPurposeSchema = z.enum(['terms', 'transactional', 'marketing']);
+export const consentPurposeSchema = z.enum(['terms', 'transactional', 'marketing', 'analytics']);
 export type ConsentPurpose = z.infer<typeof consentPurposeSchema>;
 
 export const consentStateSchema = z.object({

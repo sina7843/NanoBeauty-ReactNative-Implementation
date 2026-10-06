@@ -5,6 +5,7 @@ import { loadConfig } from './config';
 import { openDb } from './db';
 import { createDevIntegrations } from './integrations';
 import { migrate } from './migrate';
+import { deliverPushMessages, dispatchDue, queueReminders } from './notifications/dispatch';
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
@@ -74,6 +75,27 @@ const walletJobs = setInterval(async () => {
 }, 60_000);
 walletJobs.unref();
 app.addHook('onClose', async () => clearInterval(walletJobs));
+
+// Notification delivery (NANO-09): reminders queued (only when the app is the sender), the outbox dispatched and
+// scheduled marketing pushes sent. Every minute, idempotent (dedupe keys, unique delivery rows, claimed pushes).
+// ponytail: in-process timer like the others; move to the platform scheduler with hosting (open item).
+let notifyBusy = false;
+const notifyJobs = setInterval(async () => {
+  if (notifyBusy) return;
+  notifyBusy = true;
+  try {
+    const t = Date.now();
+    await queueReminders(db, t);
+    await dispatchDue(db, integrations, t, (id, err) => app.log.error({ err, id }, 'notification failed; retried next minute'));
+    await deliverPushMessages(db, integrations, t);
+  } catch (err) {
+    app.log.error({ err }, 'notification jobs failed');
+  } finally {
+    notifyBusy = false;
+  }
+}, 60_000);
+notifyJobs.unref();
+app.addHook('onClose', async () => clearInterval(notifyJobs));
 
 await app.listen({ host: config.HOST, port: config.PORT });
 app.log.info(

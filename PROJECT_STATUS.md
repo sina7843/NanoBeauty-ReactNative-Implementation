@@ -12,11 +12,11 @@ Mark a prompt complete only after implementation is reviewed, relevant checks pa
 - [x] NANO-06
 - [x] NANO-07
 - [x] NANO-08
-- [ ] NANO-09
+- [x] NANO-09
 - [ ] NANO-10
 - [ ] NANO-11
 
 ## Current work
-- Active item: `NANO-09`
-- Last completed item: `NANO-08` (2026-10-06)
-- Blockers: none for NANO-09. Open: payment provider and merchant accounts (R03, A5; dev provider until then), Expo SDK patch updates flagged by expo-doctor, legal review of deletion/retention wording and export fulfilment process, deletion web page host (NANO-11), Fresha prefill/read-back and booking URL (E2; app shows "not synced" states), real clinic content and photo rights (C5, R07), clinic hours/phone/parking (C7), terms/privacy text (R1), SMS vendor (E3), old-app export (C3), on-device smoke test, fonts, app IDs, API hosting, EAS account.
+- Active item: `NANO-10`
+- Last completed item: `NANO-09` (2026-10-07; D33 in-app booking scope intentionally skipped: no booking provider selected)
+- Blockers: none for NANO-10. Open: reminder sender decision (E6; Fresha by default), push/email/analytics/crash vendors (E5) and the EAS project ID for push tokens, deep-link domain and universal/app links, payment provider and merchant accounts (R03, A5; dev provider until then), Expo SDK patch updates flagged by expo-doctor, legal review of deletion/retention wording and export fulfilment process, deletion web page host (NANO-11), Fresha prefill/read-back and booking URL (E2; app shows "not synced" states), real clinic content and photo rights (C5, R07), clinic hours/phone/parking (C7), terms/privacy text (R1), SMS vendor (E3), old-app export (C3), on-device smoke test, fonts, app IDs, API hosting, EAS account.

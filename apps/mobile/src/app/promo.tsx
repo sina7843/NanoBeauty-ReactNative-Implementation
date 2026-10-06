@@ -10,6 +10,7 @@ import { useOffer } from '../content/queries';
 import { t } from '../i18n';
 import { clinicDate } from '../i18n/format';
 import { useSettings } from '../settings/useSettings';
+import { analytics } from '../lib/analytics';
 
 /** Error copy for each OFR-03 state (PROMO 06). Dates come from the server. */
 function messageFor(r: PromoValidation, zone: string): string | undefined {
@@ -51,7 +52,11 @@ export default function PromoCode() {
       const init = { method: 'POST' as const, body: { code } };
       // Signed in, the server can also say "already used"; anonymous checks skip that (the purchase re-checks).
       const res = status === 'signedIn' ? await session.authed('/v1/promo/validate', init) : await apiRequest('/v1/promo/validate', init);
-      setResult(promoValidateResponseSchema.parse(res.body));
+      const parsed = promoValidateResponseSchema.parse(res.body);
+      setResult(parsed);
+      const RESULT: Record<string, string> = { valid: 'applied', ended: 'expired', usedup: 'used_up' };
+      // The code itself never goes to analytics: it can be personal or single-use (spec 4 lists code_id; dropped).
+      analytics.track('promo_code_result', { result: RESULT[parsed.state] ?? parsed.state });
     } catch (e) {
       if (e instanceof ApiError && e.code === 'rate_limited') setWaitSeconds(e.info.retryAfterSeconds ?? 60);
       else setNetwork(true);

@@ -28,6 +28,7 @@ export const CONSENT_VERSIONS = {
   terms: 'terms-draft-2026-09',
   transactional: 'sms-v1',
   marketing: 'offers-v1',
+  analytics: 'usage-v1',
 } as const;
 
 export const newToken = () => randomBytes(32).toString('base64url');

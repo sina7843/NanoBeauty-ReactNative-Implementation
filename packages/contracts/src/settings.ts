@@ -62,6 +62,12 @@ export const settingsSchema = z.object({
   clinicHours: clinicHoursSchema.nullable(),
   ratingLine: z.object({ on: z.boolean(), source: z.string().min(1) }),
   giftRefundDays: days,
+  /** NOTIF 07 / E6: exactly one sender of appointment reminders. Fresha already sends them, so it is the default. */
+  reminderSender: z.enum(['fresha', 'app']),
+  /** NTF-02 timing (hours before the visit), used only when the app sends reminders. */
+  reminderHours: z.array(z.number().int().min(1).max(168)).min(1).max(3),
+  /** Clinic-local quiet hours (spec 3: 9 pm–8 am sample). Texts and non-urgent pushes wait until it ends. */
+  quietHours: z.object({ start: timeOfDay, end: timeOfDay }),
   deletionGraceDays: days,
   /** True while values are samples awaiting clinic confirmation (A1–A8) — screens keep Sample badges. */
   sample: z.boolean(),

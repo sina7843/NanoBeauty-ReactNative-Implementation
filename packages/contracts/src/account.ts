@@ -37,7 +37,7 @@ export type InboxResponse = z.infer<typeof inboxResponseSchema>;
 
 /** ACC-06 consent history (PRIV 02): every decision, newest first. */
 export const consentRecordSchema = z.object({
-  purpose: z.enum(['terms', 'transactional', 'marketing']),
+  purpose: z.enum(['terms', 'transactional', 'marketing', 'analytics']),
   granted: z.boolean(),
   version: z.string(),
   channel: z.string(),

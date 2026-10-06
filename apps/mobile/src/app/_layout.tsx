@@ -15,8 +15,11 @@ import { AuthProvider } from '../auth/AuthProvider';
 import { getEnv } from '../config/env';
 import { Maintenance, UpdateRequired } from '../entry/GateScreens';
 import { useHardGate } from '../entry/useEntry';
+import { installGlobalErrorHandler, telemetry } from '../lib/telemetry';
+import { NotificationBridge } from '../platform/NotificationBridge';
 
 wireQueryToDevice();
+installGlobalErrorHandler();
 // ENT-01: keep the native splash (plum + master frame) until fonts are resolved; the entry route then
 // continues the same splash in-app while the remote gate is checked.
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -24,6 +27,7 @@ SplashScreen.preventAutoHideAsync().catch(() => undefined);
 /** Root crash screen. Never shows `error.message` — it can carry internals. */
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   if (__DEV__) console.error(error);
+  telemetry.capture(error, 'render', true);
   return (
     <SafeAreaProvider>
       <ThemeProvider>
@@ -128,6 +132,7 @@ export default function RootLayout() {
         <ThemeProvider fonts={fonts}>
           <ToastProvider>
             <AuthProvider>
+              <NotificationBridge />
               <Navigator />
             </AuthProvider>
           </ToastProvider>

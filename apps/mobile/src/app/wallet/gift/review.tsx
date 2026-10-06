@@ -7,7 +7,6 @@ import { Banner, Button, ListGroup, ListRow, Screen, Text } from '../../../compo
 import { newIdempotencyKey } from '../../../booking/visits';
 import { t } from '../../../i18n';
 import { clinicDateTime } from '../../../i18n/format';
-import { analytics } from '../../../lib/analytics';
 import { createOrder } from '../../../payments/checkout';
 import { useGiftDraft } from '../../../payments/giftDraft';
 import { cents } from '../../../payments/queries';
@@ -57,7 +56,6 @@ function Review() {
         },
         key,
       );
-      analytics.track('gift_order_started', { scheduled: !!draft.sendAt, design: draft.design ?? '' });
       router.push({ pathname: '/pay/method', params: { order: order.id } });
     } catch {
       setFailed(true);

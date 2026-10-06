@@ -101,10 +101,12 @@ describe('inbox (ACC-04/05, NOTIF 05)', () => {
     const visit = (await t.req('GET', '/v1/visits', token)).json().upcoming[0];
     await t.req('POST', `/v1/visits/${visit.id}/requests`, token, { type: 'change', message: 'Move to Tuesday?', idempotencyKey: 'req-key-0001' });
     const inbox = inboxResponseSchema.parse((await t.req('GET', '/v1/me/inbox', token)).json());
-    expect(inbox.unread).toBe(1);
+    // Two "Booking confirmed" messages from the Fresha read-back (NTF-01) plus the request.
+    expect(inbox.unread).toBe(3);
+    expect(inbox.items.filter((i) => i.title === 'Booking confirmed')).toHaveLength(2);
     expect(inbox.items[0]).toMatchObject({ title: 'Request sent to the clinic', href: `/visits/${visit.id}`, read: false });
     expect((await t.req('GET', `/v1/me/inbox/${inbox.items[0]!.id}`, token)).json()).toMatchObject({ read: true });
-    expect(inboxResponseSchema.parse((await t.req('GET', '/v1/me/inbox', token)).json()).unread).toBe(0);
+    expect(inboxResponseSchema.parse((await t.req('GET', '/v1/me/inbox', token)).json()).unread).toBe(2);
     const other = await t.signIn(...OTHER);
     expect((await t.req('GET', `/v1/me/inbox/${inbox.items[0]!.id}`, other)).statusCode).toBe(404);
     // Staff notices never appear in a customer's inbox.

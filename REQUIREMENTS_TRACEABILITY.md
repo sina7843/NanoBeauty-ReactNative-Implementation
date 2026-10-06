@@ -65,3 +65,14 @@ Add/update mappings as implementation progresses. Preserve requirement IDs from 
 | NTF-01/03/11 notification hooks (request submitted, approved, declined, call needed) | NANO-04 | `notifications` outbox (migration 0005), `notify()` in `visits/routes.ts` | `visits.test.ts` | Hooks done; delivery NANO-09 |
 | CAR-01 Care for a visit | NANO-04 | `care/[visitId].tsx` (service care steps + urgent line) | — | Done (clinic copy pending) |
 | NFR 09 Offline Visits | NANO-04 | `useVisits` cached under `nano.private.*`, wiped on sign-out/expiry (`lib/private-cache.ts`) | `navigation/booking.test.tsx` | Done |
+| ACC-01 Account hub | NANO-05 | `app/account/index.tsx` | `navigation/account.test.tsx` | Done (staff row NANO-07) |
+| ACC-02 / PRIV 05 Profile and phone change | NANO-05 | `app/account/profile.tsx`, `account/CodeStep.tsx`, `POST /v1/me/phone/start`, `/verify` | `account.test.ts`, `navigation/account.test.tsx` | Done |
+| ACC-03 / NOTIF 04 Preferences | NANO-05 | `customer_preferences` (migration 0006), `GET`/`PUT /v1/me/preferences`, `app/account/notifications.tsx` | `account.test.ts`, `navigation/account.test.tsx` | Done (delivery NANO-09) |
+| ACC-04/05 / NOTIF 05 Inbox | NANO-05 | `notifications.read_at`, `GET /v1/me/inbox`, `/:id`, `app/account/inbox/*` | `account.test.ts`, `navigation/account.test.tsx` | Done |
+| ACC-06 / PRIV 02 Privacy hub and consent history | NANO-05 | `GET /v1/me/consents`, `app/account/privacy.tsx` | `account.test.ts`, `navigation/account.test.tsx` | Done |
+| ACC-07 / PRIV 08 Data export request | NANO-05 | `privacy_requests`, `GET`/`POST /v1/me/data-requests`, `app/account/data-request.tsx` | `account.test.ts`, `navigation/account.test.tsx` | Request tracked; export fulfilment by the clinic |
+| ACC-08–10 / AUTH 06 / PRIV 04 Account deletion | NANO-05 | `/v1/me/deletion/*`, `DELETION_PLAN`, `carryOutDeletion`, `runDueDeletions`, `app/account/delete.tsx` | `account.test.ts`, `navigation/account.test.tsx` | Done (retention wording: legal review) |
+| WEB-03/04 web deletion contract | NANO-05 | `POST /v1/privacy/deletion/start`, `/confirm`, `GET /v1/privacy/deletion/:token`; contracts `webDeletionStartSchema`, `deletionStatusSchema` | `account.test.ts` | API ready; page in NANO-11 |
+| PRIV 06 Permissions in context | NANO-05 | ACC-03 explains OS-off with Open settings; no prompt outside ENT-04 or the calendar action | `navigation/account.test.tsx` | Done |
+| PRIV 07 Sensitive content | NANO-05 | Profile has name, phone, email only; "no medical details" helper on free-text fields | — | Done |
+| NFR 05 Logs and analytics minimisation | NANO-05 | Logger redaction, no PII in URLs, one deletion event without personal data | — | Done |

@@ -85,7 +85,11 @@ export const meSchema = z.object({
     firstName: z.string().nullable(),
     lastName: z.string().nullable(),
     email: z.string().nullable(),
+    /** ACC-01 "client since". */
+    createdAt: z.iso.datetime({ offset: true }).optional(),
   }),
+  /** A deletion waiting out its grace period (ACC-10); signing in again lets the person cancel it. */
+  deletion: z.object({ reference: z.string(), dueAt: z.iso.datetime({ offset: true }) }).nullable().optional(),
   /** Latest record per purpose (history is append-only on the server). */
   consents: z.array(consentStateSchema),
   /** Display only; authorization uses `permissions`. */

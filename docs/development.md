@@ -142,6 +142,28 @@ Runtime boundaries:
   the customer). Delivery (push/text/email, consent, quiet hours) is NANO-09.
 - **Device data:** visits are cached for offline reading under `nano.private.*` and wiped on sign-out or session expiry.
 
+## Account, privacy, inbox and deletion (NANO-05)
+
+- **Screens:** `/account` (ACC-01), `/account/profile` (ACC-02), `/account/notifications` (ACC-03), `/account/inbox` and
+  `/account/inbox/[id]` (ACC-04/05), `/account/privacy` (ACC-06, consent history inline), `/account/data-request`
+  (ACC-07), `/account/delete` (ACC-08 → 09 → 10).
+- **Endpoints:** `GET`/`PUT /v1/me/preferences`, `POST /v1/me/phone/start` and `/verify`, `GET /v1/me/inbox`,
+  `GET /v1/me/inbox/:id` (marks read), `GET /v1/me/consents`, `GET`/`POST /v1/me/data-requests`,
+  `GET /v1/me/deletion/preview`, `POST /v1/me/deletion/start`, `POST /v1/me/deletion`, `POST /v1/me/deletion/cancel`;
+  public `GET /v1/privacy/deletion/:token`, `POST /v1/privacy/deletion/start` and `/confirm` (contract for WEB-03/04).
+- **Codes:** phone change and deletion use the same code rules and limits as sign-in (`startCode`/`checkCode` in
+  `auth/routes.ts`). A new number is saved only after its own code is verified.
+- **Deletion:** a verified request is `pending` for `settings.deletionGraceDays` (Sample 30), every session ends at
+  once, and a text confirms it. Signing in again during the grace period shows "Keep my account". `runDueDeletions`
+  (hourly in `server.ts`) then deletes, deidentifies and retains exactly per `DELETION_PLAN` in `account/routes.ts`,
+  marks the request completed and texts the completion notice. **Adding a table that holds customer data means adding
+  it to the plan and to `carryOutDeletion`.**
+- **Inbox:** customer notifications (`notifications`, audience `customer`) are the inbox; wording per template is in
+  `INBOX` (`account/routes.ts`). Unknown templates are not shown.
+- **Logs and analytics:** request logs carry method, URL and status only (no bodies); `authorization` and cookies are
+  redacted. Account URLs never contain phone numbers or emails. The only account analytics event is
+  `account_deletion_requested { route }`.
+
 ## Troubleshooting
 
 - **`FATAL ERROR: Zone Allocation failed - process out of memory`** when PGlite starts (tests or `api:dev`): the

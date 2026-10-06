@@ -1,3 +1,4 @@
+import { runDueDeletions } from './account/routes';
 import { buildApp } from './app';
 import { loadConfig } from './config';
 import { openDb } from './db';
@@ -39,6 +40,14 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     );
   });
 }
+
+// Deletions whose grace period has ended (PRIV 04). Idempotent, so overlapping instances can't double-run one.
+// ponytail: in-process timer; move to the platform scheduler when the API is hosted (open item).
+const deletions = setInterval(() => {
+  runDueDeletions(db, integrations, Date.now(), (requestId, err) => app.log.error({ err, requestId }, 'deletion failed; will retry')).catch((err: unknown) => app.log.error({ err }, 'deletion run failed'));
+}, 3600_000);
+deletions.unref();
+app.addHook('onClose', async () => clearInterval(deletions));
 
 await app.listen({ host: config.HOST, port: config.PORT });
 app.log.info(

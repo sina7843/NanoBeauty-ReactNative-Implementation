@@ -114,6 +114,7 @@ export default function AskUs() {
             error={error}
             maxLength={1000}
             multiline
+            helper={t('privacy.noMedical')}
           />
           {failed ? (
             <Banner tone="danger" title={t('error.title')}>

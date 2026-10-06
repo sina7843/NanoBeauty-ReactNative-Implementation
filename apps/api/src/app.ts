@@ -11,6 +11,7 @@ import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
 import type { Config } from './config';
 import type { Db } from './db';
+import { registerAccountRoutes } from './account/routes';
 import { registerAuthRoutes } from './auth/routes';
 import { registerContentRoutes } from './content/routes';
 import { registerVisitRoutes } from './visits/routes';
@@ -57,6 +58,9 @@ export interface AppDeps {
   auth?: { now?: () => number; devOtpSink?: Map<string, string> };
 }
 
+/** Request-log URL without secrets: the deletion status token is a bearer value for its request's status. */
+export const redactUrl = (url: string) => url.replace(/(\/v1\/privacy\/deletion\/)[0-9a-f-]{36}/i, '$1:token');
+
 export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
   const app = Fastify({
     logger:
@@ -66,6 +70,10 @@ export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
             level: config.LOG_LEVEL,
             // Structured, non-sensitive: never log credentials or session material.
             redact: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
+            // URLs only, with bearer-like path segments (deletion status token) masked.
+            serializers: {
+              req: (req: { method: string; url: string; id: string }) => ({ method: req.method, url: redactUrl(req.url), id: req.id }),
+            },
           },
     // Accept a caller's request ID only if it is a safe token; otherwise mint one.
     genReqId: (req) => {
@@ -110,7 +118,8 @@ export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
   // rate limiter only applies to the routes that opt in.
   app.register(async (scope) => {
     await scope.register(rateLimit, { global: false });
-    registerAuthRoutes(scope, { now: auth.now ?? Date.now, devOtpSink: auth.devOtpSink });
+    const kit = registerAuthRoutes(scope, { now: auth.now ?? Date.now, devOtpSink: auth.devOtpSink });
+    registerAccountRoutes(scope, { now: auth.now ?? Date.now, kit });
     // Public discovery content (NANO-03): catalogue, offers, promo checks, support, policies.
     registerContentRoutes(scope, { now: auth.now ?? Date.now });
     // Fresha hand-off, visits and visit requests (NANO-04).

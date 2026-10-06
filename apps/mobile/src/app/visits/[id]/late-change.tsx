@@ -141,6 +141,7 @@ function Composer({ visit, offline }: { visit: Visit; offline: boolean }) {
         error={error}
         maxLength={1000}
         multiline
+        helper={t('privacy.noMedical')}
       />
       {failed ? (
         <Banner tone="danger" title={t('error.title')}>

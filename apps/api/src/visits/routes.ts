@@ -294,7 +294,7 @@ export function registerVisitRoutes(app: FastifyInstance, { now }: { now: () => 
       );
       // NTF-11 to staff who can handle requests; acknowledgement to the customer.
       await notify(tx, { audience: 'staff', permission: 'requests.manage', template: 'NTF-11.request_needs_you', data: { requestId: row!.id, reference }, now: t });
-      await notify(tx, { audience: 'customer', customerId: ctx.customerId, template: 'visit_request_submitted', data: { requestId: row!.id, reference }, now: t });
+      await notify(tx, { audience: 'customer', customerId: ctx.customerId, template: 'visit_request_submitted', data: { requestId: row!.id, reference, visitId: visit.id }, now: t });
       return toRequest(row!);
     });
   });
@@ -342,7 +342,7 @@ export function registerVisitRoutes(app: FastifyInstance, { now }: { now: () => 
           audience: 'customer',
           customerId: r.customer_id,
           template,
-          data: { requestId: id, reference: r.reference, ...(body.to === 'declined' ? { reason: body.reason } : {}) },
+          data: { requestId: id, reference: r.reference, visitId: r.visit_id, ...(body.to === 'declined' ? { reason: body.reason } : {}) },
           now: t,
         });
       }

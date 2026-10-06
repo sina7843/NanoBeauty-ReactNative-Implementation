@@ -91,6 +91,11 @@ export function registerAuthRoutes(app: FastifyInstance, { now, devOtpSink }: Au
   // AUT-01. Same response whether or not the number has an account (no enumeration).
   app.post('/v1/auth/otp/start', throttled, async (request): Promise<OtpStartResponse> => {
     const { phone: raw } = otpStartRequestSchema.parse(request.body);
+    return startCode(raw);
+  });
+
+  /** Sends a code to a number, with the per-number limits. Also used for phone change and deletion (NANO-05). */
+  async function startCode(raw: string): Promise<OtpStartResponse> {
     const phone = normalizePhone(raw);
     if (!phone) throw new HttpError(400, 'validation_failed', 'Enter a 10-digit Canadian mobile number');
     const t = now();
@@ -127,11 +132,27 @@ export function registerAuthRoutes(app: FastifyInstance, { now, devOtpSink }: Au
       await tx.query('UPDATE otp_challenges SET provider_ref = $2 WHERE id = $1', [row!.id, providerRef]);
       return { challengeId: row!.id, sentTo: maskPhone(phone), expiresAt, resendAvailableAt };
     });
-  });
+  }
 
-  // AUT-02. Attempts are counted before the provider is asked, so parallel guesses can't exceed the limit.
+  // AUT-02.
   app.post('/v1/auth/otp/verify', throttled, async (request): Promise<OtpVerifyResponse> => {
     const { challengeId, code } = otpVerifyRequestSchema.parse(request.body);
+    const phone = await checkCode(challengeId, code);
+    const t = now();
+    const [customer] = await db.query<{ id: string }>(
+      `INSERT INTO customers (phone_e164) VALUES ($1)
+       ON CONFLICT (phone_e164) DO UPDATE SET updated_at = customers.updated_at RETURNING id`,
+      [phone],
+    );
+    const tokens = await issueSession(db, customer!.id, t);
+    return { ...tokens, next: await nextStep(db, customer!.id, integrations.legacy.isConnected()) };
+  });
+
+  /**
+   * Checks and consumes a code; returns the verified number. Attempts are counted before the provider is asked,
+   * so parallel guesses can't exceed the limit.
+   */
+  async function checkCode(challengeId: string, code: string): Promise<string> {
     const expired = new HttpError(400, 'code_expired', 'This code has expired.');
     if (!UUID.test(challengeId)) throw expired;
     const t = now();
@@ -169,14 +190,8 @@ export function registerAuthRoutes(app: FastifyInstance, { now, devOtpSink }: Au
       iso(t),
     ]);
     if (consumed.length === 0) throw expired;
-    const [customer] = await db.query<{ id: string }>(
-      `INSERT INTO customers (phone_e164) VALUES ($1)
-       ON CONFLICT (phone_e164) DO UPDATE SET updated_at = customers.updated_at RETURNING id`,
-      [challenge.phone_e164],
-    );
-    const tokens = await issueSession(db, customer!.id, t);
-    return { ...tokens, next: await nextStep(db, customer!.id, integrations.legacy.isConnected()) };
-  });
+    return challenge.phone_e164;
+  }
 
   app.post('/v1/auth/refresh', throttled, async (request) => {
     const { refreshToken } = refreshRequestSchema.parse(request.body);
@@ -189,8 +204,12 @@ export function registerAuthRoutes(app: FastifyInstance, { now, devOtpSink }: Au
   });
 
   async function me(ctx: AuthContext): Promise<Me> {
-    const [c] = await db.query<{ id: string; phone_e164: string; first_name: string | null; last_name: string | null; email: string | null }>(
-      'SELECT id, phone_e164, first_name, last_name, email FROM customers WHERE id = $1',
+    const [c] = await db.query<{ id: string; phone_e164: string; first_name: string | null; last_name: string | null; email: string | null; created_at: Date }>(
+      'SELECT id, phone_e164, first_name, last_name, email, created_at FROM customers WHERE id = $1',
+      [ctx.customerId],
+    );
+    const [deletion] = await db.query<{ reference: string; due_at: Date }>(
+      `SELECT reference, due_at FROM privacy_requests WHERE customer_id = $1 AND kind = 'delete' AND status = 'pending'`,
       [ctx.customerId],
     );
     if (!c) throw new HttpError(401, 'session_expired', 'Please sign in again.');
@@ -200,7 +219,8 @@ export function registerAuthRoutes(app: FastifyInstance, { now, devOtpSink }: Au
       [c.id],
     );
     return {
-      customer: { id: c.id, phone: c.phone_e164, firstName: c.first_name, lastName: c.last_name, email: c.email },
+      customer: { id: c.id, phone: c.phone_e164, firstName: c.first_name, lastName: c.last_name, email: c.email, createdAt: c.created_at.toISOString() },
+      deletion: deletion ? { reference: deletion.reference, dueAt: deletion.due_at.toISOString() } : null,
       consents: consents.map((r) => ({ purpose: r.purpose, granted: r.granted, version: r.version, recordedAt: r.recorded_at.toISOString() })),
       roles: ctx.roles,
       permissions: ctx.permissions,
@@ -358,4 +378,7 @@ export function registerAuthRoutes(app: FastifyInstance, { now, devOtpSink }: Au
     });
   }
 
+  return { startCode, checkCode, me, requireAuth };
 }
+
+export type AuthKit = ReturnType<typeof registerAuthRoutes>;

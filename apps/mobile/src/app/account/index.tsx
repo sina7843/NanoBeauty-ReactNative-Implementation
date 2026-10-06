@@ -7,6 +7,7 @@ import { StyleSheet, View } from 'react-native';
 import { useInbox, usePreferences } from '../../account/queries';
 import { useAuth } from '../../auth/AuthProvider';
 import { SignInGate } from '../../auth/SignInGate';
+import { isStaff } from '../../staff/api';
 import { Banner, Button, ListGroup, ListRow, Screen, Text } from '../../components';
 import { t } from '../../i18n';
 import { clinicDate } from '../../i18n/format';
@@ -94,6 +95,12 @@ function Hub() {
         />
         <ListRow icon="lock" title={t('acc.privacy')} onPress={() => router.push('/account/privacy')} />
       </ListGroup>
+      {isStaff(me?.permissions) ? (
+        // Only when the server session carries a staff permission (D34); customers never see it.
+        <ListGroup>
+          <ListRow icon="user-gear" title={t('acc.staff')} value={me?.roles.join(' + ')} onPress={() => router.push('/staff')} />
+        </ListGroup>
+      ) : null}
       <ListGroup>
         <ListRow icon="question" title={t('acc.help')} onPress={() => router.push('/support')} />
         <ListRow icon="receipt" title={t('acc.legal')} onPress={() => router.push('/legal/terms')} />

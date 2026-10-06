@@ -18,7 +18,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { AuthKit } from '../auth/routes';
 import { CONSENT_VERSIONS, type AuthContext } from '../auth/session';
-import type { Db } from '../db';
+import type { Db, Queryable } from '../db';
 import { HttpError } from '../errors';
 import type { Integrations } from '../integrations';
 import { notify } from '../visits/routes';
@@ -49,6 +49,10 @@ export const DELETION_PLAN = {
       tables: ['orders', 'refunds', 'wallet_instruments', 'ledger_entries'],
     },
     { label: 'Bookings in Fresha are kept by the clinic in Fresha; ask the clinic about them.', tables: [] },
+    {
+      label: 'If you worked for the clinic: content edits, approvals, uploads, imports and invites you made, linked only to the removed record.',
+      tables: ['approvals', 'media', 'catalog_imports', 'staff_invites'],
+    },
   ],
 } as const;
 
@@ -157,12 +161,16 @@ export async function carryOutDeletion(db: Db, integrations: Integrations, reque
     const [r] = await tx.query<{ customer_id: string; status: string }>('SELECT customer_id, status FROM privacy_requests WHERE id = $1 FOR UPDATE', [requestId]);
     if (!r || r.status !== 'pending') return null;
     const id = r.customer_id;
+    // Same lock and rule as the team routes: the clinic never ends up without an Owner.
+    await tx.query('SELECT pg_advisory_xact_lock(hashtext($1))', ['staff_roles']);
+    if (await isLastOwner(tx, id)) throw new Error('last Owner: deletion waits until another Owner exists');
     const [c] = await tx.query<{ phone_e164: string }>('SELECT phone_e164 FROM customers WHERE id = $1', [id]);
     // delete
     await tx.query('DELETE FROM used_refresh_tokens WHERE session_id IN (SELECT id FROM sessions WHERE customer_id = $1)', [id]);
     await tx.query('DELETE FROM sessions WHERE customer_id = $1', [id]);
     await tx.query('DELETE FROM otp_challenges WHERE phone_e164 = $1', [c!.phone_e164]);
     await tx.query('DELETE FROM auth_locks WHERE phone_e164 = $1', [c!.phone_e164]);
+    await tx.query('DELETE FROM staff_invites WHERE phone_e164 = $1 AND accepted_at IS NULL', [c!.phone_e164]);
     await tx.query('DELETE FROM staff_roles WHERE customer_id = $1', [id]);
     await tx.query('DELETE FROM customer_preferences WHERE customer_id = $1', [id]);
     await tx.query('DELETE FROM notifications WHERE customer_id = $1', [id]);
@@ -203,6 +211,12 @@ export async function carryOutDeletion(db: Db, integrations: Integrations, reque
  * Runs every deletion whose grace period has ended. One failing request is reported (by id only) and skipped, so it
  * can never hold up everyone else's deletion. Returns how many were carried out.
  */
+/** True when this person holds the only Owner role (D34 needs one Owner to manage the team). */
+async function isLastOwner(tx: Queryable, customerId: string): Promise<boolean> {
+  const rows = await tx.query<{ customer_id: string }>(`SELECT customer_id FROM staff_roles WHERE role = 'Owner'`);
+  return rows.length > 0 && rows.every((r) => r.customer_id === customerId);
+}
+
 export async function runDueDeletions(db: Db, integrations: Integrations, now: number, onError?: (requestId: string, err: unknown) => void): Promise<number> {
   const due = await db.query<{ id: string }>(`SELECT id FROM privacy_requests WHERE kind = 'delete' AND status = 'pending' AND due_at <= $1 ORDER BY due_at`, [iso(now)]);
   let done = 0;
@@ -409,6 +423,9 @@ export function registerAccountRoutes(app: FastifyInstance, { now, kit }: { now:
     const t = now();
     const days = await graceDays();
     const status = await db.transaction(async (tx) => {
+      if (await isLastOwner(tx, customerId)) {
+        throw new HttpError(409, 'conflict', 'You’re the clinic’s only Owner. Give someone else the Owner role first, then delete your account.');
+      }
       const [open] = await tx.query<RequestRow>(`SELECT * FROM privacy_requests WHERE customer_id = $1 AND kind = 'delete' AND status = 'pending'`, [customerId]);
       if (open) return { row: open, created: false };
       const [row] = await tx.query<RequestRow>(

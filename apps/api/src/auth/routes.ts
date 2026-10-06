@@ -18,6 +18,7 @@ import {
 import type { FastifyInstance, FastifyRequest, preHandlerHookHandler } from 'fastify';
 import { z } from 'zod';
 import { HttpError } from '../errors';
+import { acceptStaffInvite } from '../staff/routes';
 import type { LegacyRecord } from '../integrations';
 import {
   authenticate,
@@ -144,6 +145,8 @@ export function registerAuthRoutes(app: FastifyInstance, { now, devOtpSink }: Au
        ON CONFLICT (phone_e164) DO UPDATE SET updated_at = customers.updated_at RETURNING id`,
       [phone],
     );
+    // A pending staff invite for this number becomes access now (STF-13/38), before the session's roles load.
+    await acceptStaffInvite(db, customer!.id, phone, t);
     const tokens = await issueSession(db, customer!.id, t);
     return { ...tokens, next: await nextStep(db, customer!.id, integrations.legacy.isConnected()) };
   });

@@ -67,6 +67,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ['expo-splash-screen', { image: './assets/splash.png', imageWidth: 300, backgroundColor: '#463E55', dark: { image: './assets/splash.png', backgroundColor: '#463E55' } }],
       // iOS 17+ write-only access for the system event sheet; never full calendar read access.
       ['expo-calendar', { writeOnlyAccess: true, writeOnlyCalendarPermission: 'Allow Nano Beauty to add your visits to your calendar.' }],
+      // STF-36 staff media: photo library only when a staff member taps Upload; no camera, no microphone.
+      ['expo-image-picker', { photosPermission: 'Allow Nano Beauty to use photos you choose for the clinic’s treatments.', cameraPermission: false, microphonePermission: false }],
     ],
     experiments: { typedRoutes: true, tsconfigPaths: false },
     extra: {

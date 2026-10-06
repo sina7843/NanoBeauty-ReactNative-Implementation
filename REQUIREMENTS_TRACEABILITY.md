@@ -88,3 +88,13 @@ Add/update mappings as implementation progresses. Preserve requirement IDs from 
 | WALT 15 / STF-11, STF-25 Counter lookup and redemption | NANO-06 | `GET /v1/staff/lookup`, `POST /v1/staff/redemptions` | `wallet.test.ts` | API done; staff screens NANO-07/08 |
 | WAL-05 / D38 Membership | NANO-06 | `wallet/membership.tsx` behind `features.legacyMembership` | `navigation/wallet.test.tsx` | Done |
 | WALT 12 Legacy value continuity | NANO-06 | `wallet_instruments.source = 'legacy'`, `status = 'reconciling'` hides values | — | Ready for the C3 import (NANO-07/08) |
+| ADMIN 01/07 / STF-01 / STF-14 Staff workspace and access | NANO-07 | `app/staff/_layout.tsx` gate, `staff/index.tsx`, `staff/denied.tsx`, `StaffBar`, `StaffScreen`; server `can(...)` on every `/v1/staff/*` route | `staff.test.ts`, `navigation/staff.test.tsx` | Done (Today/selling sections NANO-08) |
+| STF-02 / STF-03 / STF-40 Services, edit, FAQ (versioned drafts, 409 conflict) | NANO-07 | `services.version/draft` (migration 0008), `/v1/staff/services*`, `useServiceEditor`, `EditorChrome` | `staff.test.ts`, `navigation/staff.test.tsx` | Done |
+| D35 / STF-08 / STF-09 Publish with confirm, approvals, second approver | NANO-07 | `approvals`, `/v1/staff/approvals*`, publish/submit | `staff.test.ts`, `navigation/staff.test.tsx` | Done |
+| D36 / STF-39 Archive, restore, delete rules | NANO-07 | archive/restore/delete endpoints (services, categories, media), `ConfirmDialog` | `staff.test.ts`, `navigation/staff.test.tsx` | Done |
+| STF-04 Categories | NANO-07 | `/v1/staff/categories*`, move, `staff/taxonomy.tsx` | `staff.test.ts`, `navigation/staff.test.tsx` | Done (concerns NANO-08) |
+| STF-36 Media library | NANO-07 | `media` table, `/v1/staff/media*`, `/v1/media/:id`, `staff/media.tsx` | `staff.test.ts` | Done (object storage at hosting) |
+| STF-41 / STF-42 Catalogue import | NANO-07 | `catalog_imports`, `/v1/staff/imports*`, `parseCsv`, `parsePrice`, `staff/import/*` | `staff.test.ts`, `navigation/staff.test.tsx` | Done |
+| STF-12 Audit log viewer | NANO-07 | `GET /v1/staff/audit`, `staff/audit.tsx`; entries append-only | `staff.test.ts`, `navigation/staff.test.tsx` | Done |
+| STF-13 / STF-38 Team and roles | NANO-07 | `staff_invites`, `/v1/staff/team*`, `acceptStaffInvite`, `staff/team/*` | `staff.test.ts`, `navigation/staff.test.tsx` | Done |
+| D39 Tablet two-column layout | NANO-07 | `StaffScreen` (`useTablet`: 768 pt iOS / 600 dp Android, form left, preview/actions right) on STF-03, STF-40, STF-42 | — | Done; verify on a tablet |

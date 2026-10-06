@@ -17,6 +17,7 @@ import { registerContentRoutes } from './content/routes';
 import { registerVisitRoutes } from './visits/routes';
 import { HttpError } from './errors';
 import type { Integrations } from './integrations';
+import { registerStaffRoutes } from './staff/routes';
 import { registerWalletRoutes, type WalletKit } from './wallet/routes';
 
 declare module 'fastify' {
@@ -130,6 +131,8 @@ export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
     registerVisitRoutes(scope, { now: auth.now ?? Date.now });
     // Payments, wallet, gifts and counter redemption (NANO-06).
     app.jobs.wallet = registerWalletRoutes(scope, { now: auth.now ?? Date.now, kit });
+    // Staff workspace core and content governance (NANO-07).
+    registerStaffRoutes(scope, { now: auth.now ?? Date.now });
   });
 
   app.get('/health/live', async () => ({ status: 'ok' as const }));

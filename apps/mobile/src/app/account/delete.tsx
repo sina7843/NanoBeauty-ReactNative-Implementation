@@ -81,6 +81,7 @@ function Flow({ onRequested }: { onRequested: (token: string) => void }) {
             await signOut();
             onRequested(status.token);
           }}
+          describe={(e) => (e.code === 'conflict' ? t('del.lastOwner') : undefined)}
         />
         <Button variant="tertiary" fullWidth onPress={() => router.back()}>
           {t('del.keep')}

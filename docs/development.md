@@ -188,6 +188,30 @@ Runtime boundaries:
 - **Settings:** `paymentMethods` switches, `gift.presetsCAD`, `gift.customRangeCAD`, `gift.designs`. Packages live in
   the `packages` table (sample list).
 
+## Staff workspace and content governance (NANO-07)
+
+- **Open it:** sign in with a number that has a staff role (grant one in dev with the `staff_roles` INSERT above, or
+  invite it from Team), then Account → **Staff workspace** (`/staff`). Customers never see the row or the routes.
+- **Roles → permissions (D34):** Owner = everything; Editor = `content.draft` (draft and submit, never publish);
+  Front desk = no content. The server checks every `/v1/staff/*` call; a 403 opens STF-14.
+- **Editing:** staff edit a draft; customers keep the live version until publish. Every write sends `version`; a stale
+  one gets 409 and the app shows "Someone else changed this" with **Load the latest version**. A failed save keeps
+  the edits on the phone (`nano.staff.unsaved.service.<id>`). Offline is read only.
+- **Publishing:** Owner → confirm dialog → live. Editor → Submit → STF-08 queue. With `secondApprover.on` (settings),
+  a price change waits for someone other than the submitter.
+- **Archive rules (D36):** published services/categories archive (never delete); never-published drafts delete;
+  categories with treatments are blocked until they move; media deletes only as an unused draft.
+- **Media:** upload JPG/PNG/WebP ≤ 5 MB; usable after alt text + rights confirmed; reference it in a service as
+  `media:<id>`; customers load usable photos from `GET /v1/media/:id`.
+- **Import:** Services → Import list → choose a CSV (header row) → match columns → review → resolve duplicates →
+  Publish (Owner) or Submit (Editor). Prices like `From $250`, `$50 per area`, `$300–$500`, `Consultation` are read.
+- **Tablet (D39):** at 768 pt (iOS) / 600 dp (Android) wide, STF-03, STF-40 and STF-42 show the form on the left and
+  preview/actions on the right.
+- **Endpoints:** `/v1/staff/services[/:id[/draft|submit|publish|archive|restore|delete|move]]`,
+  `/v1/staff/categories[/:id[/archive|restore|delete]]`, `/v1/staff/approvals[/:id/decide]`, `/v1/staff/media[/:id[/…]]`,
+  `/v1/staff/imports[/:id/mapping|review|decisions|publish|submit]`, `/v1/staff/team[/invites|/:id/roles|/:id/remove]`,
+  `/v1/staff/audit`, `/v1/staff/summary`, public `GET /v1/media/:id`.
+
 ## Troubleshooting
 
 - **`FATAL ERROR: Zone Allocation failed - process out of memory`** when PGlite starts (tests or `api:dev`): the

@@ -86,6 +86,8 @@ function Navigator() {
         <Stack.Screen name="book" options={{ headerShown: false, presentation: 'modal' }} />
         <Stack.Screen name="pay" options={{ headerShown: false, presentation: 'modal' }} />
         <Stack.Screen name="auth" options={{ headerShown: false, presentation: 'modal' }} />
+        {/* Staff workspace: its own StaffBar header (ADMIN 01/07). */}
+        <Stack.Screen name="staff" options={{ headerShown: false }} />
         <Stack.Screen name="account/index" options={{ title: t('nav.account') }} />
         <Stack.Screen name="legal/[doc]" options={{ title: '' }} />
         <Stack.Screen name="support/contact" options={{ title: '' }} />

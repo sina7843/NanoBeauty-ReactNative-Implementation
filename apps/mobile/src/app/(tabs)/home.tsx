@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAuth } from '../../auth/AuthProvider';
 import { Banner, Button, IconButton, NotBuiltYet, Screen } from '../../components';
 import { t } from '../../i18n';
 import { useIsOnline } from '../../lib/network';
@@ -7,10 +8,20 @@ import { useIsOnline } from '../../lib/network';
 export default function Home() {
   const router = useRouter();
   const online = useIsOnline();
+  const { status } = useAuth();
   const { notice } = useLocalSearchParams<{ notice?: string }>();
   return (
     <Screen tabbed
-      trailing={<IconButton icon="user-circle" label={t('nav.account')} onPress={() => router.push('/account')} />}
+      trailing={
+        status === 'signedIn' ? (
+          <IconButton icon="user-circle" label={t('nav.account')} onPress={() => router.push('/account')} />
+        ) : status === 'guest' ? (
+          // Guests browse freely (AUTH 01); sign-in is offered, never forced (Main board).
+          <Button variant="tertiary" size="sm" onPress={() => router.push('/auth/phone')}>
+            {t('home.signIn')}
+          </Button>
+        ) : null
+      }
       footer={
         <Button size="lg" fullWidth onPress={() => router.push('/book/service')}>
           {t('home.book')}

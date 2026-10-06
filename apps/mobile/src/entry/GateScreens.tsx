@@ -17,7 +17,7 @@ const openSafely = (url: string) => {
   Linking.openURL(url).catch(() => undefined);
 };
 
-function useClinicCall() {
+export function useClinicCall() {
   const phone = useSettings().data?.data.clinic.phone ?? null;
   // ponytail: no number yet (open-items C7) → the call action is hidden rather than dialling nothing (docs/deviations.md).
   return phone ? () => openSafely(`tel:${phone.replace(/[^\d+]/g, '')}`) : null;

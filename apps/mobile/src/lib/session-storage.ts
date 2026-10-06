@@ -1,31 +1,32 @@
+import { tokenPairSchema, type TokenPair } from '@nano/contracts';
 import * as SecureStore from 'expo-secure-store';
 
 // The only place session credentials are persisted: Keychain (iOS) / Keystore-backed storage (Android).
 // Never AsyncStorage (IMPLEMENTATION_DECISIONS §3).
-const KEY = 'nano.session';
+const KEY = 'nano.session.v2';
 const OPTIONS: SecureStore.SecureStoreOptions = { keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY };
 
-export type StoredSession = { accessToken: string; refreshToken: string };
+export type StoredSession = TokenPair;
 
-export async function readSession(): Promise<StoredSession | null> {
-  const raw = await SecureStore.getItemAsync(KEY, OPTIONS);
-  if (!raw) return null;
-  try {
-    const value = JSON.parse(raw) as Partial<StoredSession>;
-    if (typeof value.accessToken === 'string' && typeof value.refreshToken === 'string') {
-      return { accessToken: value.accessToken, refreshToken: value.refreshToken };
+export interface SessionStore {
+  read(): Promise<StoredSession | null>;
+  write(session: StoredSession): Promise<void>;
+  clear(): Promise<void>;
+}
+
+export const secureSessionStore: SessionStore = {
+  async read() {
+    const raw = await SecureStore.getItemAsync(KEY, OPTIONS);
+    if (!raw) return null;
+    try {
+      const parsed = tokenPairSchema.safeParse(JSON.parse(raw));
+      if (parsed.success) return parsed.data;
+    } catch {
+      // fall through: a corrupt entry is cleared
     }
-  } catch {
-    // fall through: corrupt entry is cleared
-  }
-  await clearSession();
-  return null;
-}
-
-export function writeSession(session: StoredSession): Promise<void> {
-  return SecureStore.setItemAsync(KEY, JSON.stringify(session), OPTIONS);
-}
-
-export function clearSession(): Promise<void> {
-  return SecureStore.deleteItemAsync(KEY, OPTIONS);
-}
+    await SecureStore.deleteItemAsync(KEY, OPTIONS);
+    return null;
+  },
+  write: (session) => SecureStore.setItemAsync(KEY, JSON.stringify(session), OPTIONS),
+  clear: () => SecureStore.deleteItemAsync(KEY, OPTIONS),
+};

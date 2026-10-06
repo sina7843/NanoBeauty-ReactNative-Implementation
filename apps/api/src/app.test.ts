@@ -126,6 +126,13 @@ describe('config', () => {
     expect(() => loadConfig({ NODE_ENV: 'production' })).toThrow(/APP_ENV/);
   });
 
+  it('refuses the OTP sink and sample legacy data anywhere but local development', () => {
+    const staging = { APP_ENV: 'staging', DATABASE_URL: 'postgres://u:p@db.example/x' };
+    expect(() => loadConfig({ ...staging, DEV_OTP_SINK: 'true' })).toThrow(/DEV_OTP_SINK/);
+    expect(() => loadConfig({ ...staging, DEV_SAMPLE_LEGACY: 'true' })).toThrow(/DEV_SAMPLE_LEGACY/);
+    expect(loadConfig({ DEV_OTP_SINK: 'true' }).DEV_OTP_SINK).toBe(true);
+  });
+
   it('never echoes values in error messages', () => {
     expect(() => loadConfig({ DATABASE_URL: 'not a url but secret-ish' })).toThrow(/^(?!.*secret-ish)/s);
   });
@@ -141,13 +148,18 @@ describe('dev integrations', () => {
     expect(await integrations.payments.getStatus(a.providerRef)).toBe('pending');
   });
 
-  it('OTP accepts only the dev code and expires', async () => {
+  it('OTP codes are random, single-use, expire, and only visible in the dev sink', async () => {
     let t = 0;
-    const { integrations, devOtpCode } = createDevIntegrations({ now: () => t });
-    const { challengeId } = await integrations.otp.start('+16045550100');
-    expect(await integrations.otp.check(challengeId, '111111')).toBe('wrong');
-    t = 6 * 60_000;
-    expect(await integrations.otp.check(challengeId, devOtpCode)).toBe('expired');
+    const { integrations, otpSink } = createDevIntegrations({ now: () => t });
+    const { providerRef } = await integrations.otp.send('+16045550100');
+    const code = otpSink.get('+16045550100')!;
+    expect(code).toMatch(/^\d{6}$/);
+    expect(await integrations.otp.check(providerRef, code === '111111' ? '222222' : '111111')).toBe('wrong');
+    expect(await integrations.otp.check(providerRef, code)).toBe('approved');
+    expect(await integrations.otp.check(providerRef, code)).toBe('expired');
+    const second = await integrations.otp.send('+16045550100');
+    t = 11 * 60_000;
+    expect(await integrations.otp.check(second.providerRef, otpSink.get('+16045550100')!)).toBe('expired');
   });
 
   it('Fresha and legacy report not connected instead of inventing data', async () => {

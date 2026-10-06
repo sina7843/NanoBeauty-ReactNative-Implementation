@@ -38,12 +38,12 @@ describe('navigation (real route tree)', () => {
     await waitFor(() => expect(router.getPathname()).toBe('/home'));
   });
 
-  it('Home shows the Option B tab bar, profile button and Book action', async () => {
+  it('Home shows the Option B tab bar, guest Sign in and Book action', async () => {
     renderRouter(APP_DIR, { initialUrl: '/home' });
     for (const tab of ['Home', 'Treatments', 'Visits', 'Wallet']) {
       expect(await screen.findByRole('tab', { name: tab })).toBeTruthy();
     }
-    expect(screen.getByRole('button', { name: 'Account' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Book appointment' })).toBeTruthy();
   });
 

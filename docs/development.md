@@ -98,6 +98,26 @@ Runtime boundaries:
   `app.minimumVersion` / `app.maintenance` from `/v1/settings`.
 - Deviations from the boards are listed in `docs/deviations.md`.
 
+## Sign-in and sessions (NANO-02)
+
+- **Try it locally:** in your own `.env` set `DEV_OTP_SINK=true` and `DEV_SAMPLE_LEGACY=true`, start the API, open the
+  app, tap **Sign in**, enter a number, then read the code with `curl "http://localhost:4000/v1/dev/otp?phone=6045550123"`.
+  Codes exist only in that dev sink, never in logs. `(604) 555-0123` with the name Maria Chen shows a matched sample
+  account; `(604) 555-0199` shows a mismatch; any other number shows "not found".
+- **Endpoints:** `POST /v1/auth/otp/start`, `POST /v1/auth/otp/verify`, `POST /v1/auth/refresh`, `POST /v1/auth/logout`,
+  `GET /v1/me`, `POST /v1/me/consents`, `PUT /v1/me/profile`, `POST /v1/me/legacy-match`,
+  `POST /v1/me/legacy-match/decision`; staff `GET /v1/staff/match-cases` and `POST /v1/staff/match-cases/:id/resolve`
+  (permission `accountMatch.resolve`).
+- **Limits** (`apps/api/src/auth/session.ts → LIMITS`): code valid 5 min; resend after 30 s; 5 codes per hour per
+  number; 3 tries per code, then codes pause for 10 min; access token 15 min; customer session 30 days; staff 12 h;
+  20 requests/min per client address on the unauthenticated auth routes.
+- **Tokens:** opaque random tokens; only SHA-256 hashes are stored. Refresh tokens are single-use, and presenting a
+  rotated one revokes the whole session. The app keeps tokens only in expo-secure-store and refreshes once per expiry.
+- **Permissions:** `role_permissions` (data, D34) → `/v1/me.permissions`. Mobile checks `useAuth().can('…')`, never
+  role names. Giving everyone full access (the owner's D34 direction) means granting the Owner role — no code change.
+- **Grant a staff role in dev:**
+  `INSERT INTO staff_roles (customer_id, role) SELECT id, 'Owner' FROM customers WHERE phone_e164 = '+16045550123';`
+
 ## Troubleshooting
 
 - **`FATAL ERROR: Zone Allocation failed - process out of memory`** when PGlite starts (tests or `api:dev`): the

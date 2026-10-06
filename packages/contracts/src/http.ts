@@ -8,6 +8,14 @@ export const errorCodeSchema = z.enum([
   'not_found',
   'conflict',
   'rate_limited',
+  /** AUT-02: wrong code; `attemptsLeft` says how many tries remain. */
+  'code_wrong',
+  /** AUT-02: code expired or already used; request a new one. */
+  'code_expired',
+  /** Access token expired: refresh and retry. */
+  'token_expired',
+  /** Session ended (30-day limit, sign-out elsewhere, or replayed refresh token): sign in again (AUT-08). */
+  'session_expired',
   'internal_error',
   'service_unavailable',
 ]);
@@ -20,6 +28,12 @@ export const errorEnvelopeSchema = z.object({
     message: z.string(),
     requestId: z.string(),
     details: z.array(z.object({ path: z.string(), message: z.string() })).optional(),
+    /** With `rate_limited`: when the person may try again. Read as time, not blame. */
+    retryAfterSeconds: z.number().int().nonnegative().optional(),
+    /** With `code_wrong`. */
+    attemptsLeft: z.number().int().nonnegative().optional(),
+    /** With `forbidden`: the permission the caller lacks. */
+    missingPermission: z.string().optional(),
   }),
 });
 export type ErrorEnvelope = z.infer<typeof errorEnvelopeSchema>;

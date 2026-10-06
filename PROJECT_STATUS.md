@@ -5,7 +5,7 @@ Mark a prompt complete only after implementation is reviewed, relevant checks pa
 ## Implementation prompts
 - [x] NANO-00
 - [x] NANO-01
-- [ ] NANO-02
+- [x] NANO-02
 - [ ] NANO-03
 - [ ] NANO-04
 - [ ] NANO-05
@@ -17,6 +17,6 @@ Mark a prompt complete only after implementation is reviewed, relevant checks pa
 - [ ] NANO-11
 
 ## Current work
-- Active item: `NANO-02`
-- Last completed item: `NANO-01` (2026-10-06; independent review: needs changes → all findings fixed and re-tested)
-- Blockers: none for NANO-02. Open: on-device iOS/Android smoke test of navigation/entry (no Android SDK on the build machine; iOS via EAS), owner-supplied font files, client-owned app IDs, API hosting URLs, EAS account (see DECISIONS.md, docs/eas-builds.md, docs/deviations.md).
+- Active item: `NANO-03`
+- Last completed item: `NANO-02` (2026-10-06; independent review: approve with notes, all nine findings fixed and re-tested)
+- Blockers: none for NANO-03. Open: SMS OTP vendor (E3), session lengths confirmation (E3), old-app export for real account matching (C3), terms/privacy text (R1), biometric re-entry design (NANO-05), on-device iOS/Android smoke test, plus earlier items (fonts, app IDs, API hosting, EAS account).

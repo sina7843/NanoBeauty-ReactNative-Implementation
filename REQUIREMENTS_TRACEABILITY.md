@@ -32,3 +32,13 @@ Add/update mappings as implementation progresses. Preserve requirement IDs from 
 | NFR 01 accessibility basics (48 dp targets, labels, text scaling, reduced motion) | NANO-01 | components (`hitSlopFor`, a11y roles/labels, `maxFontSizeMultiplier` on display styles, `useReducedMotion`) | `components.test.tsx`, `theme.test.ts` | Foundation; VoiceOver/TalkBack pass pending (NANO-10) |
 | NFR 16 design fidelity / deviations log | NANO-01 | `docs/deviations.md` | — | Started |
 | ADMIN 01/07 staff visual boundary | NANO-01 | `StaffBar`, `RoleBadge`, `PermissionNotice` | `components.test.tsx` | Components done; workspace NANO-07 |
+| AUTH 01 Guest access | NANO-02 | Public routes need no session; Home shows "Sign in" for guests; personal routes redirect to AUT-01 | API `auth.test.ts` (guest), `router.test.tsx` | Done |
+| AUTH 02 / AUT-01, AUT-02 Phone + 6-digit code | NANO-02 | `apps/api/src/auth/routes.ts`, `apps/mobile/src/app/auth/{phone,code}.tsx`, `OTPInput` (one-time-code autofill) | `auth.test.ts`, `auth-flow.test.tsx` | Done (dev SMS adapter until E3) |
+| AUTH 03 / AUT-08 Resend timer, wrong/expired code, rate limits, session expiry, sign out | NANO-02 | `LIMITS` in `apps/api/src/auth/session.ts`; per-IP throttle; `/auth/code` AUT-08 states; Account → Sign out | `auth.test.ts` (limits, expiry, lock, logout), `auth-flow.test.tsx` (limited, offline, expired) | Done |
+| AUTH 04 / AUT-04 Profile (name, optional email) | NANO-02 | `PUT /v1/me/profile`, `src/app/auth/profile.tsx` | `auth.test.ts`, `auth-flow.test.tsx` | Sign-up step done; full profile ACC-02 in NANO-05 |
+| AUTH 05 Secure session (secure storage, revoke, replay) | NANO-02 | Hashed opaque tokens, rotation + replay revoke, `SessionManager` single-flight refresh, expo-secure-store only | `auth.test.ts` (rotation, replay, grace), `session.test.ts` | Done |
+| AUTH 07 Biometric re-entry | NANO-02 | — | — | Deferred to NANO-05 (no board) |
+| AUTH 09 / AUT-03 Consent separation | NANO-02 | `consents` table (append-only, version, time, channel), `POST /v1/me/consents`, `ConsentRow` | `auth.test.ts`, `auth-flow.test.tsx` | Done |
+| AUTH 10 Legal destinations | NANO-02 | "Read the terms" → `/legal/terms` (ACC-11 placeholder) | — | Blocked by R1 (terms text) |
+| AUTH 11 / AUT-05…07 Legacy account match | NANO-02 | `/v1/me/legacy-match`, decision cases, staff resolve with audit, `AccountMatch` | `auth.test.ts` (matched, mismatch, notfound, unavailable, self-resolve, repeat) | Done (real data awaits C3) |
+| D34 Server-side permission map | NANO-02 | `role_permissions`, `staff_roles`, `/v1/me.permissions`, `requirePermission` (403 + `missingPermission`), `useAuth().can()` | `auth.test.ts` (Owner vs Editor) | Done |

@@ -6,10 +6,13 @@ import {
   type ErrorEnvelope,
   type Readiness,
 } from '@nano/contracts';
+import rateLimit from '@fastify/rate-limit';
 import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
 import type { Config } from './config';
 import type { Db } from './db';
+import { registerAuthRoutes } from './auth/routes';
+import { HttpError } from './errors';
 import type { Integrations } from './integrations';
 
 declare module 'fastify' {
@@ -37,19 +40,22 @@ function sendError(
   status: number,
   code: ErrorCode,
   message: string,
-  details?: ErrorEnvelope['error']['details'],
+  extra: Partial<Omit<ErrorEnvelope['error'], 'code' | 'message' | 'requestId'>> = {},
 ) {
-  const body: ErrorEnvelope = { error: { code, message, requestId: request.id, ...(details ? { details } : {}) } };
+  const body: ErrorEnvelope = { error: { code, message, requestId: request.id, ...extra } };
+  if (extra.retryAfterSeconds) reply.header('retry-after', String(extra.retryAfterSeconds));
   return reply.status(status).send(body);
 }
 
 export interface AppDeps {
-  config: Pick<Config, 'LOG_LEVEL' | 'NODE_ENV'>;
+  config: Pick<Config, 'LOG_LEVEL' | 'NODE_ENV'> & Partial<Pick<Config, 'TRUST_PROXY'>>;
   db: Db;
   integrations: Integrations;
+  /** Injectable clock and the dev-only OTP sink (tests, local QA). */
+  auth?: { now?: () => number; devOtpSink?: Map<string, string> };
 }
 
-export function buildApp({ config, db, integrations }: AppDeps) {
+export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
   const app = Fastify({
     logger:
       config.NODE_ENV === 'test'
@@ -65,6 +71,8 @@ export function buildApp({ config, db, integrations }: AppDeps) {
       return typeof incoming === 'string' && SAFE_REQUEST_ID.test(incoming) ? incoming : randomUUID();
     },
     bodyLimit: 1_048_576,
+    // Hop count, never true: the per-IP auth throttle must see the real client, not a spoofable header.
+    trustProxy: (_address: string, hop: number) => hop < (config.TRUST_PROXY ?? 0),
   });
 
   app.decorate('db', db);
@@ -79,9 +87,12 @@ export function buildApp({ config, db, integrations }: AppDeps) {
   app.setNotFoundHandler((request, reply) => sendError(request, reply, 404, 'not_found', 'Route not found.'));
 
   app.setErrorHandler((error, request, reply) => {
+    if (error instanceof HttpError) {
+      return sendError(request, reply, error.statusCode, error.code, error.message, error.extra);
+    }
     if (error instanceof ZodError) {
       const details = error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }));
-      return sendError(request, reply, 400, 'validation_failed', 'Request validation failed.', details);
+      return sendError(request, reply, 400, 'validation_failed', 'Request validation failed.', { details });
     }
     const err = error as { statusCode?: number; validation?: unknown; message?: string };
     if (err.validation) return sendError(request, reply, 400, 'validation_failed', 'Request validation failed.');
@@ -91,6 +102,13 @@ export function buildApp({ config, db, integrations }: AppDeps) {
     }
     request.log.error({ err: error }, 'unhandled error');
     return sendError(request, reply, 500, 'internal_error', 'Something went wrong. Try again.');
+  });
+
+  // Identity, sessions, consents, legacy match and staff permission checks (NANO-02). Scoped so the per-IP
+  // rate limiter only applies to the routes that opt in.
+  app.register(async (scope) => {
+    await scope.register(rateLimit, { global: false });
+    registerAuthRoutes(scope, { now: auth.now ?? Date.now, devOtpSink: auth.devOtpSink });
   });
 
   app.get('/health/live', async () => ({ status: 'ok' as const }));

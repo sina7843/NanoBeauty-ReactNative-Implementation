@@ -1,3 +1,4 @@
+export { AccountMatch, ConsentRow, OTPInput } from './Auth';
 export { Badge, RoleBadge, SampleBadge, type StaffRole, type Tone } from './Badge';
 export { Banner, type BannerTone } from './Banner';
 export { Button, IconButton } from './Button';

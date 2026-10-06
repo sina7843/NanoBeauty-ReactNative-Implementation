@@ -1,13 +1,16 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomInt } from 'node:crypto';
 
 // Integration boundaries (IMPLEMENTATION_DECISIONS §6). Vendors are not chosen (open-items E2–E5),
 // so only deterministic development adapters exist. They never report success that a real
 // system of record would have to confirm, and config refuses them in production.
 
-/** SMS OTP (E3). Phone number is the identity (A6). */
+/**
+ * SMS OTP (E3). Phone number is the identity (A6). The provider owns the code; the API tracks attempts,
+ * expiry and lockouts itself so limits don't depend on the vendor.
+ */
 export interface OtpProvider {
-  start(phoneE164: string): Promise<{ challengeId: string }>;
-  check(challengeId: string, code: string): Promise<'approved' | 'wrong' | 'expired'>;
+  send(phoneE164: string): Promise<{ providerRef: string }>;
+  check(providerRef: string, code: string): Promise<'approved' | 'wrong' | 'expired'>;
 }
 
 export interface OutboundMessage {
@@ -43,9 +46,20 @@ export interface FreshaGateway {
   readVisits(customerRef: string): Promise<{ status: 'not_connected' } | { status: 'synced'; visits: unknown[] }>;
 }
 
-/** Old app (Lead360 white-label) data (C3). No export received yet. */
+export interface LegacyRecord {
+  ref: string;
+  firstName: string;
+  lastName: string;
+  items: { kind: 'visit' | 'package' | 'giftCard' | 'credit'; title: string; value: string | null }[];
+}
+
+/** Old app (Lead360 white-label) data (C3). Read-only: matching never moves value. */
 export interface LegacyDirectory {
-  findByPhone(phoneE164: string): Promise<{ status: 'not_connected' } | { status: 'found' | 'not_found' }>;
+  /** False until the old-app export/connection exists (C3); the app then skips the match step. */
+  isConnected(): boolean;
+  findByPhone(
+    phoneE164: string,
+  ): Promise<{ status: 'not_connected' } | { status: 'not_found' } | { status: 'found'; record: LegacyRecord; sample: boolean }>;
 }
 
 export interface Integrations {
@@ -56,30 +70,65 @@ export interface Integrations {
   legacy: LegacyDirectory;
 }
 
-const DEV_OTP_CODE = '000000';
-const DEV_OTP_TTL_MS = 5 * 60_000;
+const DEV_OTP_TTL_MS = 10 * 60_000;
+
+/**
+ * Sample old-app records for development and review builds only (labelled sample, AUT-05 "Sample records").
+ * +1 604 555 0123 matches the fixtures client; +1 604 555 0199 exists under another name (mismatch).
+ */
+const SAMPLE_LEGACY: Record<string, LegacyRecord> = {
+  '+16045550123': {
+    ref: 'legacy_sample_maria',
+    firstName: 'Maria',
+    lastName: 'Chen',
+    items: [
+      { kind: 'visit', title: '1 upcoming visit', value: '16 Oct' },
+      { kind: 'package', title: 'Laser package', value: '3 left' },
+      { kind: 'giftCard', title: 'Gift card', value: '$95' },
+      { kind: 'credit', title: 'Clinic credit', value: '$40' },
+    ],
+  },
+  '+16045550199': { ref: 'legacy_sample_jordan', firstName: 'Jordan', lastName: 'Lee', items: [] },
+};
 
 const digest = (value: string) => createHash('sha256').update(value).digest('hex').slice(0, 16);
 
-export function createDevIntegrations(options: { freshaBookingUrl?: string | undefined; now?: () => number } = {}) {
+export function createDevIntegrations(
+  options: {
+    freshaBookingUrl?: string | undefined;
+    now?: () => number;
+    /** Deterministic codes for tests. */
+    generateCode?: () => string;
+    /** Serve SAMPLE_LEGACY instead of reporting the old app as not connected. */
+    sampleLegacy?: boolean;
+  } = {},
+) {
   const now = options.now ?? Date.now;
-  const challenges = new Map<string, number>();
+  const generateCode = options.generateCode ?? (() => String(randomInt(0, 1_000_000)).padStart(6, '0'));
+  const codes = new Map<string, { code: string; expiresAt: number }>();
+  /**
+   * The ONLY place development OTP codes are visible (dev/test sink). Never logged. Reachable over HTTP only
+   * through the dev-only route, and only when DEV_OTP_SINK is enabled outside production.
+   */
+  const otpSink = new Map<string, string>();
   /** Captured instead of delivered; tests and local tooling read it. */
   const outbox: OutboundMessage[] = [];
   let sequence = 0;
 
   const integrations: Integrations = {
     otp: {
-      async start(phoneE164) {
-        const challengeId = `dev_otp_${digest(`${phoneE164}:${++sequence}`)}`;
-        challenges.set(challengeId, now() + DEV_OTP_TTL_MS);
-        return { challengeId };
+      async send(phoneE164) {
+        const providerRef = `dev_otp_${digest(`${phoneE164}:${++sequence}`)}`;
+        const code = generateCode();
+        codes.set(providerRef, { code, expiresAt: now() + DEV_OTP_TTL_MS });
+        otpSink.set(phoneE164, code);
+        return { providerRef };
       },
-      async check(challengeId, code) {
-        const expiresAt = challenges.get(challengeId);
-        if (expiresAt === undefined || now() > expiresAt) return 'expired';
-        if (code !== DEV_OTP_CODE) return 'wrong';
-        challenges.delete(challengeId);
+      async check(providerRef, code) {
+        const entry = codes.get(providerRef);
+        if (!entry || now() > entry.expiresAt) return 'expired';
+        if (code !== entry.code) return 'wrong';
+        codes.delete(providerRef);
         return 'approved';
       },
     },
@@ -103,8 +152,13 @@ export function createDevIntegrations(options: { freshaBookingUrl?: string | und
       readVisits: async () => ({ status: 'not_connected' }),
     },
     legacy: {
-      findByPhone: async () => ({ status: 'not_connected' }),
+      isConnected: () => !!options.sampleLegacy,
+      async findByPhone(phoneE164) {
+        if (!options.sampleLegacy) return { status: 'not_connected' };
+        const record = SAMPLE_LEGACY[phoneE164];
+        return record ? { status: 'found', record, sample: true } : { status: 'not_found' };
+      },
     },
   };
-  return { integrations, outbox, devOtpCode: DEV_OTP_CODE };
+  return { integrations, outbox, otpSink };
 }

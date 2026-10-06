@@ -11,6 +11,7 @@ import { t } from '../i18n';
 import { wireQueryToDevice } from '../lib/network';
 import { loadBrandFonts } from '../theme/fonts';
 import { ThemeProvider, useTheme } from '../theme/ThemeProvider';
+import { AuthProvider } from '../auth/AuthProvider';
 import { getEnv } from '../config/env';
 import { Maintenance, UpdateRequired } from '../entry/GateScreens';
 import { useHardGate } from '../entry/useEntry';
@@ -84,7 +85,10 @@ function Navigator() {
         {/* Modal stacks for booking and payment (phase-7 route map). */}
         <Stack.Screen name="book" options={{ headerShown: false, presentation: 'modal' }} />
         <Stack.Screen name="pay" options={{ headerShown: false, presentation: 'modal' }} />
+        <Stack.Screen name="auth" options={{ headerShown: false, presentation: 'modal' }} />
         <Stack.Screen name="account/index" options={{ title: t('nav.account') }} />
+        <Stack.Screen name="legal/[doc]" options={{ title: '' }} />
+        <Stack.Screen name="support/contact" options={{ title: '' }} />
         <Stack.Screen name="dev" options={{ headerShown: false }} redirect={!devTools} />
         <Stack.Screen name="+not-found" options={{ headerShown: false }} />
       </Stack>
@@ -119,7 +123,9 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider fonts={fonts}>
           <ToastProvider>
-            <Navigator />
+            <AuthProvider>
+              <Navigator />
+            </AuthProvider>
           </ToastProvider>
         </ThemeProvider>
       </QueryClientProvider>

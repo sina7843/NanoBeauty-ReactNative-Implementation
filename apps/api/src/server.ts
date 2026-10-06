@@ -11,8 +11,11 @@ const db = await openDb(config.DATABASE_URL);
 // In-memory PGlite starts empty every run; a real Postgres is migrated by the `migrate` deploy step.
 if (!config.DATABASE_URL) await migrate(db);
 
-const { integrations } = createDevIntegrations({ freshaBookingUrl: config.FRESHA_BOOKING_URL });
-const app = buildApp({ config, db, integrations });
+const { integrations, otpSink } = createDevIntegrations({
+  freshaBookingUrl: config.FRESHA_BOOKING_URL,
+  sampleLegacy: config.DEV_SAMPLE_LEGACY,
+});
+const app = buildApp({ config, db, integrations, auth: config.DEV_OTP_SINK ? { devOtpSink: otpSink } : {} });
 
 let closing = false;
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {

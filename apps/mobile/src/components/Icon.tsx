@@ -17,6 +17,7 @@ import { CompassIcon } from 'phosphor-react-native/src/icons/Compass';
 import { EyeIcon } from 'phosphor-react-native/src/icons/Eye';
 import { FirstAidKitIcon } from 'phosphor-react-native/src/icons/FirstAidKit';
 import { GiftIcon } from 'phosphor-react-native/src/icons/Gift';
+import { IdentificationCardIcon } from 'phosphor-react-native/src/icons/IdentificationCard';
 import { HourglassMediumIcon } from 'phosphor-react-native/src/icons/HourglassMedium';
 import { HouseIcon } from 'phosphor-react-native/src/icons/House';
 import { InfoIcon } from 'phosphor-react-native/src/icons/Info';
@@ -28,6 +29,7 @@ import { PhoneIcon } from 'phosphor-react-native/src/icons/Phone';
 import { ProhibitIcon } from 'phosphor-react-native/src/icons/Prohibit';
 import { QuestionIcon } from 'phosphor-react-native/src/icons/Question';
 import { ReceiptIcon } from 'phosphor-react-native/src/icons/Receipt';
+import { SealCheckIcon } from 'phosphor-react-native/src/icons/SealCheck';
 import { StorefrontIcon } from 'phosphor-react-native/src/icons/Storefront';
 import { TicketIcon } from 'phosphor-react-native/src/icons/Ticket';
 import { TrashIcon } from 'phosphor-react-native/src/icons/Trash';
@@ -61,6 +63,7 @@ const ICONS = {
   gift: GiftIcon,
   'hourglass-medium': HourglassMediumIcon,
   house: HouseIcon,
+  'identification-card': IdentificationCardIcon,
   info: InfoIcon,
   lock: LockIcon,
   'magnifying-glass': MagnifyingGlassIcon,
@@ -70,6 +73,7 @@ const ICONS = {
   prohibit: ProhibitIcon,
   question: QuestionIcon,
   receipt: ReceiptIcon,
+  'seal-check': SealCheckIcon,
   storefront: StorefrontIcon,
   ticket: TicketIcon,
   trash: TrashIcon,

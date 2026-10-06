@@ -14,6 +14,15 @@ const schema = z
     INTEGRATIONS_MODE: z.enum(['dev']).default('dev'),
     /** Fresha hand-off target (D33). No Fresha booking API exists; this is a link only. */
     FRESHA_BOOKING_URL: z.url().optional(),
+    /**
+     * Number of reverse-proxy hops to trust for the client address (per-IP throttling). 0 = connect directly.
+     * Set it to the real hop count behind a load balancer; never "trust all", or X-Forwarded-For is spoofable.
+     */
+    TRUST_PROXY: z.coerce.number().int().min(0).max(5).default(0),
+    /** Local development only: expose sent OTP codes at GET /v1/dev/otp. */
+    DEV_OTP_SINK: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
+    /** Local development only: serve sample old-app records for the account match (AUT-05…07). */
+    DEV_SAMPLE_LEGACY: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
   })
   .superRefine((env, ctx) => {
     // A production build must state its tier; never fall back to the development default.
@@ -22,6 +31,12 @@ const schema = z
     }
     if (env.APP_ENV !== 'development' && !env.DATABASE_URL) {
       ctx.addIssue({ code: 'custom', path: ['DATABASE_URL'], message: `required when APP_ENV=${env.APP_ENV}` });
+    }
+    // The OTP sink is a sign-in bypass by design; it must never be reachable on shared environments.
+    for (const flag of ['DEV_OTP_SINK', 'DEV_SAMPLE_LEGACY'] as const) {
+      if (env.APP_ENV !== 'development' && env[flag]) {
+        ctx.addIssue({ code: 'custom', path: [flag], message: 'is a local development switch and is refused outside APP_ENV=development' });
+      }
     }
     if (env.APP_ENV === 'production' && env.INTEGRATIONS_MODE === 'dev') {
       ctx.addIssue({

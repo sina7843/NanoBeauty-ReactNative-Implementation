@@ -47,6 +47,9 @@ export const PERMISSIONS = [
   'value.lookup',
   'giftcard.actions',
   'giftcard.void',
+  /** NANO-06: credit issue/adjustment and payment refunds (Owner only, audited). */
+  'value.adjust',
+  'payments.refund',
   'customers.view',
   'accountMatch.resolve',
   'content.draft',

@@ -1,4 +1,4 @@
-import { createHash, randomInt } from 'node:crypto';
+import { createHash, createHmac, randomInt, timingSafeEqual } from 'node:crypto';
 
 // Integration boundaries (IMPLEMENTATION_DECISIONS §6). Vendors are not chosen (open-items E2–E5),
 // so only deterministic development adapters exist. They never report success that a real
@@ -25,16 +25,43 @@ export interface MessageSender {
 }
 
 export type PaymentContext = 'deposit' | 'package' | 'gift';
-export type PaymentStatus = 'requires_action' | 'pending' | 'paid' | 'declined' | 'cancelled';
+export type PaymentMethodId = 'card' | 'apple_pay' | 'google_pay' | 'klarna' | 'affirm';
+export type PaymentStatus = 'requires_action' | 'processing' | 'succeeded' | 'declined' | 'cancelled';
+export type FailureReason = 'declined' | 'cancelled' | 'expired_card' | 'insufficient_funds' | 'provider_error';
+export interface ProviderPayment {
+  status: PaymentStatus;
+  card?: { brand: string; last4: string };
+  failureReason?: FailureReason;
+}
+export interface ProviderEvent {
+  eventId: string;
+  providerRef: string;
+  type: 'payment.updated' | 'refund.updated';
+}
 
-/** Card / wallet / BNPL provider (E4). The app never sees raw card data. */
+/**
+ * Card / wallet / BNPL provider (R03, E4). The app never sees raw card data: card, Apple Pay and Google Pay are
+ * confirmed with a token from the provider's client SDK; Klarna and Affirm run on the provider's hosted page.
+ * Webhooks only say "something changed"; the API then asks the provider for the authoritative state.
+ */
 export interface PaymentProvider {
+  /** Methods this provider can really take; ANDed with the staff switches in settings (PAY 14). */
+  capabilities(): PaymentMethodId[];
+  /** Whether financing can be offered for this amount at all. Never a promise of approval (PAY 04, PAY 12). */
+  financingOffered(method: 'klarna' | 'affirm', amountCents: number): boolean;
   createIntent(input: {
     idempotencyKey: string;
     amountCents: number;
     context: PaymentContext;
-  }): Promise<{ providerRef: string; status: PaymentStatus }>;
-  getStatus(providerRef: string): Promise<PaymentStatus>;
+    method: PaymentMethodId;
+  }): Promise<{ providerRef: string; status: PaymentStatus; redirectUrl: string | null }>;
+  confirm(providerRef: string, paymentToken: string): Promise<ProviderPayment>;
+  getStatus(providerRef: string): Promise<ProviderPayment>;
+  cancel(providerRef: string): Promise<void>;
+  refund(input: { providerRef: string; amountCents: number; idempotencyKey: string }): Promise<{ refundRef: string; status: 'pending' | 'succeeded' | 'failed' }>;
+  getRefundStatus(refundRef: string): Promise<'pending' | 'succeeded' | 'failed'>;
+  /** Verified event, or null when the signature doesn't match (the request is then rejected). */
+  parseWebhook(rawBody: string, signature: string | undefined): ProviderEvent | null;
 }
 
 /**
@@ -126,6 +153,8 @@ export function createDevIntegrations(
     sampleLegacy?: boolean;
     /** Simulate a connected Fresha read-back with SAMPLE_FRESHA bookings (local development and tests only). */
     sampleFresha?: boolean;
+    /** Methods the dev payment provider supports (default: all five). */
+    paymentCapabilities?: PaymentMethodId[];
   } = {},
 ) {
   const now = options.now ?? Date.now;
@@ -141,6 +170,8 @@ export function createDevIntegrations(
   /** Captured instead of delivered; tests and local tooling read it. */
   const outbox: OutboundMessage[] = [];
   let sequence = 0;
+
+  const { provider: devPayments, control: paymentControl } = createDevPayments(options.paymentCapabilities);
 
   const integrations: Integrations = {
     otp: {
@@ -165,15 +196,7 @@ export function createDevIntegrations(
         return { id: `dev_msg_${outbox.length}` };
       },
     },
-    payments: {
-      // Same idempotency key → same provider ref. Never auto-completes: a dev payment stays pending.
-      async createIntent({ idempotencyKey }) {
-        return { providerRef: `dev_pay_${digest(idempotencyKey)}`, status: 'requires_action' };
-      },
-      async getStatus() {
-        return 'pending';
-      },
-    },
+    payments: devPayments,
     fresha: {
       handoffUrl: () => options.freshaBookingUrl ?? null,
       isConnected: () => !!options.sampleFresha,
@@ -191,5 +214,102 @@ export function createDevIntegrations(
       },
     },
   };
-  return { integrations, outbox, otpSink, freshaBookings };
+  return { integrations, outbox, otpSink, freshaBookings, paymentControl };
+}
+
+/** Development-only webhook secret: the dev provider signs, the API verifies, exactly like a real provider would. */
+const DEV_WEBHOOK_SECRET = 'dev-only-webhook-secret';
+export const signDevWebhook = (body: string) => createHmac('sha256', DEV_WEBHOOK_SECRET).update(body).digest('hex');
+
+/**
+ * Deterministic payment provider for development and tests (no money moves). Test tokens decide card outcomes:
+ * `tok_visa` succeeds, `tok_decline` / `tok_insufficient` are declined, `tok_3ds` needs a bank check,
+ * `tok_timeout` stays processing. Klarna/Affirm wait on their hosted page until `control.settle`.
+ */
+export function createDevPayments(capabilities: PaymentMethodId[] = ['card', 'apple_pay', 'google_pay', 'klarna', 'affirm']) {
+  type Intent = ProviderPayment & { amountCents: number; refunded: number; method: PaymentMethodId };
+  const intents = new Map<string, Intent>();
+  const refunds = new Map<string, 'pending' | 'succeeded' | 'failed'>();
+  let events = 0;
+  const intentFor = (ref: string) => {
+    const intent = intents.get(ref);
+    if (!intent) throw new Error('unknown provider ref');
+    return intent;
+  };
+  const view = ({ status, card, failureReason }: Intent): ProviderPayment => ({ status, ...(card ? { card } : {}), ...(failureReason ? { failureReason } : {}) });
+
+  const provider: PaymentProvider = {
+    capabilities: () => capabilities,
+    // Sample rule standing in for the provider's own eligibility (E4): financing from $50 to $10,000.
+    financingOffered: (_method, amountCents) => amountCents >= 5000 && amountCents <= 1_000_000,
+    async createIntent({ idempotencyKey, amountCents, method }) {
+      const providerRef = `dev_pay_${digest(idempotencyKey)}`;
+      if (!intents.has(providerRef)) intents.set(providerRef, { status: 'requires_action', amountCents, refunded: 0, method });
+      const redirect = method === 'klarna' || method === 'affirm';
+      return { providerRef, status: intentFor(providerRef).status, redirectUrl: redirect ? `https://pay.example.invalid/${method}/${providerRef}` : null };
+    },
+    async confirm(providerRef, token) {
+      const intent = intentFor(providerRef);
+      // A confirmed intent never changes again (a second confirm is a no-op, like a real provider).
+      if (intent.status !== 'requires_action') return view(intent);
+      const card = { brand: 'Visa', last4: '4242' };
+      if (token === 'tok_visa') Object.assign(intent, { status: 'succeeded', card });
+      else if (token === 'tok_decline') Object.assign(intent, { status: 'declined', failureReason: 'declined' });
+      else if (token === 'tok_insufficient') Object.assign(intent, { status: 'declined', failureReason: 'insufficient_funds' });
+      else if (token === 'tok_timeout' || token === 'tok_3ds') Object.assign(intent, { status: token === 'tok_3ds' ? 'requires_action' : 'processing', card });
+      else Object.assign(intent, { status: 'declined', failureReason: 'provider_error' });
+      return view(intent);
+    },
+    async getStatus(providerRef) {
+      return view(intentFor(providerRef));
+    },
+    async cancel(providerRef) {
+      const intent = intentFor(providerRef);
+      if (intent.status === 'requires_action' || intent.status === 'processing') Object.assign(intent, { status: 'cancelled', failureReason: 'cancelled' });
+    },
+    async refund({ providerRef, amountCents, idempotencyKey }) {
+      const refundRef = `dev_re_${digest(idempotencyKey)}`;
+      if (!refunds.has(refundRef)) {
+        const intent = intentFor(providerRef);
+        const ok = intent.status === 'succeeded' && intent.refunded + amountCents <= intent.amountCents;
+        if (ok) intent.refunded += amountCents;
+        refunds.set(refundRef, ok ? 'succeeded' : 'failed');
+      }
+      return { refundRef, status: refunds.get(refundRef)! };
+    },
+    async getRefundStatus(refundRef) {
+      return refunds.get(refundRef) ?? 'failed';
+    },
+    parseWebhook(rawBody, signature) {
+      if (!signature) return null;
+      const expected = Buffer.from(signDevWebhook(rawBody));
+      const given = Buffer.from(signature);
+      if (expected.length !== given.length || !timingSafeEqual(expected, given)) return null;
+      try {
+        const event = JSON.parse(rawBody) as ProviderEvent;
+        return typeof event.eventId === 'string' && typeof event.providerRef === 'string' ? event : null;
+      } catch {
+        return null;
+      }
+    },
+  };
+
+  const control = {
+    /** The customer finished (or abandoned) the bank check / hosted page, or the bank answered late. */
+    settle(providerRef: string, outcome: 'succeeded' | 'declined' | 'cancelled') {
+      const intent = intentFor(providerRef);
+      if (intent.status === 'requires_action' || intent.status === 'processing') {
+        Object.assign(intent, outcome === 'succeeded' ? { status: outcome, card: intent.card ?? { brand: 'Visa', last4: '4242' } } : { status: outcome, failureReason: outcome });
+      }
+    },
+    /** A signed webhook delivery for a payment, as the provider would send it. */
+    webhook(providerRef: string, eventId = `evt_${++events}`) {
+      const body = JSON.stringify({ eventId, providerRef, type: 'payment.updated' } satisfies ProviderEvent);
+      return { body, signature: signDevWebhook(body) };
+    },
+    setRefund(refundRef: string, status: 'pending' | 'succeeded' | 'failed') {
+      refunds.set(refundRef, status);
+    },
+  };
+  return { provider, control };
 }

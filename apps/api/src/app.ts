@@ -17,11 +17,14 @@ import { registerContentRoutes } from './content/routes';
 import { registerVisitRoutes } from './visits/routes';
 import { HttpError } from './errors';
 import type { Integrations } from './integrations';
+import { registerWalletRoutes, type WalletKit } from './wallet/routes';
 
 declare module 'fastify' {
   interface FastifyInstance {
     db: Db;
     integrations: Integrations;
+    /** Background work the server runs on a timer (gift sends, payment reconciliation); set once routes load. */
+    jobs: { wallet?: WalletKit };
   }
 }
 
@@ -87,6 +90,7 @@ export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
 
   app.decorate('db', db);
   app.decorate('integrations', integrations);
+  app.decorate('jobs', {});
   app.addHook('onRequest', async (request, reply) => {
     reply.header(REQUEST_ID_HEADER, request.id);
   });
@@ -124,6 +128,8 @@ export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
     registerContentRoutes(scope, { now: auth.now ?? Date.now });
     // Fresha hand-off, visits and visit requests (NANO-04).
     registerVisitRoutes(scope, { now: auth.now ?? Date.now });
+    // Payments, wallet, gifts and counter redemption (NANO-06).
+    app.jobs.wallet = registerWalletRoutes(scope, { now: auth.now ?? Date.now, kit });
   });
 
   app.get('/health/live', async () => ({ status: 'ok' as const }));

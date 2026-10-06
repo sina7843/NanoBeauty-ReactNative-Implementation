@@ -132,7 +132,7 @@ function Explain({ preview }: { preview: DeletionPreview }) {
           {[
             v.count && v.next ? (v.count === 1 ? t('del.visitsOne', { date: clinicDate(v.next, zone) }) : t('del.visitsMany', { count: v.count, date: clinicDate(v.next, zone) })) : '',
             v.count ? t('del.visitsNote') : '',
-            ...preview.balances.map((b) => t('del.balance', { amount: money(b.amountCAD), label: b.label })),
+            ...preview.balances.map((b) => (b.amountCAD > 0 ? t('del.balance', { amount: money(b.amountCAD), label: b.label }) : t('del.sessionsLeft', { label: b.label }))),
           ]
             .filter(Boolean)
             .join(' ')}

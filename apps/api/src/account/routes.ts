@@ -22,6 +22,7 @@ import type { Db } from '../db';
 import { HttpError } from '../errors';
 import type { Integrations } from '../integrations';
 import { notify } from '../visits/routes';
+import { walletFor } from '../wallet/routes';
 
 const iso = (ms: number) => new Date(ms).toISOString();
 const DAY = 24 * 3600_000;
@@ -37,13 +38,16 @@ export const DELETION_PLAN = {
     { label: 'Your profile, sign-in and devices', tables: ['sessions', 'used_refresh_tokens', 'otp_challenges', 'auth_locks', 'staff_roles'] },
     { label: 'Your preferences and app messages', tables: ['customer_preferences', 'notifications'] },
     { label: 'Visits, booking hand-offs and change requests shown in the app', tables: ['visits', 'booking_handoffs', 'visit_requests'] },
-    { label: 'Questions you sent us in the app', tables: ['support_questions'] },
+    { label: 'Questions you sent us in the app', tables: ['support_questions', 'balance_help_cases'] },
   ],
   deidentify: [{ label: 'Your customer record: name, mobile number and email removed', tables: ['customers', 'privacy_requests'] }],
   retain: [
     { label: 'Consent records and the staff audit trail, linked only to the removed record', tables: ['consents', 'audit_entries'] },
     { label: 'Promo code use and old-account decisions, linked only to the removed record', tables: ['promo_redemptions', 'legacy_match_cases'] },
-    { label: 'Payment and tax records for the period required in BC, with your name removed where possible. [Legal to confirm.]', tables: [] },
+    {
+      label: 'Payment and tax records (purchases, receipts, refunds, gift cards and the balance ledger) for the period required in BC, linked only to the removed record. [Legal to confirm.]',
+      tables: ['orders', 'refunds', 'wallet_instruments', 'ledger_entries'],
+    },
     { label: 'Bookings in Fresha are kept by the clinic in Fresha; ask the clinic about them.', tables: [] },
   ],
 } as const;
@@ -73,6 +77,51 @@ const INBOX: Record<string, (d: Record<string, string>) => Omit<InboxItem, 'id' 
     body: `Reference ${d.reference}. They’ll call you, or you can call them.`,
     href: '/support/contact',
     hrefLabel: 'Contact the clinic',
+  }),
+  payment_receipt: (d) => ({
+    title: 'Payment received',
+    body: `Reference ${d.reference}. Your receipt is in your Wallet.`,
+    href: d.orderId ? `/pay/receipt/${d.orderId}` : null,
+    hrefLabel: d.orderId ? 'View receipt' : null,
+  }),
+  refund_status: (d) => ({
+    title: d.status === 'succeeded' ? 'Refund sent' : 'Refund didn’t go through',
+    body:
+      d.status === 'succeeded'
+        ? `Reference ${d.reference}. It can take up to 5 business days to show on your statement.`
+        : `Reference ${d.reference}. The clinic will contact you; nothing has been lost.`,
+    href: d.orderId ? `/pay/receipt/${d.orderId}` : null,
+    hrefLabel: d.orderId ? 'View receipt' : null,
+  }),
+  gift_scheduled: (d) => ({
+    title: `Gift card for ${d.name}`,
+    body: 'Paid. We’ll text it at the time you chose.',
+    href: d.instrumentId ? `/wallet/gift-cards/${d.instrumentId}` : null,
+    hrefLabel: 'See the gift',
+  }),
+  gift_sent: (d) => ({
+    title: `Gift card sent to ${d.name}`,
+    body: 'They got a link and a code by text.',
+    href: d.instrumentId ? `/wallet/gift-cards/${d.instrumentId}` : null,
+    hrefLabel: 'See the gift',
+  }),
+  gift_claimed: (d) => ({
+    title: `${d.name} added your gift card`,
+    body: 'It’s now in their Wallet.',
+    href: d.instrumentId ? `/wallet/gift-cards/${d.instrumentId}` : null,
+    hrefLabel: 'See the gift',
+  }),
+  'NTF-09.package_session_used': (d) => ({
+    title: 'Package session used',
+    body: `${d.label}${d.reference ? ` · ${d.reference}` : ''}.`,
+    href: d.instrumentId ? `/wallet/packages/${d.instrumentId}` : null,
+    hrefLabel: 'See your package',
+  }),
+  value_used: (d) => ({
+    title: 'Balance used at your visit',
+    body: `${d.label}${d.reference ? ` · ${d.reference}` : ''}.`,
+    href: '/wallet',
+    hrefLabel: 'Open Wallet',
   }),
   data_request_received: (d) => ({
     title: 'We’re preparing your data',
@@ -121,6 +170,13 @@ export async function carryOutDeletion(db: Db, integrations: Integrations, reque
     await tx.query('DELETE FROM booking_handoffs WHERE customer_id = $1', [id]);
     await tx.query('DELETE FROM visits WHERE customer_id = $1', [id]);
     await tx.query('DELETE FROM support_questions WHERE customer_id = $1', [id]);
+    await tx.query('DELETE FROM balance_help_cases WHERE customer_id = $1', [id]);
+    // Gifts this person sent: once delivered, the recipient's number and the message aren't needed in the kept record.
+    await tx.query(
+      `UPDATE wallet_instruments SET recipient_phone = NULL, message = NULL WHERE buyer_id = $1 AND delivery IN ('sent', 'failed', 'cancelled')`,
+      [id],
+    );
+    await tx.query(`UPDATE orders SET gift = gift - 'recipientPhone' - 'message' WHERE customer_id = $1 AND gift IS NOT NULL`, [id]);
     // deidentify (other retained records still point at this row)
     await tx.query(
       `UPDATE customers SET phone_e164 = 'deleted:' || id::text, first_name = NULL, last_name = NULL, email = NULL,
@@ -325,7 +381,16 @@ export function registerAccountRoutes(app: FastifyInstance, { now, kit }: { now:
     );
     return {
       upcomingVisits: { count: Number(v?.count ?? 0), next: v?.next?.toISOString() ?? null },
-      balances: [], // wallet balances arrive with NANO-06
+      // Value the person would lose access to in the app (from the ledger, never a stored number).
+      balances: (await walletFor(db, id, now()))
+        .filter((i) => i.role === 'owner' && i.status === 'active')
+        .flatMap((i) =>
+          i.balanceCents
+            ? [{ label: i.kind === 'gift_card' ? `gift card •••• ${i.last4 ?? ''}`.trim() : i.label.toLowerCase(), amountCAD: i.balanceCents / 100 }]
+            : i.sessions?.remaining
+              ? [{ label: `${i.label} (${i.sessions.remaining} sessions)`, amountCAD: 0 }]
+              : [],
+        ),
       delete: DELETION_PLAN.delete.map((d) => d.label),
       deidentify: DELETION_PLAN.deidentify.map((d) => d.label),
       retain: DELETION_PLAN.retain.map((d) => d.label),

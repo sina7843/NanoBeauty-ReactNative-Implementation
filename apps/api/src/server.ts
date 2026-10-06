@@ -1,5 +1,6 @@
 import { runDueDeletions } from './account/routes';
 import { buildApp } from './app';
+import { dueGiftIds, pendingRefundIds, staleAttemptIds } from './wallet/routes';
 import { loadConfig } from './config';
 import { openDb } from './db';
 import { createDevIntegrations } from './integrations';
@@ -48,6 +49,31 @@ const deletions = setInterval(() => {
 }, 3600_000);
 deletions.unref();
 app.addHook('onClose', async () => clearInterval(deletions));
+
+// Scheduled gift sends and payments left open (app closed mid-payment): every minute, idempotent.
+// ponytail: in-process timer like deletions; move to the platform scheduler with hosting (open item).
+let walletBusy = false;
+const walletJobs = setInterval(async () => {
+  const wallet = app.jobs.wallet;
+  if (!wallet || walletBusy) return; // a long run never overlaps the next tick
+  walletBusy = true;
+  // Each item on its own: one failure is logged (by id only) and the rest still run.
+  const each = async (ids: string[], run: (id: string) => Promise<unknown>, what: string) => {
+    for (const id of ids) await run(id).catch((err: unknown) => app.log.error({ err, id }, `${what} failed; retried next minute`));
+  };
+  try {
+    const t = Date.now();
+    await each(await dueGiftIds(db, t), (id) => wallet.deliverGift(id), 'gift send');
+    await each(await staleAttemptIds(db, t), (id) => wallet.reconcileById(id), 'payment check');
+    await each(await pendingRefundIds(db, t), (id) => wallet.retryRefund(id), 'refund check');
+  } catch (err) {
+    app.log.error({ err }, 'wallet jobs failed');
+  } finally {
+    walletBusy = false;
+  }
+}, 60_000);
+walletJobs.unref();
+app.addHook('onClose', async () => clearInterval(walletJobs));
 
 await app.listen({ host: config.HOST, port: config.PORT });
 app.log.info(

@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { loadPendingHandoff } from '../booking/pendingHandoff';
+import { loadPendingPayment } from '../payments/pendingPayment';
 import { Button, EmptyState, Logo } from '../components';
 import { EntryLayout } from '../entry/GateScreens';
 import { markPrimerSeen, useEntry } from '../entry/useEntry';
@@ -19,17 +20,19 @@ export default function Entry() {
 }
 
 /**
- * Home, or — if the app was closed while Fresha was open — Home with the BKG-09 return check on top, so an
- * interrupted hand-off is recovered instead of silently lost (BOOK 16).
+ * Home, or — if the app was closed mid-payment or while Fresha was open — Home with the payment status (PAY-04…08)
+ * or the BKG-09 return check on top, so nothing interrupted is silently lost (PAY 07, BOOK 16).
  */
 function Resume() {
   const router = useRouter();
   useEffect(() => {
     let active = true;
-    loadPendingHandoff().then((pending) => {
+    Promise.all([loadPendingHandoff(), loadPendingPayment()]).then(([handoff, payment]) => {
       if (!active) return;
       router.replace('/home');
-      if (pending) router.push({ pathname: '/book/fresha-return', params: { handoff: pending.id } });
+      // An interrupted payment is checked with the provider first (PAY-03 promise), then an interrupted hand-off.
+      if (payment) router.push({ pathname: '/pay/status', params: { attempt: payment.attemptId, order: payment.orderId } });
+      else if (handoff) router.push({ pathname: '/book/fresha-return', params: { handoff: handoff.id } });
     });
     return () => {
       active = false;

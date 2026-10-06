@@ -76,3 +76,15 @@ Add/update mappings as implementation progresses. Preserve requirement IDs from 
 | PRIV 06 Permissions in context | NANO-05 | ACC-03 explains OS-off with Open settings; no prompt outside ENT-04 or the calendar action | `navigation/account.test.tsx` | Done |
 | PRIV 07 Sensitive content | NANO-05 | Profile has name, phone, email only; "no medical details" helper on free-text fields | — | Done |
 | NFR 05 Logs and analytics minimisation | NANO-05 | Logger redaction, no PII in URLs, one deletion event without personal data | — | Done |
+| PAY 01 / PAY 10 Tokenised payments, no card data | NANO-06 | `PaymentProvider` (`integrations.ts`), device-side `payments/provider.ts`, `pay/card.tsx`; only brand/last4 stored | `wallet.test.ts`, `navigation/wallet.test.tsx`, `payments.test.ts` | Done with dev provider (live provider R03) |
+| PAY 02–04 / PAY 12–14 Methods and financing truthfulness | NANO-06 | `GET /v1/orders/:id/methods`, `pay/method.tsx` | `wallet.test.ts`, `navigation/wallet.test.tsx` | Done |
+| PAY 05 Deposit vs full payment | NANO-06 | Hand-off mode: packages and gift cards only; deposits in Fresha | — | Done (in-app deposits NANO-09) |
+| PAY 06 / PAY 07 Idempotency and recovery | NANO-06 | `orders`, `payment_attempts` (one open), `provider_events`, `settle`, `reconcile`, minute job, `pay/status.tsx`, relaunch resume | `wallet.test.ts`, `navigation/wallet.test.tsx` | Done |
+| PAY 08 / PAY 09 Receipts and refunds | NANO-06 | `GET /v1/receipts/:orderId`, `refunds`, `POST /v1/staff/payments/:attemptId/refunds`, `pay/receipt/[id].tsx` | `wallet.test.ts`, `navigation/wallet.test.tsx` | Done (tax lines Sample) |
+| WALT 01–04, 13, 14 Gift cards | NANO-06 | `wallet_instruments` (gift), `/v1/gifts/*`, `wallet/gift/*`, `wallet/claim.tsx`, `wallet/gift-cards/[id].tsx` | `wallet.test.ts`, `navigation/wallet.test.tsx` | Done (web page NANO-11) |
+| WALT 05–07 Packages | NANO-06 | `packages`, `wallet/buy-package.tsx`, `wallet/packages/[id].tsx` | `wallet.test.ts`, `navigation/wallet.test.tsx` | Done (redeem at booking in in-app mode NANO-09) |
+| WALT 08 / WALT 11 History and ledger reconciliation | NANO-06 | `ledger_entries` (append-only), `GET /v1/wallet/history`, `wallet/history.tsx`, `wallet/help.tsx`, `balance_help_cases` | `wallet.test.ts`, `navigation/wallet.test.tsx` | Done |
+| WALT 10 Clinic credit | NANO-06 | `POST /v1/staff/adjustments` (`value.adjust`), `wallet/credit.tsx` | `wallet.test.ts` | Done |
+| WALT 15 / STF-11, STF-25 Counter lookup and redemption | NANO-06 | `GET /v1/staff/lookup`, `POST /v1/staff/redemptions` | `wallet.test.ts` | API done; staff screens NANO-07/08 |
+| WAL-05 / D38 Membership | NANO-06 | `wallet/membership.tsx` behind `features.legacyMembership` | `navigation/wallet.test.tsx` | Done |
+| WALT 12 Legacy value continuity | NANO-06 | `wallet_instruments.source = 'legacy'`, `status = 'reconciling'` hides values | — | Ready for the C3 import (NANO-07/08) |

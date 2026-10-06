@@ -141,11 +141,13 @@ describe('config', () => {
 describe('dev integrations', () => {
   it('payments are idempotent and never auto-complete', async () => {
     const { integrations } = createDevIntegrations();
-    const a = await integrations.payments.createIntent({ idempotencyKey: 'k1', amountCents: 5000, context: 'gift' });
-    const b = await integrations.payments.createIntent({ idempotencyKey: 'k1', amountCents: 5000, context: 'gift' });
+    const a = await integrations.payments.createIntent({ idempotencyKey: 'k1', amountCents: 5000, context: 'gift', method: 'card' });
+    const b = await integrations.payments.createIntent({ idempotencyKey: 'k1', amountCents: 5000, context: 'gift', method: 'card' });
     expect(a.providerRef).toBe(b.providerRef);
     expect(a.status).toBe('requires_action');
-    expect(await integrations.payments.getStatus(a.providerRef)).toBe('pending');
+    expect((await integrations.payments.getStatus(a.providerRef)).status).toBe('requires_action');
+    // Webhooks with a bad signature are rejected.
+    expect(integrations.payments.parseWebhook('{"eventId":"e","providerRef":"x","type":"payment.updated"}', 'nope')).toBeNull();
   });
 
   it('OTP codes are random, single-use, expire, and only visible in the dev sink', async () => {

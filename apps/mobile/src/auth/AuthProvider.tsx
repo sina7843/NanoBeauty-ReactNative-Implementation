@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { clearPrivateCache } from '../lib/private-cache';
+import { giftDraft } from '../payments/giftDraft';
 import { secureSessionStore } from '../lib/session-storage';
 import { SessionManager } from './session';
 
@@ -38,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         queryClient.removeQueries({ queryKey: ['me'] });
         queryClient.removeQueries({ queryKey: ['visits'] });
         clearPrivateCache();
+        giftDraft.clear();
         router.push({ pathname: '/auth/code', params: { reason: 'expired' } });
       }),
   );
@@ -74,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async signOut() {
         await session.signOut();
         await clearPrivateCache();
+        giftDraft.clear(); // a half-written gift (recipient, message) never carries over to the next person
         setMe(null);
         setStatus('guest');
         queryClient.clear();

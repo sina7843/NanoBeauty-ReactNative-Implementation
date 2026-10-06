@@ -3,6 +3,7 @@ import {
   catalogSchema,
   homeContentSchema,
   offerResponseSchema,
+  packagesResponseSchema,
   policySchema,
   supportHubSchema,
 } from '@nano/contracts';
@@ -36,3 +37,5 @@ export const useSupportHub = () => useContent('support', '/v1/support', supportH
 export const useArticle = (id: string | undefined) =>
   useContent(`article.${id}`, `/v1/support/articles/${encodeURIComponent(id ?? '')}`, articleSchema, !!id);
 export const usePolicy = (id: string | undefined) => useContent(`policy.${id}`, `/v1/policies/${encodeURIComponent(id ?? '')}`, policySchema, !!id);
+/** WAL-07 package list (public; prices are the clinic's sample list until confirmed). */
+export const usePackages = () => useContent('packages', '/v1/packages', packagesResponseSchema);

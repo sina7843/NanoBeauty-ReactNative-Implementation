@@ -164,6 +164,30 @@ Runtime boundaries:
   redacted. Account URLs never contain phone numbers or emails. The only account analytics event is
   `account_deletion_requested { route }`.
 
+## Payments, wallet and gift cards (NANO-06)
+
+- **Flow:** WAL-07 package or WAL-13 → 08 → 09 → 10 gift → `POST /v1/orders` (idempotency key) → PAY-01
+  `/pay/method?order=` → `POST /v1/orders/:id/attempts` → card (`/pay/card`, device tokenises), Apple/Google Pay sheet,
+  or Klarna/Affirm (`/pay/provider`, hosted page) → `/pay/status` (polls; "still checking" after 30 s) →
+  `/pay/receipt/[id]`.
+- **Test cards (development provider):** `4242` succeeds, `0002` declined, `9995` insufficient funds, `3155` bank
+  check stays open, `0341` never answers (last four digits; any expiry/CVC/postal). Only the token
+  (`tok_visa`, `tok_decline`, …) reaches the API. Klarna/Affirm intents wait until the dev provider settles them
+  (`createDevIntegrations().paymentControl.settle(ref, outcome)` in tests; there is no live page).
+- **Webhooks:** `POST /v1/payments/webhook` with `x-provider-signature` (HMAC-SHA256 over the raw body). Events are
+  de-duplicated by `eventId` and only make the API re-read the provider. The dev secret is a development-only
+  constant; a live provider brings its own secret through configuration.
+- **Money and ledger:** integer cents. Balances are always `SUM(ledger_entries)`; the table is append-only (DB
+  trigger). Never update a balance; add an entry.
+- **Gifts:** codes are created when the gift is sent, texted with `https://app.nanobeautystar.com/gift/<code>` (host to
+  be decided) and stored only as hashes. Scheduled sends and stale payments are processed every minute
+  (`server.ts`).
+- **Staff APIs (screens in NANO-07/08):** `GET /v1/staff/lookup?code=|phone=` (`value.lookup`),
+  `POST /v1/staff/redemptions` (`value.redeem`), `POST /v1/staff/adjustments` (`value.adjust`, Owner),
+  `POST /v1/staff/payments/:attemptId/refunds` (`payments.refund`, Owner).
+- **Settings:** `paymentMethods` switches, `gift.presetsCAD`, `gift.customRangeCAD`, `gift.designs`. Packages live in
+  the `packages` table (sample list).
+
 ## Troubleshooting
 
 - **`FATAL ERROR: Zone Allocation failed - process out of memory`** when PGlite starts (tests or `api:dev`): the

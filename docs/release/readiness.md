@@ -120,6 +120,6 @@ procedure (with `npm run reconcile`), cutover/rollback runbook, customer message
 | Clinic content, photo rights, hours/phone/parking (C5, C7, R07) | Clinic | Sample badges stay on |
 | Old-app export (C3), rewards/membership decisions | Clinic | LEG 01–08, REWD 02, MEM 02/03 |
 | Hosting: TLS, encryption at rest, backups/restore test (NFR 11), shared rate-limit store, scheduler | Tech lead | NANO-11 |
-| App IDs, store accounts, deep-link domain | Clinic + tech lead | NANO-11 |
+| App IDs, store accounts, deep-link domain | Clinic + tech lead | store builds (NANO-11 configured; `npm run release:gate` lists what's missing) |
 | External security review | Clinic | launch |
 | Expo SDK patch updates (expo-doctor) | Tech lead | toolchain advisories |

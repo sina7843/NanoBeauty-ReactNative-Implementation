@@ -98,7 +98,7 @@ const semver = z.string().regex(/^\d+\.\d+\.\d+$/, 'MAJOR.MINOR.PATCH');
 export const appGateSchema = z.object({
   minimumVersion: z.object({ ios: semver, android: semver }),
   /** Store listing to open from "Update now". `null` until the listing exists. */
-  storeUrl: z.object({ ios: z.url().nullable(), android: z.url().nullable() }),
+  storeUrl: z.object({ ios: z.url({ protocol: /^https$/ }).nullable(), android: z.url({ protocol: /^(https|market)$/ }).nullable() }),
   /** `null` = no maintenance. `until` is shown as clinic-local time. */
   maintenance: z.object({ until: z.iso.datetime({ offset: true }) }).nullable(),
 });

@@ -60,3 +60,22 @@ for (const variant of ['staging', 'production']) {
   assert.throws(() => config(variant, 'http://api.example.invalid'), undefined, `${variant} must require https`);
   console.log(`ok ${variant}: refuses a plain-http API URL`);
 }
+
+// Store hygiene (NANO-11): least-privilege Android permissions, no backups, privacy manifest, production push, no
+// unused iOS usage strings. Plugin options are checked as configured (the build applies them).
+{
+  const c = config('production', PLACEHOLDER_URL);
+  for (const p of ['android.permission.READ_CALENDAR', 'android.permission.WRITE_CALENDAR', 'android.permission.READ_EXTERNAL_STORAGE', 'android.permission.WRITE_EXTERNAL_STORAGE', 'android.permission.RECORD_AUDIO']) {
+    assert.ok(c.android.blockedPermissions.includes(p), `blocked ${p}`);
+  }
+  assert.equal(c.android.allowBackup, false, 'android.allowBackup');
+  assert.equal(c.ios.privacyManifests?.NSPrivacyTracking, false, 'privacy manifest: no tracking');
+  assert.ok(c.ios.privacyManifests.NSPrivacyAccessedAPITypes.length > 0, 'privacy manifest: required-reason APIs');
+  const plugin = (name) => c.plugins.find((p) => (Array.isArray(p) ? p[0] : p) === name);
+  assert.deepEqual(plugin('expo-notifications')?.[1], { mode: 'production' }, 'production push environment');
+  assert.equal(plugin('expo-secure-store')?.[1]?.faceIDPermission, false, 'no Face ID string');
+  assert.equal(plugin('expo-calendar')?.[1]?.remindersPermission, false, 'no Reminders string');
+  assert.equal(c.ios.requireFullScreen, true, 'iPad full screen');
+  console.log('ok production: permissions, backup, privacy manifest, push mode, usage strings');
+}
+

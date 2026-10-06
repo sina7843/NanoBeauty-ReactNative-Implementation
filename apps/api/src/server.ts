@@ -3,7 +3,7 @@ import { buildApp } from './app';
 import { dueGiftIds, pendingRefundIds, staleAttemptIds } from './wallet/routes';
 import { loadConfig } from './config';
 import { openDb } from './db';
-import { createDevIntegrations } from './integrations';
+import { createDevIntegrations, withReviewAccount } from './integrations';
 import { migrate } from './migrate';
 import { deliverPushMessages, dispatchDue, queueReminders } from './notifications/dispatch';
 
@@ -19,6 +19,8 @@ const { integrations, otpSink } = createDevIntegrations({
   sampleLegacy: config.DEV_SAMPLE_LEGACY,
   sampleFresha: config.DEV_SAMPLE_FRESHA,
 });
+const review = config.REVIEW_PHONE && config.REVIEW_CODE && config.REVIEW_EXPIRES ? { phone: config.REVIEW_PHONE, code: config.REVIEW_CODE, expiresAt: Date.parse(config.REVIEW_EXPIRES) } : null;
+integrations.otp = withReviewAccount(integrations.otp, review);
 const app = buildApp({ config, db, integrations, auth: config.DEV_OTP_SINK ? { devOtpSink: otpSink } : {} });
 
 let closing = false;
@@ -96,6 +98,8 @@ const notifyJobs = setInterval(async () => {
 }, 60_000);
 notifyJobs.unref();
 app.addHook('onClose', async () => clearInterval(notifyJobs));
+
+if (review) app.log.warn({ until: config.REVIEW_EXPIRES }, 'App Review sign-in is ON; remove REVIEW_* after the review');
 
 await app.listen({ host: config.HOST, port: config.PORT });
 app.log.info(

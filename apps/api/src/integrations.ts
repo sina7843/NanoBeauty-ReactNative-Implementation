@@ -13,6 +13,33 @@ export interface OtpProvider {
   check(providerRef: string, code: string): Promise<'approved' | 'wrong' | 'expired'>;
 }
 
+/**
+ * App Review sign-in (NANO-11). Store reviewers can't receive our texts, so one configured number signs in with one
+ * configured code instead of an SMS. Off unless both values are set (environment only, never in the repo); every
+ * other number goes to the real provider. Attempts, expiry and lockouts still apply (the API counts them).
+ */
+export function withReviewAccount(
+  otp: OtpProvider,
+  review: { phone: string; code: string; expiresAt: number } | null,
+  now: () => number = Date.now,
+): OtpProvider {
+  if (!review) return otp;
+  const expected = Buffer.from(review.code);
+  return {
+    async send(phoneE164) {
+      // After REVIEW_EXPIRES the number is an ordinary number again (real SMS), so a forgotten setting can't linger.
+      if (phoneE164 !== review.phone || now() >= review.expiresAt) return otp.send(phoneE164);
+      return { providerRef: `review_${randomInt(0, 2 ** 31)}` };
+    },
+    async check(providerRef, code) {
+      if (!providerRef.startsWith('review_')) return otp.check(providerRef, code);
+      if (now() >= review.expiresAt) return 'expired';
+      const given = Buffer.from(code);
+      return given.length === expected.length && timingSafeEqual(given, expected) ? 'approved' : 'wrong';
+    },
+  };
+}
+
 export interface OutboundMessage {
   channel: 'email' | 'push' | 'sms';
   to: string;

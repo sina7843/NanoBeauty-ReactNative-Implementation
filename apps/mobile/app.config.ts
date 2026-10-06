@@ -52,6 +52,27 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       // Portrait-only (NFR 07): declare full screen so iPad multitasking doesn't require every orientation (App Store validation).
       requireFullScreen: true,
       config: { usesNonExemptEncryption: false },
+      // App privacy manifest (required-reason APIs used by our own code; libraries ship their own manifests).
+      privacyManifests: {
+        NSPrivacyTracking: false,
+        NSPrivacyTrackingDomains: [],
+        NSPrivacyAccessedAPITypes: [
+          // AsyncStorage (cached content, drafts, pending hand-off) uses UserDefaults for the app's own data.
+          { NSPrivacyAccessedAPIType: 'NSPrivacyAccessedAPICategoryUserDefaults', NSPrivacyAccessedAPITypeReasons: ['CA92.1'] },
+        ],
+        // Data linked to the person, used for app functionality only; none for tracking (see docs/store/privacy-inventory.md).
+        NSPrivacyCollectedDataTypes: [
+          { NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypePhoneNumber', NSPrivacyCollectedDataTypeLinked: true, NSPrivacyCollectedDataTypeTracking: false, NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality'] },
+          { NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeName', NSPrivacyCollectedDataTypeLinked: true, NSPrivacyCollectedDataTypeTracking: false, NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality'] },
+          { NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeEmailAddress', NSPrivacyCollectedDataTypeLinked: true, NSPrivacyCollectedDataTypeTracking: false, NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality'] },
+          { NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypePurchaseHistory', NSPrivacyCollectedDataTypeLinked: true, NSPrivacyCollectedDataTypeTracking: false, NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality'] },
+          { NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeUserID', NSPrivacyCollectedDataTypeLinked: true, NSPrivacyCollectedDataTypeTracking: false, NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality'] },
+          { NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeDeviceID', NSPrivacyCollectedDataTypeLinked: true, NSPrivacyCollectedDataTypeTracking: false, NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality'] },
+          { NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeCustomerSupport', NSPrivacyCollectedDataTypeLinked: true, NSPrivacyCollectedDataTypeTracking: false, NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality'] },
+          { NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeProductInteraction', NSPrivacyCollectedDataTypeLinked: false, NSPrivacyCollectedDataTypeTracking: false, NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAnalytics'] },
+          { NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeCrashData', NSPrivacyCollectedDataTypeLinked: false, NSPrivacyCollectedDataTypeTracking: false, NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality'] },
+        ],
+      },
     },
     android: {
       package: `${BASE_ID}${suffix}`,
@@ -61,18 +82,40 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         monochromeImage: './assets/android-icon-monochrome.png',
       },
       predictiveBackGestureEnabled: true,
-      // Calendar uses the insert intent (guideline 08), so the module's calendar permissions are removed.
-      blockedPermissions: ['android.permission.READ_CALENDAR', 'android.permission.WRITE_CALENDAR'],
+      // Calendar uses the insert intent (guideline 08), so the module's calendar permissions are removed. Photos come
+      // from the system picker, so no storage permissions either (Play data-safety: no file access).
+      blockedPermissions: [
+        'android.permission.READ_CALENDAR',
+        'android.permission.WRITE_CALENDAR',
+        'android.permission.READ_EXTERNAL_STORAGE',
+        'android.permission.WRITE_EXTERNAL_STORAGE',
+        'android.permission.READ_MEDIA_IMAGES',
+        'android.permission.READ_MEDIA_VIDEO',
+        'android.permission.RECORD_AUDIO',
+      ],
+      // Cached content and drafts stay on this phone; sessions are in the keystore (secure-store excludes itself too).
+      allowBackup: false,
     },
     plugins: [
       'expo-router',
       'expo-status-bar',
-      'expo-secure-store',
-      'expo-notifications',
+      // Sessions only; no biometric unlock, so no Face ID usage string.
+      ['expo-secure-store', { faceIDPermission: false }],
+      // Store builds use the production push environment.
+      ['expo-notifications', { mode: variant === 'development' ? 'development' : 'production' }],
       // ENT-01: master frame artwork on logo plum (plum-800 #463E55) in both themes.
       ['expo-splash-screen', { image: './assets/splash.png', imageWidth: 300, backgroundColor: '#463E55', dark: { image: './assets/splash.png', backgroundColor: '#463E55' } }],
       // iOS 17+ write-only access for the system event sheet; never full calendar read access.
-      ['expo-calendar', { writeOnlyAccess: true, writeOnlyCalendarPermission: 'Allow Nano Beauty to add your visits to your calendar.' }],
+      [
+        'expo-calendar',
+        {
+          writeOnlyAccess: true,
+          writeOnlyCalendarPermission: 'Allow Nano Beauty to add your visits to your calendar.',
+          // iOS 16 and earlier have no write-only access: same purpose, same words.
+          calendarPermission: 'Allow Nano Beauty to add your visits to your calendar.',
+          remindersPermission: false,
+        },
+      ],
       // STF-36 staff media: photo library only when a staff member taps Upload; no camera, no microphone.
       ['expo-image-picker', { photosPermission: 'Allow Nano Beauty to use photos you choose for the clinic’s treatments.', cameraPermission: false, microphonePermission: false }],
     ],

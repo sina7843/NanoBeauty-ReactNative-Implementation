@@ -1,11 +1,11 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/server.ts', 'src/migrate-cli.ts'],
+  entry: ['src/server.ts', 'src/migrate-cli.ts', 'src/reconcile-cli.ts'],
   format: 'esm',
   platform: 'node',
   target: 'node22',
   clean: true,
   // Workspace contracts ship as TypeScript source; bundle them, keep real npm deps external.
-  noExternal: ['@nano/contracts'],
+  noExternal: ['@nano/contracts', '@nano/design-tokens'],
 });

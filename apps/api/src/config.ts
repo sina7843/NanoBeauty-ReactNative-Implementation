@@ -25,6 +25,11 @@ const schema = z
     DEV_SAMPLE_LEGACY: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
     /** Local development only: simulate a connected Fresha read-back with sample bookings (NANO-04). */
     DEV_SAMPLE_FRESHA: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
+    /** App Review demo sign-in (NANO-11): a reviewer-only number and its fixed code. Set only while a review is open. */
+    REVIEW_PHONE: z.string().regex(/^\+1\d{10}$/, 'E.164, e.g. +16045550100').optional(),
+    REVIEW_CODE: z.string().regex(/^\d{6}$/, '6 digits').optional(),
+    /** When the review sign-in stops working (ISO date-time); required with REVIEW_PHONE, at most 60 days ahead. */
+    REVIEW_EXPIRES: z.iso.datetime({ offset: true }).optional(),
   })
   .superRefine((env, ctx) => {
     // A production build must state its tier; never fall back to the development default.
@@ -39,6 +44,16 @@ const schema = z
       if (env.APP_ENV !== 'development' && env[flag]) {
         ctx.addIssue({ code: 'custom', path: [flag], message: 'is a local development switch and is refused outside APP_ENV=development' });
       }
+    }
+    if (!!env.REVIEW_PHONE !== !!env.REVIEW_CODE || !!env.REVIEW_PHONE !== !!env.REVIEW_EXPIRES) {
+      ctx.addIssue({ code: 'custom', path: ['REVIEW_CODE'], message: 'REVIEW_PHONE, REVIEW_CODE and REVIEW_EXPIRES are set together or not at all' });
+    }
+    // A forgotten review login must not live on: it ends by itself, and can't be set far ahead.
+    if (env.REVIEW_EXPIRES && Date.parse(env.REVIEW_EXPIRES) > Date.now() + 60 * 24 * 3600_000) {
+      ctx.addIssue({ code: 'custom', path: ['REVIEW_EXPIRES'], message: 'must be within 60 days' });
+    }
+    if (env.REVIEW_CODE && /^(\d)\1{5}$|^123456$|^654321$/.test(env.REVIEW_CODE)) {
+      ctx.addIssue({ code: 'custom', path: ['REVIEW_CODE'], message: 'is too easy to guess' });
     }
     if (env.APP_ENV === 'production' && env.INTEGRATIONS_MODE === 'dev') {
       ctx.addIssue({

@@ -1,0 +1,56 @@
+name: Release build
+
+# Manual only. Builds on EAS after every gate passes; never submits to a store (submission is a separate, explicit
+# `eas submit` run by a person). Needs repository secrets EXPO_TOKEN and EAS_PROJECT_ID.
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: EAS build profile
+        type: choice
+        options: [qa, testflight, production]
+        required: true
+      platform:
+        description: Platform
+        type: choice
+        options: [android, ios, all]
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.profile }}-${{ inputs.platform }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Gate and build ${{ inputs.platform }} (${{ inputs.profile }})
+    # Only from main, and through the "release" environment (add required reviewers in the repository settings).
+    if: github.ref == 'refs/heads/main'
+    environment: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: All checks (typecheck, lint, tests, config, audit, secret scan)
+        run: npm run check
+      - name: Release gate (placeholder URLs, app IDs, legal URLs, domain, review notes)
+        run: node scripts/release-gate.mjs ${{ inputs.profile }}
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: 16.x
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: EAS build (no submit)
+        working-directory: apps/mobile
+        # The token reaches only this step (not npm install scripts or the checks).
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas build --platform ${{ inputs.platform }} --profile ${{ inputs.profile }} --non-interactive --no-wait

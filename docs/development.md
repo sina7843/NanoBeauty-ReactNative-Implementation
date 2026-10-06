@@ -248,6 +248,12 @@ Runtime boundaries:
 - `npm run bench -w @nano/api` — in-process API latency against budgets.
 - Readiness and blockers: `docs/release/readiness.md`; device checklist: `docs/release/manual-qa.md`.
 
+## Releases (NANO-11)
+
+- Runbook, profiles, credentials setup and submit commands: `docs/store/README.md`.
+- `npm run release:gate -- <qa|testflight|production>` before any cloud build; `npm run release:android:qa` etc. run it.
+- Web pages: run the API and open `http://127.0.0.1:4000/delete` or `/gift/<code>` (dev OTP sink for the code).
+
 ## Troubleshooting
 
 - **`FATAL ERROR: Zone Allocation failed - process out of memory`** when PGlite starts (tests or `api:dev`): the

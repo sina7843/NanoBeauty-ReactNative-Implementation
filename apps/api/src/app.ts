@@ -22,6 +22,7 @@ import { effectiveBookingMode } from './bookingGate';
 import type { Integrations } from './integrations';
 import { registerEntityRoutes, type ApprovalHandler } from './staff/entities';
 import { registerOpsRoutes } from './staff/ops';
+import { registerWebRoutes } from './web/routes';
 import { registerStaffRoutes } from './staff/routes';
 import { registerWalletRoutes, type WalletKit } from './wallet/routes';
 
@@ -72,7 +73,7 @@ export interface AppDeps {
 }
 
 /** Request-log URL without secrets: the deletion status token is a bearer value for its request's status. */
-export const redactUrl = (url: string) => url.replace(/(\/v1\/privacy\/deletion\/)[0-9a-f-]{36}/i, '$1:token');
+export const redactUrl = (url: string) => url.replace(/(\/v1\/privacy\/deletion\/)[0-9a-f-]{36}/i, '$1:token').replace(/^(\/gift\/)[^/?#]+/, '$1:code');
 
 export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
   const app = Fastify({
@@ -155,6 +156,9 @@ export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
     registerEntityRoutes(scope, { now: auth.now ?? Date.now });
     registerOpsRoutes(scope, { now: auth.now ?? Date.now });
   });
+
+  // WEB-01–04: gift claim and account deletion pages (served on the app link domain, NANO-11).
+  registerWebRoutes(app);
 
   app.get('/health/live', async () => ({ status: 'ok' as const }));
 

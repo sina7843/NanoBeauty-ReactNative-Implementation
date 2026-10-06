@@ -9,7 +9,7 @@ Add/update mappings as implementation progresses. Preserve requirement IDs from 
 | D38 `features.legacyMembership` (default `false`) | NANO-00 | same as above | `apps/api/src/app.test.ts` | Flag served; UI in NANO-06 |
 | D37 / Spec 1 rules A1–A8, payment switches, gift, consultation, rating/financing lines, grace periods | NANO-00 | settings contract + seeded sample row (`sample: true`) | `apps/api/src/app.test.ts`, `apps/mobile/src/settings/bootstrap.test.ts` | Done; staff editing STF-17/31/32 (NANO-08) |
 | Clinic info (STF-31 / SUP-01 source) | NANO-00 | `clinicInfoSchema`, seeded row | `apps/api/src/app.test.ts` | Read path done |
-| Build plan M0-1 repo, environments, CI, EAS | NANO-00 | root workspace, `apps/mobile/app.config.ts`, `apps/mobile/eas.json`, `.github/workflows/ci.yml` | `apps/mobile/scripts/check-config.mjs` | Done (EAS cloud build not yet run) |
+| Build plan M0-1 repo, environments, CI, EAS | NANO-00, NANO-11 | root workspace, `apps/mobile/app.config.ts`, `apps/mobile/eas.json`, `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `scripts/release-gate.mjs` | `apps/mobile/scripts/check-config.mjs` | Done; cloud builds blocked on accounts |
 | Build plan M0-5 settings fetch with cached fallback | NANO-00 | `apps/mobile/src/settings/bootstrap.ts`, `useSettings.ts` | `bootstrap.test.ts` | Done |
 | Build plan M0-6 offline detection, error mapping, analytics consent gate, i18n-ready strings | NANO-00 | `src/lib/network.ts`, `src/api/client.ts`, `src/lib/analytics.ts`, `src/i18n/` | `bootstrap.test.ts`, `env.test.ts` | Foundations done; per-screen use later |
 | NFR 04 Security (secure secrets) | NANO-00 | `src/lib/session-storage.ts` (SecureStore only), `.env.example` only, config validation | `app.test.ts` (config) | Partial |
@@ -152,3 +152,7 @@ Add/update mappings as implementation progresses. Preserve requirement IDs from 
 | NFR 11 Backup and recovery | NANO-10 | Requirements and runbook in `docs/release/readiness.md` | — | Blocked: hosting (NANO-11) |
 | AUTH 08 Apple/Google sign-in | — | Not in v1 (Could): phone identity (A6) | — | Not planned |
 | DISC 08 / PAY 11 / PROD 01–05 / REWD 01 / REWD 03 / REF 01–03 / MEM 01 / SUP 07 Backlog items | — | Backlog or Remove in Requirements; not in v1 | — | Not in v1 |
+| WEB-01 / WEB-02 Gift claim on the web | NANO-06, NANO-11 | API pages `GET /gift/:code` + `/web/app.js` calling `/v1/gifts/lookup`, `/claim/start`, `/claim/confirm` | `web/web.test.ts`, `wallet.test.ts` | Done; hosting on the link domain blocked |
+| WEB-03 / WEB-04 Account deletion on the web (Google Play URL) | NANO-05, NANO-11 | `GET /delete` calling `/v1/privacy/deletion/start|confirm` | `web/web.test.ts`, `account.test.ts` | Done; hosting blocked |
+| Store submission (Android APK/AAB, iOS TestFlight/App Store) | NANO-11 | EAS profiles, release scripts, release gate, `docs/store/*` (runbook, listing, review notes, privacy/data safety, SDK inventory) | `scripts/check-config.mjs`, `scripts/release-gate.mjs` | Configured; builds and submission blocked on accounts and legal URLs |
+| App Review demo access | NANO-11 | `withReviewAccount` (env `REVIEW_PHONE`/`REVIEW_CODE`, both or neither) | `review.test.ts` | Done; values to set at review time |

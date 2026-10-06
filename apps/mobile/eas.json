@@ -16,6 +16,7 @@
     },
     "qa": {
       "distribution": "internal",
+      "autoIncrement": true,
       "env": {
         "APP_VARIANT": "staging",
         "EXPO_PUBLIC_API_URL": "https://api.staging.nanobeauty.invalid"
@@ -43,10 +44,12 @@
   },
   "submit": {
     "testflight": {
-      "android": { "track": "internal", "releaseStatus": "draft" }
+      "android": { "track": "internal", "releaseStatus": "draft" },
+      "ios": {}
     },
     "production": {
-      "android": { "track": "production", "releaseStatus": "draft" }
+      "android": { "track": "production", "releaseStatus": "draft" },
+      "ios": {}
     }
   }
 }

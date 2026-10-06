@@ -1,0 +1,19 @@
+{
+  "$comment": "Release facts the clinic must confirm before a store build (NANO-11). Public values only, never credentials. null = not supplied yet; `npm run release:gate -- <profile>` refuses store profiles until every value is set.",
+  "appIdsConfirmed": false,
+  "urls": {
+    "privacyPolicy": null,
+    "terms": null,
+    "support": null,
+    "accountDeletion": "https://app.nanobeautystar.com/delete",
+    "marketing": null
+  },
+  "domains": {
+    "appLinks": "app.nanobeautystar.com",
+    "domainConfirmed": false
+  },
+  "contacts": {
+    "reviewNotesReady": false,
+    "supportEmail": null
+  }
+}

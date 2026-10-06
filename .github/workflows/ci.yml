@@ -53,3 +53,5 @@ jobs:
         working-directory: apps/mobile
       - name: API production build
         run: npm run build -w @nano/api
+      - name: Release audit (requirement/route coverage, secret scan)
+        run: npm run release:audit

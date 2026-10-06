@@ -108,6 +108,8 @@ type InstrumentRow = {
   sent_at: Date | null;
   delivery: 'scheduled' | 'sent' | 'failed' | 'cancelled' | null;
   claimed_at: Date | null;
+  /** Package instruments: the treatment it is for (BOOK 14 next booking action). */
+  service_id?: string | null;
 };
 type Sums = { amount: number; sessions: number; bought: number; used: number };
 
@@ -156,6 +158,7 @@ export function toInstrument(row: InstrumentRow, sums: Sums | undefined, viewerI
     balanceCents: reconciling || row.kind === 'package' || row.kind === 'membership' || (sender && !!row.claimed_at) ? null : s.amount,
     sessions: row.kind === 'package' && !reconciling ? { total: s.bought, used: s.used, remaining: Math.max(0, s.sessions) } : null,
     expiresAt: row.expires_at?.toISOString() ?? null,
+    serviceId: row.service_id ?? null,
     last4: row.code_last4,
     role: sender ? 'sender' : 'owner',
     gift:
@@ -177,7 +180,7 @@ export function toInstrument(row: InstrumentRow, sums: Sums | undefined, viewerI
 /** Everything in a customer's Wallet, plus gifts they sent that someone else holds. */
 export async function walletFor(db: Queryable, customerId: string, now: number): Promise<Instrument[]> {
   const rows = await db.query<InstrumentRow>(
-    `SELECT * FROM wallet_instruments WHERE (customer_id = $1 OR buyer_id = $1) AND status <> 'voided' ORDER BY created_at DESC`,
+    `SELECT *, (SELECT service_id FROM packages p WHERE p.id = wallet_instruments.package_id) AS service_id FROM wallet_instruments WHERE (customer_id = $1 OR buyer_id = $1) AND status <> 'voided' ORDER BY created_at DESC`,
     [customerId],
   );
   const sums = await ledgerSums(db, rows.map((r) => r.id));
@@ -725,7 +728,7 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
   app.get('/v1/wallet/instruments/:id', signedIn, async (request) => {
     const { id } = z.object({ id: z.uuid() }).parse(request.params);
     const customerId = auth(request).customerId;
-    const [row] = await db.query<InstrumentRow>('SELECT * FROM wallet_instruments WHERE id = $1 AND (customer_id = $2 OR buyer_id = $2)', [id, customerId]);
+    const [row] = await db.query<InstrumentRow>('SELECT *, (SELECT service_id FROM packages p WHERE p.id = wallet_instruments.package_id) AS service_id FROM wallet_instruments WHERE id = $1 AND (customer_id = $2 OR buyer_id = $2)', [id, customerId]);
     if (!row || (row.kind === 'membership' && !(await settingsOf(db)).features.legacyMembership)) throw new HttpError(404, 'not_found', 'Not found in your Wallet.');
     const instrument = toInstrument(row, (await ledgerSums(db, [row.id])).get(row.id), customerId, now());
     // A sender sees delivery, not how the recipient spends it.

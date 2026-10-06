@@ -33,6 +33,8 @@ declare module 'fastify' {
     jobs: { wallet?: WalletKit };
     /** Approvals queue dispatch for NANO-08 draftable items (services are handled in staff/routes.ts). */
     approvalHandlers: Map<string, ApprovalHandler>;
+    /** Every registered route (method + URL), for the authorization sweep and the release audit. */
+    routeList: { method: string; url: string }[];
   }
 }
 
@@ -100,8 +102,14 @@ export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
   app.decorate('integrations', integrations);
   app.decorate('jobs', {});
   app.decorate('approvalHandlers', new Map<string, ApprovalHandler>());
+  app.decorate('routeList', []);
+  app.addHook('onRoute', (route) => {
+    for (const method of [route.method].flat()) if (method !== 'HEAD') app.routeList.push({ method, url: route.url });
+  });
   app.addHook('onRequest', async (request, reply) => {
     reply.header(REQUEST_ID_HEADER, request.id);
+    // Baseline hardening for every response (JSON API; the deletion web page sets its own when hosted, NANO-11).
+    reply.header('x-content-type-options', 'nosniff').header('referrer-policy', 'no-referrer').header('x-frame-options', 'DENY');
   });
   app.addHook('onClose', async () => {
     await db.close();

@@ -9,7 +9,7 @@ const isoTime = z.iso.datetime({ offset: true });
 const version = z.number().int().positive();
 const link = z.object({ label: z.string().trim().min(1).max(60), href: z.string().startsWith('/').max(200) });
 
-export const ENTITY_TYPES = ['package', 'campaign', 'promo', 'professional', 'policy'] as const;
+export const ENTITY_TYPES = ['package', 'campaign', 'promo', 'professional', 'policy', 'article'] as const;
 export const entityTypeSchema = z.enum(ENTITY_TYPES);
 export type EntityType = z.infer<typeof entityTypeSchema>;
 
@@ -77,12 +77,21 @@ export const policyDraftSchema = z.object({
 });
 export type PolicyDraft = z.infer<typeof policyDraftSchema>;
 
+/** STF-10 / ADMIN 05: a support question and its answer (SUP-02), shown on the help hub when `onHub`. */
+export const articleDraftSchema = z.object({
+  title: z.string().trim().min(5).max(120),
+  body: z.array(z.string().trim().min(2).max(2000)).min(1).max(20),
+  onHub: z.boolean(),
+});
+export type ArticleDraft = z.infer<typeof articleDraftSchema>;
+
 export const DRAFT_SCHEMAS = {
   package: packageDraftSchema,
   campaign: campaignDraftSchema,
   promo: promoDraftSchema,
   professional: professionalDraftSchema,
   policy: policyDraftSchema,
+  article: articleDraftSchema,
 } as const;
 export type DraftOf<T extends EntityType> = z.infer<(typeof DRAFT_SCHEMAS)[T]>;
 

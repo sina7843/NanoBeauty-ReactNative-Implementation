@@ -52,7 +52,7 @@ export default function PackageScreen() {
                     {t('pkg.buyAgain')}
                   </Button>
                 ) : (
-                  <Button onPress={() => router.push('/book/service')}>{t('wal.book')}</Button>
+                  <Button onPress={() => router.push(i.serviceId ? { pathname: '/book/service', params: { service: i.serviceId } } : '/book/service')}>{t('wal.book')}</Button>
                 )}
                 <Button variant="tertiary" onPress={() => router.push({ pathname: '/wallet/help', params: { id: i.id } })}>
                   {t('wal.problem')}

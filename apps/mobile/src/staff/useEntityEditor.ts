@@ -7,7 +7,7 @@ import { useIsOnline } from '../lib/network';
 import { problemOf, useStaffQuery, type SaveProblem } from './api';
 
 /** Staff API path segment per draftable kind (NANO-08). */
-export type EntityPlural = 'packages' | 'campaigns' | 'promo-codes' | 'professionals' | 'policies';
+export type EntityPlural = 'packages' | 'campaigns' | 'promo-codes' | 'professionals' | 'policies' | 'articles';
 
 const localKey = (plural: string, id: string) => `nano.staff.unsaved.${plural}.${id}`;
 

@@ -14,6 +14,7 @@ import { buildApp } from '../app';
 import { openDb } from '../db';
 import { createDevIntegrations } from '../integrations';
 import { migrate } from '../migrate';
+import { reconcile } from '../reconcile';
 import { dueGiftIds } from './routes';
 
 let close: (() => Promise<unknown>) | undefined;
@@ -381,5 +382,29 @@ describe('counter redemption and adjustments (WALT 07, 10, 15)', () => {
     expect(first).toMatch(/^BH-/);
     expect((await ask()).json().reference).toBe(first);
     expect(await t.ledgerCount()).toBe(1);
+  });
+});
+
+describe('reconciliation (NFR 03, LEG 03)', () => {
+  it('purchases, a redemption and a partial refund reconcile; a broken entry is reported', async () => {
+    const t = await setup();
+    const maria = await t.signIn(...MARIA);
+    const o = await t.order(maria, PACKAGE);
+    const paid = await t.confirm(maria, (await t.attempt(maria, o.id)).id, 'tok_visa');
+    const g = await t.order(maria, gift(), 'order-key-2');
+    await t.confirm(maria, (await t.attempt(maria, g.id, 'card', 'attempt-key-2')).id, 'tok_visa');
+    const pkg = (await t.wallet(maria)).instruments.find((i) => i.kind === 'package')!;
+    // BOOK 14: the package names its treatment, so "Book and use it" opens that booking.
+    const [p] = await t.db.query<{ service_id: string | null }>(`SELECT service_id FROM packages WHERE id = 'pkg_sqt_4'`);
+    expect(pkg.serviceId).toBe(p!.service_id);
+    expect(pkg.serviceId).toBeTruthy();
+    const desk = await t.signIn(...DESK, 'Front desk');
+    await t.req('POST', '/v1/staff/redemptions', desk, { instrumentId: pkg.id, sessions: 1, idempotencyKey: 'redeem-key-9' });
+    const owner = await t.signIn(...OWNER, 'Owner');
+    expect((await t.req('POST', `/v1/staff/payments/${paid.id}/refunds`, owner, { amountCents: 30000, reason: 'One session back', idempotencyKey: 'refund-key-9' })).statusCode).toBe(200);
+    expect(await reconcile(t.db)).toEqual([]);
+    // A hand-made entry that pushes a balance below zero is caught.
+    await t.db.query(`INSERT INTO ledger_entries (instrument_id, kind, sessions, label, idempotency_key, created_at) VALUES ($1, 'adjust', -10, 'bad', 'bad-1', now())`, [pkg.id]);
+    expect((await reconcile(t.db)).map((d) => d.check)).toEqual(['negative_balance']);
   });
 });

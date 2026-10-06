@@ -78,3 +78,18 @@ describe('filterServices (DISC 05)', () => {
     expect(ids({ concerns: ['loose-skin'], prices: ['fixed'] })).toEqual([]);
   });
 });
+
+describe('search budget (NFR 02)', () => {
+  it('searches a 1,000-treatment catalogue in well under a frame budget per keystroke', () => {
+    const big: Catalog = {
+      ...catalog,
+      services: Array.from({ length: 1000 }, (_, i) => svc({ id: `s${i}`, name: `Treatment ${i} facial peel`, aliases: [`alias${i}`], concerns: ['loose-skin'] })),
+    };
+    searchCatalog(big, 'warm up');
+    const start = performance.now();
+    for (const q of ['f', 'fa', 'fac', 'faci', 'facia', 'facial']) searchCatalog(big, q);
+    // Six keystrokes; budget 16 ms each (one frame), checked loosely for slow CI machines.
+    expect((performance.now() - start) / 6).toBeLessThan(16);
+  });
+});
+

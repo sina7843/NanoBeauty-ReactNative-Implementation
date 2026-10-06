@@ -25,6 +25,7 @@ const SECTIONS: { title: StringKey; items: Item[] }[] = [
       { label: 'stf.categories', href: '/staff/taxonomy', needs: 'content.draft' },
       { label: 'stf.media', href: '/staff/media', needs: 'content.draft' },
       { label: 'stf.import', href: '/staff/import', needs: 'content.draft' },
+      { label: 'stf.supportContent', href: '/staff/support-content', needs: 'content.draft' },
     ],
   },
   {

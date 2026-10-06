@@ -30,6 +30,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   if (variant !== 'development' && !apiUrl) {
     throw new Error(`EXPO_PUBLIC_API_URL is required for APP_VARIANT=${variant}`);
   }
+  // NFR 04: TLS in transit. Only local development may talk plain http (to the Metro host).
+  if (variant !== 'development' && apiUrl && !apiUrl.startsWith('https://')) {
+    throw new Error(`EXPO_PUBLIC_API_URL must use https for APP_VARIANT=${variant}`);
+  }
 
   return {
     ...config,
@@ -45,6 +49,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       bundleIdentifier: `${BASE_ID}${suffix}`,
       // D39: staff long forms have a tablet layout.
       supportsTablet: true,
+      // Portrait-only (NFR 07): declare full screen so iPad multitasking doesn't require every orientation (App Store validation).
+      requireFullScreen: true,
       config: { usesNonExemptEncryption: false },
     },
     android: {

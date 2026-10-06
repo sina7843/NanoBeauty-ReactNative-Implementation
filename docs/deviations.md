@@ -83,3 +83,5 @@ Every place the build differs from a board or component spec, with the reason (h
 | STF-01 "Support text" (STF-10) | Not built. | Not in the NANO-08 scope; support articles stay as seeded. | Later prompt |
 | ACC-06 analytics opt-in | "Help improve the app" switch added to the privacy hub. | Spec 4 needs an analytics consent; AUT-03's board has exactly three choices, so it isn't added there. | Design QA |
 | NTF boards "[short link]" | Text and email links use `https://app.nanobeautystar.com/<path>`; the app opens them only once universal/app links are configured. | Domain not confirmed (spec 3). | NANO-11 |
+| VIS-05 body | "{service} on {date} is cancelled." without "We've told the clinic." | In hand-off mode the cancellation happened in Fresha; the app didn't tell the clinic anything. | — |
+| STF-10 | Support questions use the shared draft/publish editor (question, answer paragraphs, on-hub switch). | Same governance as other content (ADMIN 05). | Design QA |

@@ -240,6 +240,14 @@ Runtime boundaries:
   configured). Check a link with `resolveLink()` in `src/navigation/links.ts`.
 - **In-app booking:** stays off. `bookingMode = inapp` is ignored until a booking provider adapter is selected (D33).
 
+## Release checks (NANO-10)
+
+- `npm run release:audit` — requirement/route coverage summary + secret scan (part of `npm run check`).
+- `node scripts/audit-coverage.mjs > docs/release/coverage.md` — full coverage report.
+- `npm run reconcile -w @nano/api` — ledger reconciliation against a real database (`DATABASE_URL`).
+- `npm run bench -w @nano/api` — in-process API latency against budgets.
+- Readiness and blockers: `docs/release/readiness.md`; device checklist: `docs/release/manual-qa.md`.
+
 ## Troubleshooting
 
 - **`FATAL ERROR: Zone Allocation failed - process out of memory`** when PGlite starts (tests or `api:dev`): the

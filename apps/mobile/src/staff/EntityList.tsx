@@ -24,6 +24,7 @@ export const stateBadge = (state: EntityRow['state'], phase?: string | null) => 
 /** STF-05/15/19/21/33 lists: filter, search, open, and STF-39 archive / restore / delete-draft (D36). */
 export function EntityList({
   plural,
+  basePath,
   publishPermission,
   archivable = true,
   header,
@@ -33,6 +34,8 @@ export function EntityList({
   render,
 }: {
   plural: EntityPlural;
+  /** App route when it differs from the API name (STF-10 articles live at /staff/support-content). */
+  basePath?: string;
   publishPermission: Permission;
   archivable?: boolean;
   header?: ReactNode;
@@ -91,7 +94,7 @@ export function EntityList({
           <ListGroup>
             {list.data.map((r) => (
               <View key={r.id}>
-                <ListRow title={r.name} subtitle={[r.subtitle, r.hasDraft ? t('stf.edited') : null].filter(Boolean).join(' · ')} onPress={() => router.push(`/staff/${plural}/${encodeURIComponent(r.id)}` as Href)} />
+                <ListRow title={r.name} subtitle={[r.subtitle, r.hasDraft ? t('stf.edited') : null].filter(Boolean).join(' · ')} onPress={() => router.push(`${basePath ?? `/staff/${plural}`}/${encodeURIComponent(r.id)}` as Href)} />
                 <View style={styles.rowActions}>
                   {stateBadge(r.state, r.phase)}
                   {!archivable ? null : r.state === 'archived' && canPublish ? (

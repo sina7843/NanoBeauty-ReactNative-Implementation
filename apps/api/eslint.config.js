@@ -9,5 +9,5 @@ export default tseslint.config(
       'no-console': ['error', { allow: ['error'] }],
     },
   },
-  { files: ['src/migrate-cli.ts'], rules: { 'no-console': 'off' } },
+  { files: ['src/*-cli.ts'], rules: { 'no-console': 'off' } },
 );

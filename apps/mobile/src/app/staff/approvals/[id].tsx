@@ -8,7 +8,7 @@ import { t } from '../../../i18n';
 import { problemOf, useStaffQuery } from '../../../staff/api';
 import { StaffScreen } from '../../../staff/StaffScreen';
 
-const ITEM_PATH = { service: 'services', package: 'packages', campaign: 'campaigns', promo: 'promo-codes', professional: 'professionals', policy: 'policies' } as const;
+const ITEM_PATH = { service: 'services', package: 'packages', campaign: 'campaigns', promo: 'promo-codes', professional: 'professionals', policy: 'policies', article: 'support-content' } as const;
 
 /** `/staff/approvals/[id]` — STF-09 (approve, reject). Sending back needs a reason; never decide your own submission. */
 export default function ApprovalDetail() {

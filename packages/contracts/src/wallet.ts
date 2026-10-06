@@ -130,6 +130,8 @@ export const instrumentSchema = z.object({
   balanceCents: cents.nullable(),
   sessions: z.object({ total: z.number().int(), used: z.number().int(), remaining: z.number().int() }).nullable(),
   expiresAt: isoTime.nullable(),
+  /** Packages: the treatment the sessions are for, so "Book and use it" opens that booking (BOOK 14). */
+  serviceId: z.string().nullable().optional(),
   /** Gift cards: last four characters of the code. */
   last4: z.string().nullable(),
   /** owner = in your Wallet; sender = a gift you bought for someone else (WAL-04 "sent"). */

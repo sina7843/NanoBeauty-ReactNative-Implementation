@@ -12,7 +12,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "migrate:built": "node dist/migrate-cli.js"
+    "migrate:built": "node dist/migrate-cli.js",
+    "bench": "node --liftoff-only --import tsx src/bench-cli.ts",
+    "reconcile": "tsx --env-file-if-exists=../../.env src/reconcile-cli.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",

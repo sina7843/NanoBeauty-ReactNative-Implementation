@@ -217,7 +217,7 @@ export function registerContentRoutes(app: FastifyInstance, { now }: { now: () =
   });
 
   app.get('/v1/support', async (request, reply) => {
-    const articles = await db.query<{ id: string; title: string }>('SELECT id, title FROM support_articles WHERE on_hub ORDER BY sort');
+    const articles = await db.query<{ id: string; title: string }>('SELECT id, title FROM support_articles WHERE on_hub AND published_at IS NOT NULL AND archived_at IS NULL ORDER BY sort, id');
     const ask = await block<{ topics: string[] }>('ask_topics');
     return sendCached(request, reply, supportHubSchema.parse({ articles, askTopics: ask?.topics ?? [] }));
   });
@@ -225,7 +225,7 @@ export function registerContentRoutes(app: FastifyInstance, { now }: { now: () =
   app.get('/v1/support/articles/:id', async (request, reply) => {
     const { id } = z.object({ id: z.string().min(1).max(80) }).parse(request.params);
     const [a] = await db.query<{ id: string; title: string; body: string[]; sample: boolean }>(
-      'SELECT id, title, body, sample FROM support_articles WHERE id = $1',
+      'SELECT id, title, body, sample FROM support_articles WHERE id = $1 AND published_at IS NOT NULL AND archived_at IS NULL',
       [id],
     );
     if (!a) throw new HttpError(404, 'not_found', 'Article not found.');

@@ -57,4 +57,6 @@ for (const [name, want] of Object.entries(profiles)) {
 for (const variant of ['staging', 'production']) {
   assert.throws(() => config(variant, undefined), undefined, `${variant} must require EXPO_PUBLIC_API_URL`);
   console.log(`ok ${variant}: refuses to build without EXPO_PUBLIC_API_URL`);
+  assert.throws(() => config(variant, 'http://api.example.invalid'), undefined, `${variant} must require https`);
+  console.log(`ok ${variant}: refuses a plain-http API URL`);
 }

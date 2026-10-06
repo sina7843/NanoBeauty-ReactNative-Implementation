@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import {
+  articleDraftSchema,
   campaignDraftSchema,
   entityCreateSchema,
   entitySaveSchema,
@@ -353,6 +354,36 @@ export const DEFS: Def[] = [
     creatable: false,
   },
 ];
+
+DEFS.push({
+  type: 'article',
+  plural: 'articles',
+  table: 'support_articles',
+  idCol: 'id',
+  schema: articleDraftSchema as z.ZodType<Record<string, unknown>>,
+  perm: { draft: 'content.draft', publish: 'content.publish' },
+  highRisk: [],
+  liveOf: (r) => ({ title: r.title, body: r.body, onHub: r.on_hub }),
+  name: (d) => String(d.title),
+  subtitle: (_r, d) => (d.onHub ? 'On the help hub' : 'Linked from treatments only'),
+  liveState: () => 'live',
+  newId: (d) => rid('art', String(d.title)),
+  insert: async ({ tx }, id, d) => {
+    await tx.query(`INSERT INTO support_articles (id, title, body, sort, on_hub, sample, draft) VALUES ($1, $2, $3, 99, $4, false, $5)`, [id, d.title, JSON.stringify(d.body), d.onHub, JSON.stringify(d)]);
+  },
+  apply: async ({ tx }, r, d) => {
+    await tx.query('UPDATE support_articles SET title = $2, body = $3, on_hub = $4, sample = false WHERE id = $1', [r.id, d.title, JSON.stringify(d.body), d.onHub]);
+  },
+  // Archived articles leave the hub and their page answers "not found"; one a treatment links to can't be archived.
+  archive: async ({ tx }, r) => {
+    if ((await tx.query('SELECT 1 FROM services WHERE suitability_article = $1 AND status <> \'archived\' LIMIT 1', [r.id])).length) {
+      throw new HttpError(409, 'conflict', 'A treatment links to this article: change the treatment first.');
+    }
+  },
+  restore: async () => undefined,
+  blockDelete: async ({ tx }, r) => ((await tx.query('SELECT 1 FROM services WHERE suitability_article = $1 LIMIT 1', [r.id])).length ? 'A treatment links to this article.' : null),
+  creatable: true,
+});
 
 export function registerEntityRoutes(app: FastifyInstance, { now }: { now: () => number }) {
   const { db } = app;

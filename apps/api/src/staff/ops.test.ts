@@ -214,6 +214,27 @@ describe('selling items share the draft model (STF-05/07/15/16, D35/D36)', () =>
 
 const settingsVersion = async (t: Awaited<ReturnType<typeof opsSetup>>) => (await t.req('GET', '/v1/settings')).json().version as number;
 
+describe('support content (STF-10, ADMIN 05)', () => {
+  it('a new question is a draft customers can’t see; publishing puts it on the hub; archiving takes it off', async () => {
+    const t = await opsSetup();
+    const owner = await t.signIn(...OWNER, 'Owner');
+    const hub = async () => (await t.req('GET', '/v1/support')).json().articles.map((a: { id: string }) => a.id);
+    const a = entitySchema.parse((await t.req('POST', '/v1/staff/articles', owner, { draft: { title: 'Can I come with a cold?', body: ['Please rebook if you are unwell.'], onHub: true } })).json());
+    expect(await hub()).not.toContain(a.id);
+    expect((await t.req('GET', `/v1/support/articles/${a.id}`)).statusCode).toBe(404);
+    const pub = (await t.req('POST', `/v1/staff/articles/${a.id}/publish`, owner, { version: a.version })).json().entity;
+    expect(await hub()).toContain(a.id);
+    expect((await t.req('GET', `/v1/support/articles/${a.id}`)).json().body).toEqual(['Please rebook if you are unwell.']);
+    // A treatment links to it: archiving is refused until the link changes.
+    await t.db.query(`UPDATE services SET suitability_article = $1 WHERE id = 'svc_hifu'`, [a.id]);
+    expect((await t.req('POST', `/v1/staff/articles/${a.id}/archive`, owner, { version: pub.version })).statusCode).toBe(409);
+    await t.db.query(`UPDATE services SET suitability_article = NULL WHERE id = 'svc_hifu'`);
+    await t.req('POST', `/v1/staff/articles/${a.id}/archive`, owner, { version: pub.version });
+    expect(await hub()).not.toContain(a.id);
+    expect((await t.req('GET', `/v1/support/articles/${a.id}`)).statusCode).toBe(404);
+  });
+});
+
 describe('settings change app behaviour without a rebuild (STF-17/31/32/34)', () => {
   it('rules: versioned, audited, owner-only; in-app booking stays off; saved values drop the Sample badge', async () => {
     const t = await opsSetup();

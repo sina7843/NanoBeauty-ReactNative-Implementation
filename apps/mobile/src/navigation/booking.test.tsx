@@ -303,6 +303,33 @@ describe('Visits (BOOK 08, 18, 19) on the real screens', () => {
     expect(String(post.body.idempotencyKey).length).toBeGreaterThanOrEqual(8);
   });
 
+  it('VIS-05: a cancelled visit offers to book the same treatment again; a visit that isn’t cancelled shows its detail', async () => {
+    await signIn();
+    const gone = visit({ id: 'd4444444-4444-4444-8444-444444444444', status: 'cancelled' });
+    scriptApi({ 'GET /v1/visits': () => ({ status: 200, body: visits({ upcoming: [visit({}), gone] }) }) });
+    const router = renderRouter(APP_DIR, { initialUrl: `/visits/${gone.id}/cancelled` });
+    expect(await screen.findByText('Visit cancelled')).toBeTruthy();
+    fireEvent.press(screen.getByRole('button', { name: 'Book another time' }));
+    await waitFor(() => expect(router.getPathname()).toBe('/book/service'));
+    expect(router.getSearchParams()).toMatchObject({ service: 'svc_hifu' });
+  });
+
+  it('VIS-05 for a visit that is still on goes to the visit itself (truth first)', async () => {
+    await signIn();
+    scriptApi({ 'GET /v1/visits': () => ({ status: 200, body: visits() }) });
+    const router = renderRouter(APP_DIR, { initialUrl: '/visits/a1111111-1111-4111-8111-111111111111/cancelled' });
+    await waitFor(() => expect(router.getPathname()).toBe('/visits/a1111111-1111-4111-8111-111111111111'));
+  });
+
+  it('BOOK 12: a past visit can be booked again with the same treatment', async () => {
+    await signIn();
+    scriptApi({ 'GET /v1/visits': () => ({ status: 200, body: visits() }) });
+    const router = renderRouter(APP_DIR, { initialUrl: '/visits/b2222222-2222-4222-8222-222222222222' });
+    fireEvent.press(await screen.findByText('Book again'));
+    await waitFor(() => expect(router.getPathname()).toBe('/book/service'));
+    expect(router.getSearchParams()).toMatchObject({ service: 'svc_hifu' });
+  });
+
   it('a visit that is not in the list (old link, other account) lands on Home', async () => {
     await signIn();
     scriptApi({ 'GET /v1/visits': () => ({ status: 200, body: visits() }) });

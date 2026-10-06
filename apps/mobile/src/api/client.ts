@@ -1,7 +1,9 @@
+import { onlineManager } from '@tanstack/react-query';
 import { errorEnvelopeSchema, REQUEST_ID_HEADER, type ErrorEnvelope } from '@nano/contracts';
 import { getEnv } from '../config/env';
 
 const TIMEOUT_MS = 15_000;
+const ALWAYS_TRY = /^\/v1\/(auth\/|promo\/validate$|gifts\/lookup$|privacy\/deletion\/)/;
 
 export type ApiErrorCode = ErrorEnvelope['error']['code'] | 'network' | 'not_configured' | 'invalid_response';
 
@@ -35,6 +37,11 @@ export async function apiRequest(
   baseUrl: string | null = getEnv().apiUrl,
 ): Promise<ApiResponse> {
   if (!baseUrl) throw new ApiError('not_configured', null, null);
+  const method = init.method ?? (init.body === undefined ? 'GET' : 'POST');
+  // NFR 09: a booking, payment, cancellation or balance change is never attempted while the device reports no
+  // connection; cached screens stay readable but those writes fail fast with the offline state. Sign-in, refresh and
+  // read-style POSTs always try (the connectivity probe can be wrong on captive or filtered networks).
+  if (method !== 'GET' && !ALWAYS_TRY.test(path) && !onlineManager.isOnline()) throw new ApiError('network', null, null);
   let res: Response;
   let body: unknown = null;
   // One timeout covers headers and body, so a stalled response still fails over (cache / retry UI).
@@ -42,7 +49,7 @@ export async function apiRequest(
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
     res = await fetchImpl(`${baseUrl}${path}`, {
-      method: init.method ?? (init.body === undefined ? 'GET' : 'POST'),
+      method,
       headers: {
         accept: 'application/json',
         ...(init.body !== undefined ? { 'content-type': 'application/json' } : {}),

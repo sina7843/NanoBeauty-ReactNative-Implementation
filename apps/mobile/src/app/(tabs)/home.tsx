@@ -1,16 +1,18 @@
 import type { Href } from 'expo-router';
-import { radius, space } from '@nano/design-tokens';
+import { space } from '@nano/design-tokens';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { useAuth } from '../../auth/AuthProvider';
-import { Banner, Button, Chip, IconButton, Logo, OfferCard, PhotoFrame, RatingSummary, Screen, Skeleton, Text } from '../../components';
+import { NotSynced } from '../../booking/NotSynced';
+import { useVisits } from '../../booking/visits';
+import { AppointmentPass, Banner, Button, Chip, IconButton, Logo, OfferCard, PhotoFrame, RatingSummary, Screen, Skeleton, Text } from '../../components';
 import { imageFor } from '../../content/images';
 import { effectiveState, useServerNow } from '../../content/offerClock';
 import { useCatalog, useHomeContent } from '../../content/queries';
 import { t } from '../../i18n';
+import { clinicDate, clinicTime } from '../../i18n/format';
 import { useIsOnline } from '../../lib/network';
 import { useSettings } from '../../settings/useSettings';
-import { useTheme } from '../../theme/ThemeProvider';
 
 /**
  * HOM-01 guest home and the signed-in home. Priority (DISC 11): next visit, booking, value, then at most two
@@ -19,7 +21,6 @@ import { useTheme } from '../../theme/ThemeProvider';
  */
 export default function Home() {
   const router = useRouter();
-  const { colors } = useTheme();
   const online = useIsOnline();
   const { status, me } = useAuth();
   const { notice } = useLocalSearchParams<{ notice?: string }>();
@@ -28,7 +29,6 @@ export default function Home() {
   const settings = useSettings().data?.data;
   const zone = settings?.clinic.timezone ?? 'America/Vancouver';
   const signedIn = status === 'signedIn';
-  const bookingMode = settings?.settings.bookingMode ?? 'handoff';
 
   // Server state, moved toward "expired" by the server clock while Home stays open (PROMO 09).
   const serverNow = useServerNow(home.data?.data.serverTime, home.data?.savedAt);
@@ -78,21 +78,7 @@ export default function Home() {
               {t('home.welcomeBack', { name: me.customer.firstName })}
             </Text>
           ) : null}
-          {bookingMode === 'handoff' ? (
-            // HOM-02 hand-off, not synced: bookings can't be read back from Fresha yet (open-items E2).
-            <View style={[styles.fresha, { backgroundColor: colors.surface, borderColor: colors.line }]}>
-              <Text variant="overline" tone="inkMuted">
-                {t('home.freshaEyebrow')}
-              </Text>
-              <Text variant="headline">{t('home.freshaTitle')}</Text>
-              <Text variant="body" tone="inkMuted">
-                {t('home.freshaBody')}
-              </Text>
-              <Button variant="secondary" iconAfter="arrow-square-out" fullWidth onPress={() => router.push('/book/fresha')}>
-                {t('home.openFresha')}
-              </Button>
-            </View>
-          ) : null}
+          <NextVisit zone={zone} />
         </>
       ) : (
         <View style={styles.hero}>
@@ -166,7 +152,29 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: space['2'] },
   hero: { gap: space['3'] },
   actions: { gap: space['2'], marginTop: space['2'] },
-  fresha: { gap: space['2'], padding: space['4'], borderRadius: radius.lg, borderWidth: 1 },
   section: { gap: space['3'], marginTop: space['4'] },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space['2'] },
 });
+
+/**
+ * HOM-02: the next visit when Fresha shares bookings; otherwise "Your bookings are in Fresha" (open-items E2).
+ * Nothing is shown until the visits answer arrives, so Home never implies there is no booking.
+ */
+function NextVisit({ zone }: { zone: string }) {
+  const router = useRouter();
+  const visits = useVisits().data?.data;
+  if (!visits) return null;
+  if (visits.sync === 'not_connected') return <NotSynced freshaUrl={visits.freshaUrl} />;
+  const next = visits.upcoming[0];
+  if (!next) return null;
+  return (
+    <AppointmentPass
+      service={next.serviceName}
+      date={clinicDate(next.startsAt, zone)}
+      time={clinicTime(next.startsAt, zone)}
+      provider={next.professional}
+      status={next.status}
+      onManage={() => router.push(`/visits/${next.id}` as Href)}
+    />
+  );
+}

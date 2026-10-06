@@ -12,6 +12,7 @@ const svc = (over: Partial<Service>): Service => ({
   durationLabel: null,
   durationMin: null,
   perArea: false,
+  areas: null,
   photo: null,
   status: 'live',
   professionals: [],

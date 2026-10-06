@@ -41,9 +41,23 @@ export interface PaymentProvider {
  * Fresha (D33, E2). There is no Fresha booking API. Hand-off is a link; read-back of visits depends on
  * a data connector that is not confirmed, so `not_connected` is the only honest answer today.
  */
+export interface FreshaVisit {
+  ref: string;
+  serviceId: string | null;
+  serviceName: string;
+  detail: string | null;
+  professional: string | null;
+  startsAt: string;
+  durationMin: number | null;
+  status: 'confirmed' | 'pending' | 'changed' | 'cancelled' | 'completed' | 'noshow';
+  depositCAD: number | null;
+}
+
 export interface FreshaGateway {
   handoffUrl(): string | null;
-  readVisits(customerRef: string): Promise<{ status: 'not_connected' } | { status: 'synced'; visits: unknown[] }>;
+  /** True only when a real read-back (data connector) exists; until then the app shows "not synced" states. */
+  isConnected(): boolean;
+  readVisits(phoneE164: string): Promise<{ status: 'not_connected' } | { status: 'synced'; visits: FreshaVisit[] }>;
 }
 
 export interface LegacyRecord {
@@ -91,6 +105,15 @@ const SAMPLE_LEGACY: Record<string, LegacyRecord> = {
   '+16045550199': { ref: 'legacy_sample_jordan', firstName: 'Jordan', lastName: 'Lee', items: [] },
 };
 
+/** Sample bookings from the handover fixtures (appointments) for the sample client. */
+const SAMPLE_FRESHA: Record<string, FreshaVisit[]> = {
+  '+16045550123': [
+    { ref: 'NB-20418', serviceId: 'svc_hifu', serviceName: '12D HIFU', detail: 'Full face', professional: 'Nazanin (Naz)', startsAt: '2026-10-16T14:30:00-07:00', durationMin: 90, status: 'confirmed', depositCAD: 50 },
+    { ref: 'NB-20533', serviceId: 'svc_laser', serviceName: 'Laser Hair Removal', detail: null, professional: 'Anna', startsAt: '2026-11-13T11:00:00-08:00', durationMin: 20, status: 'pending', depositCAD: null },
+    { ref: 'NB-19877', serviceId: 'svc_laser', serviceName: 'Laser Hair Removal', detail: 'Underarms', professional: 'Anna', startsAt: '2026-08-28T11:00:00-07:00', durationMin: 20, status: 'completed', depositCAD: null },
+  ],
+};
+
 const digest = (value: string) => createHash('sha256').update(value).digest('hex').slice(0, 16);
 
 export function createDevIntegrations(
@@ -101,6 +124,8 @@ export function createDevIntegrations(
     generateCode?: () => string;
     /** Serve SAMPLE_LEGACY instead of reporting the old app as not connected. */
     sampleLegacy?: boolean;
+    /** Simulate a connected Fresha read-back with SAMPLE_FRESHA bookings (local development and tests only). */
+    sampleFresha?: boolean;
   } = {},
 ) {
   const now = options.now ?? Date.now;
@@ -111,6 +136,8 @@ export function createDevIntegrations(
    * through the dev-only route, and only when DEV_OTP_SINK is enabled outside production.
    */
   const otpSink = new Map<string, string>();
+  /** Simulated Fresha bookings by phone; tests add one to stand for "the customer booked in Fresha". */
+  const freshaBookings = new Map<string, FreshaVisit[]>(Object.entries(SAMPLE_FRESHA).map(([k, v]) => [k, [...v]]));
   /** Captured instead of delivered; tests and local tooling read it. */
   const outbox: OutboundMessage[] = [];
   let sequence = 0;
@@ -149,7 +176,11 @@ export function createDevIntegrations(
     },
     fresha: {
       handoffUrl: () => options.freshaBookingUrl ?? null,
-      readVisits: async () => ({ status: 'not_connected' }),
+      isConnected: () => !!options.sampleFresha,
+      async readVisits(phoneE164) {
+        if (!options.sampleFresha) return { status: 'not_connected' };
+        return { status: 'synced', visits: [...(freshaBookings.get(phoneE164) ?? [])] };
+      },
     },
     legacy: {
       isConnected: () => !!options.sampleLegacy,
@@ -160,5 +191,5 @@ export function createDevIntegrations(
       },
     },
   };
-  return { integrations, outbox, otpSink };
+  return { integrations, outbox, otpSink, freshaBookings };
 }

@@ -2,6 +2,7 @@ import { meSchema, type Me, type Permission, type TokenPair } from '@nano/contra
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { clearPrivateCache } from '../lib/private-cache';
 import { secureSessionStore } from '../lib/session-storage';
 import { SessionManager } from './session';
 
@@ -35,6 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setMe(null);
         setStatus('guest');
         queryClient.removeQueries({ queryKey: ['me'] });
+        queryClient.removeQueries({ queryKey: ['visits'] });
+        clearPrivateCache();
         router.push({ pathname: '/auth/code', params: { reason: 'expired' } });
       }),
   );
@@ -70,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshMe,
       async signOut() {
         await session.signOut();
+        await clearPrivateCache();
         setMe(null);
         setStatus('guest');
         queryClient.clear();

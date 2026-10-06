@@ -29,6 +29,11 @@ export type Professional = z.infer<typeof professionalSchema>;
 export const careStepSchema = z.object({ when: z.string(), title: z.string(), text: z.string().optional() });
 export const faqItemSchema = z.object({ q: z.string(), a: z.string() });
 
+const areaSchema = z.object({ name: z.string(), price: z.number().nonnegative(), kind: z.enum(['fixed', 'from']) });
+/** Per-area pricing (BKG-10): women's and men's sets and how many fit in one visit. */
+export const serviceAreasSchema = z.object({ women: z.array(areaSchema), men: z.array(areaSchema), maxAreasPerVisit: z.number().int().positive() });
+export type ServiceAreas = z.infer<typeof serviceAreasSchema>;
+
 export const serviceSchema = z.object({
   id: z.string(),
   categoryId: z.string(),
@@ -40,6 +45,7 @@ export const serviceSchema = z.object({
   durationLabel: z.string().nullable(),
   durationMin: z.number().int().nullable(),
   perArea: z.boolean(),
+  areas: serviceAreasSchema.nullable(),
   photo: z.string().nullable(),
   /** live = bookable; unavailable = shown, not bookable (TRT-07); archived = reachable from old links only. */
   status: z.enum(['live', 'unavailable', 'archived']),

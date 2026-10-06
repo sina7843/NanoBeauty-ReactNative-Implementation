@@ -60,8 +60,10 @@ export async function loadCached<T>(
     await store.setItem(key, JSON.stringify({ etag: res.headers.get('etag'), savedAt, data: parsed.data } satisfies Stored)).catch(() => undefined);
     return { data: parsed.data, source: 'network', savedAt };
   } catch (error) {
-    // A 404 is an answer (the item is gone), not a reason to show a stale copy.
-    if (cached && !(error instanceof ApiError && error.code === 'not_found')) return { data: cached.data, source: 'cache', savedAt: cached.savedAt };
+    // A 404 is an answer (the item is gone), and an auth failure means the copy may not be this person's:
+    // neither is a reason to show a stale copy.
+    const answered = error instanceof ApiError && ['not_found', 'unauthorized', 'forbidden', 'session_expired'].includes(error.code);
+    if (cached && !answered) return { data: cached.data, source: 'cache', savedAt: cached.savedAt };
     throw error;
   }
 }

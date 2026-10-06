@@ -1,6 +1,7 @@
-import { Redirect, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { loadPendingHandoff } from '../booking/pendingHandoff';
 import { Button, EmptyState, Logo } from '../components';
 import { EntryLayout } from '../entry/GateScreens';
 import { markPrimerSeen, useEntry } from '../entry/useEntry';
@@ -14,7 +15,27 @@ export default function Entry() {
   // Update/maintenance are rendered by the root layout over everything; keep the splash underneath.
   if (screen === null || screen === 'update' || screen === 'maintenance') return <Splash />;
   if (screen === 'primer') return <NotificationPrimer />;
-  return <Redirect href="/home" />;
+  return <Resume />;
+}
+
+/**
+ * Home, or — if the app was closed while Fresha was open — Home with the BKG-09 return check on top, so an
+ * interrupted hand-off is recovered instead of silently lost (BOOK 16).
+ */
+function Resume() {
+  const router = useRouter();
+  useEffect(() => {
+    let active = true;
+    loadPendingHandoff().then((pending) => {
+      if (!active) return;
+      router.replace('/home');
+      if (pending) router.push({ pathname: '/book/fresha-return', params: { handoff: pending.id } });
+    });
+    return () => {
+      active = false;
+    };
+  }, [router]);
+  return <Splash />;
 }
 
 /** ENT-01, continued in-app after the native splash so the hand-over is seamless. */

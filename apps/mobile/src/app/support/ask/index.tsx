@@ -113,6 +113,7 @@ export default function AskUs() {
             }}
             error={error}
             maxLength={1000}
+            multiline
           />
           {failed ? (
             <Banner tone="danger" title={t('error.title')}>

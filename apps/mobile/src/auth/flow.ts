@@ -5,6 +5,12 @@ import { ApiError, apiRequest } from '../api/client';
 /** Mirror of the server resend timer; only used to tell a resend wait from an AUT-08 pause. */
 const RESEND_SECONDS = 30;
 
+let returnTo: Href | null = null;
+/** Where to resume after sign-in (AUTH 11), e.g. the Fresha hand-off a guest started. */
+export function setReturnTo(href: Href | null) {
+  returnTo = href;
+}
+
 /** AUT-03 → AUT-04 → AUT-05…07 → back to where the person was (Home by default). */
 export function goToNext(next: NextStep) {
   const step: Record<Exclude<NextStep, 'done'>, Href> = {
@@ -12,8 +18,11 @@ export function goToNext(next: NextStep) {
     profile: '/auth/profile',
     match: '/auth/match',
   };
-  if (next === 'done') router.dismissTo('/home');
-  else router.replace(step[next]);
+  if (next === 'done') {
+    router.dismissTo('/home');
+    if (returnTo) router.push(returnTo);
+    returnTo = null;
+  } else router.replace(step[next]);
 }
 
 export type StartResult = { ok: true; challenge: OtpStartResponse } | { ok: false; kind: 'invalid' | 'network' | 'limited' | 'wait'; seconds?: number };

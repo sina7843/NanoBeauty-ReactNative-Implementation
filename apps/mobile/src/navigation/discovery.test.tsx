@@ -30,7 +30,7 @@ jest.mock('../settings/useSettings', () => ({
 const APP_DIR = join(__dirname, '../app');
 jest.setTimeout(45_000);
 
-const base = { aliases: [], concerns: [], description: null, durationLabel: null, durationMin: null, perArea: false, photo: null, professionals: [], faq: [], care: [], suitabilityArticle: null, sample: true, status: 'live' as const };
+const base = { aliases: [], concerns: [], description: null, durationLabel: null, durationMin: null, perArea: false, areas: null, photo: null, professionals: [], faq: [], care: [], suitabilityArticle: null, sample: true, status: 'live' as const };
 const catalog: Catalog = {
   categories: [
     { id: 'skin-tightening', name: 'Skin tightening and resurfacing', photo: 'treatment-hifu' },

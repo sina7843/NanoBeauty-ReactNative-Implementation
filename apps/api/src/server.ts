@@ -14,6 +14,7 @@ if (!config.DATABASE_URL) await migrate(db);
 const { integrations, otpSink } = createDevIntegrations({
   freshaBookingUrl: config.FRESHA_BOOKING_URL,
   sampleLegacy: config.DEV_SAMPLE_LEGACY,
+  sampleFresha: config.DEV_SAMPLE_FRESHA,
 });
 const app = buildApp({ config, db, integrations, auth: config.DEV_OTP_SINK ? { devOtpSink: otpSink } : {} });
 

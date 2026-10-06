@@ -7,7 +7,7 @@ Mark a prompt complete only after implementation is reviewed, relevant checks pa
 - [x] NANO-01
 - [x] NANO-02
 - [x] NANO-03
-- [ ] NANO-04
+- [x] NANO-04
 - [ ] NANO-05
 - [ ] NANO-06
 - [ ] NANO-07
@@ -17,6 +17,6 @@ Mark a prompt complete only after implementation is reviewed, relevant checks pa
 - [ ] NANO-11
 
 ## Current work
-- Active item: `NANO-04`
-- Last completed item: `NANO-03` (2026-10-06; independent review: approve with notes, all nine findings fixed and re-tested)
-- Blockers: none for NANO-04 (Fresha prefill/read-back E2 is designed as "not synced" states). Open: real clinic content and photo rights (C5, R07), clinic hours/phone/parking (C7), terms/privacy text (R1), SMS vendor (E3), old-app export (C3), on-device smoke test, fonts, app IDs, API hosting, EAS account.
+- Active item: `NANO-05`
+- Last completed item: `NANO-04` (2026-10-06; independent review: approve with notes, six medium findings and four low ones fixed and re-tested)
+- Blockers: none for NANO-05. Open: Fresha prefill/read-back and booking URL (E2; app shows "not synced" states), staff request screens (STF-23/24), real clinic content and photo rights (C5, R07), clinic hours/phone/parking (C7), terms/privacy text (R1), SMS vendor (E3), old-app export (C3), on-device smoke test, fonts, app IDs, API hosting, EAS account.

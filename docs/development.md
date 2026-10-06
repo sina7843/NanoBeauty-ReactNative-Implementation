@@ -118,12 +118,39 @@ Runtime boundaries:
 - **Grant a staff role in dev:**
   `INSERT INTO staff_roles (customer_id, role) SELECT id, 'Owner' FROM customers WHERE phone_e164 = '+16045550123';`
 
+## Booking hand-off and visits (NANO-04)
+
+- **Mode:** `settings.bookingMode` (default `handoff`, D33). In-app booking routes (`/book/professional`, `/time`,
+  `/details`, `/review`, `/result`, `/basket`, `/visits/[id]/reschedule`) redirect to Home with "Link not found".
+- **Flow:** BKG-01 basket (`/book/service`, laser → BKG-10 `/book/areas`) → BKG-12 `/book/how-it-works` (skipped once
+  "Don't show this again" is on) → BKG-08 `/book/fresha` → system in-app browser (`expo-web-browser`) → BKG-09
+  `/book/fresha-return?handoff=…`. Guests are asked to sign in at BKG-08 and come back there.
+- **Truth rule (BOOK 16):** the return check is `confirmed` only when the server sees a Fresha booking first seen
+  *after* the hand-off was created and not claimed by another hand-off; existing bookings never count. Without a
+  Fresha read-back, after a Fresha error, or after the 24 h hand-off lifetime it is "not yet". Fresha is read at most
+  every 15 s per customer; the app polls every 3 s while "checking" (90 s from the first check).
+- **Recovery:** the hand-off id is stored (`nano.private.handoff`, AsyncStorage, id only) before Fresha opens; a
+  relaunch within 2 h reopens the return check. Unknown, expired or malformed links land on Home.
+- **Try it locally:** set `DEV_OTP_SINK=true`, `DEV_SAMPLE_FRESHA=true` and `FRESHA_BOOKING_URL=https://…` in your own
+  `.env`, sign in as `(604) 555-0123` and open Visits. The sample has a confirmed HIFU visit, a pending laser visit and a
+  completed past visit. API tests simulate a new Fresha booking via `createDevIntegrations().freshaBookings`.
+- **Endpoints:** `GET /v1/visits`, `GET /v1/visits/:id`, `POST /v1/bookings/handoffs` (idempotency key),
+  `GET /v1/bookings/handoffs/:id`, `POST /v1/visits/:id/requests` (idempotency key; one open request per visit),
+  staff `GET /v1/staff/requests` and `POST /v1/staff/requests/:id/transition` (permission `requests.manage`).
+- **Notifications:** hooks write to the `notifications` outbox (`NTF-11.request_needs_you` to staff;
+  `visit_request_submitted`, `NTF-03.visit_request_approved`, `visit_request_declined`, `visit_request_call_needed` to
+  the customer). Delivery (push/text/email, consent, quiet hours) is NANO-09.
+- **Device data:** visits are cached for offline reading under `nano.private.*` and wiped on sign-out or session expiry.
+
 ## Troubleshooting
 
 - **`FATAL ERROR: Zone Allocation failed - process out of memory`** when PGlite starts (tests or `api:dev`): the
   machine is low on free memory and V8's optimizing WASM compiler can't allocate. Tests already pass
   `--liftoff-only`. For the dev server either free memory, use Docker Postgres (`npm run db:up` + `DATABASE_URL`),
   or run `npx tsx --liftoff-only apps/api/src/server.ts`.
-- **Metro OOM on `expo export`**: add `--max-workers 1`.
+- **Metro OOM on `expo export`**: add `--max-workers 1`. If `hermesc.exe` exits with a large negative code, it ran
+  out of memory; close other Node processes and retry.
+- **Jest workers killed (heap / Zone allocation)**: the mobile `test` script caps workers at 2; use `npx jest -i`
+  on very low memory.
 - **Duplicate React** reported by `npx expo-doctor`: root `package.json` pins `react`/`react-dom` via `overrides` to the
   SDK version. Keep them in step with `apps/mobile` when upgrading Expo.

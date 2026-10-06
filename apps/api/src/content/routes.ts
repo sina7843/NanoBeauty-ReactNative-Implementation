@@ -11,6 +11,7 @@ import {
   type Catalog,
   type Offer,
   type PromoValidation,
+  type ServiceAreas,
 } from '@nano/contracts';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
@@ -86,7 +87,7 @@ export function registerContentRoutes(app: FastifyInstance, { now }: { now: () =
       db.query<{ id: string; name: string; photo: string | null }>('SELECT id, name, photo FROM categories WHERE NOT archived ORDER BY sort'),
       db.query<{ id: string; name: string; home_rank: number | null }>('SELECT id, name, home_rank FROM concerns ORDER BY sort'),
       db.query<Record<string, unknown>>(
-        `SELECT id, category_id, name, aliases, concerns, description, price, duration_label, duration_min, per_area, photo, status,
+        `SELECT id, category_id, name, aliases, concerns, description, price, duration_label, duration_min, per_area, areas, photo, status,
                 professionals, faq, care, suitability_article, sample
            FROM services WHERE status <> 'draft' ORDER BY sort`,
       ),
@@ -108,6 +109,7 @@ export function registerContentRoutes(app: FastifyInstance, { now }: { now: () =
         durationLabel: s.duration_label,
         durationMin: s.duration_min,
         perArea: s.per_area,
+        areas: toAreas(s.areas),
         photo: s.photo,
         status: s.status,
         professionals: s.professionals,
@@ -260,4 +262,13 @@ export function matchesTarget(codeTarget: string, wanted: string): boolean {
   if (codeTarget === wanted) return true;
   const [kind, value] = codeTarget.split(':');
   return value === 'any' && wanted.startsWith(`${kind}:`);
+}
+
+type AreaTuple = [string, number, 'fixed' | 'from'];
+/** Stored as compact tuples (seed); sent as named fields. */
+export function toAreas(raw: unknown): ServiceAreas | null {
+  if (!raw) return null;
+  const a = raw as { women: AreaTuple[]; men: AreaTuple[]; maxAreasPerVisit: number };
+  const map = (list: AreaTuple[]) => list.map(([name, price, kind]) => ({ name, price, kind }));
+  return { women: map(a.women), men: map(a.men), maxAreasPerVisit: a.maxAreasPerVisit };
 }

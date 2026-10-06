@@ -51,6 +51,9 @@ import { CarIcon } from 'phosphor-react-native/src/icons/Car';
 import { StarIcon } from 'phosphor-react-native/src/icons/Star';
 import { CaretDownIcon } from 'phosphor-react-native/src/icons/CaretDown';
 import { CaretUpIcon } from 'phosphor-react-native/src/icons/CaretUp';
+import { CalendarXIcon } from 'phosphor-react-native/src/icons/CalendarX';
+import { CheckSquareIcon } from 'phosphor-react-native/src/icons/CheckSquare';
+import { SquareIcon } from 'phosphor-react-native/src/icons/Square';
 import { useTheme } from '../theme/ThemeProvider';
 
 // Names follow Phosphor (and the handover boards). Add an import + entry when a screen needs a new one.
@@ -104,6 +107,9 @@ const ICONS = {
   'star': StarIcon,
   'caret-down': CaretDownIcon,
   'caret-up': CaretUpIcon,
+  'calendar-x': CalendarXIcon,
+  'check-square': CheckSquareIcon,
+  square: SquareIcon,
 } satisfies Record<string, PhosphorIcon>;
 
 export type IconName = keyof typeof ICONS;

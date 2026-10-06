@@ -23,6 +23,8 @@ const schema = z
     DEV_OTP_SINK: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
     /** Local development only: serve sample old-app records for the account match (AUT-05…07). */
     DEV_SAMPLE_LEGACY: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
+    /** Local development only: simulate a connected Fresha read-back with sample bookings (NANO-04). */
+    DEV_SAMPLE_FRESHA: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
   })
   .superRefine((env, ctx) => {
     // A production build must state its tier; never fall back to the development default.
@@ -33,7 +35,7 @@ const schema = z
       ctx.addIssue({ code: 'custom', path: ['DATABASE_URL'], message: `required when APP_ENV=${env.APP_ENV}` });
     }
     // The OTP sink is a sign-in bypass by design; it must never be reachable on shared environments.
-    for (const flag of ['DEV_OTP_SINK', 'DEV_SAMPLE_LEGACY'] as const) {
+    for (const flag of ['DEV_OTP_SINK', 'DEV_SAMPLE_LEGACY', 'DEV_SAMPLE_FRESHA'] as const) {
       if (env.APP_ENV !== 'development' && env[flag]) {
         ctx.addIssue({ code: 'custom', path: [flag], message: 'is a local development switch and is refused outside APP_ENV=development' });
       }

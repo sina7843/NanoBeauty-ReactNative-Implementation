@@ -1,6 +1,7 @@
 export { AccountMatch, ConsentRow, OTPInput } from './Auth';
 export { Badge, RoleBadge, SampleBadge, type StaffRole, type Tone } from './Badge';
 export { Banner, type BannerTone } from './Banner';
+export { AppointmentPass, AreaPicker, ServiceBasket, type Area, type BasketItem } from './Booking';
 export { Button, IconButton } from './Button';
 export { Card, ListGroup, ListRow } from './Card';
 export { CareTimeline, FAQBlock, OfferCard, RatingSummary, SearchField, ServiceCard, SupportContext, UrgentLine } from './Discovery';

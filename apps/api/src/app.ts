@@ -13,6 +13,7 @@ import type { Config } from './config';
 import type { Db } from './db';
 import { registerAuthRoutes } from './auth/routes';
 import { registerContentRoutes } from './content/routes';
+import { registerVisitRoutes } from './visits/routes';
 import { HttpError } from './errors';
 import type { Integrations } from './integrations';
 
@@ -112,6 +113,8 @@ export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
     registerAuthRoutes(scope, { now: auth.now ?? Date.now, devOtpSink: auth.devOtpSink });
     // Public discovery content (NANO-03): catalogue, offers, promo checks, support, policies.
     registerContentRoutes(scope, { now: auth.now ?? Date.now });
+    // Fresha hand-off, visits and visit requests (NANO-04).
+    registerVisitRoutes(scope, { now: auth.now ?? Date.now });
   });
 
   app.get('/health/live', async () => ({ status: 'ok' as const }));

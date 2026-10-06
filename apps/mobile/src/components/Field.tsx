@@ -11,7 +11,7 @@ import { hitSlopFor, OPACITY_DISABLED } from './press';
 export interface TextFieldProps
   extends Pick<
     TextInputProps,
-    'value' | 'onChangeText' | 'onBlur' | 'keyboardType' | 'textContentType' | 'autoComplete' | 'autoCapitalize' | 'secureTextEntry' | 'returnKeyType' | 'onSubmitEditing' | 'maxLength'
+    'value' | 'onChangeText' | 'onBlur' | 'keyboardType' | 'textContentType' | 'autoComplete' | 'autoCapitalize' | 'secureTextEntry' | 'returnKeyType' | 'onSubmitEditing' | 'maxLength' | 'multiline'
   > {
   /** Always visible; never placeholder-only. */
   label: string;
@@ -62,7 +62,7 @@ export function TextField({ label, placeholder, helper, error, optional, disable
             setFocused(false);
             input.onBlur?.(e);
           }}
-          style={[type('bodyLg'), styles.input, { color: disabled ? colors.inkDisabled : colors.ink }]}
+          style={[type('bodyLg'), styles.input, input.multiline && styles.multiline, { color: disabled ? colors.inkDisabled : colors.ink }]}
         />
       </View>
       {error ? (
@@ -228,6 +228,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   input: { flex: 1, paddingVertical: space['2'] },
+  multiline: { minHeight: 96, maxHeight: 200, textAlignVertical: 'top', paddingTop: space['3'] },
   message: { flexDirection: 'row', gap: space['1'], alignItems: 'flex-start' },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: space['4'], paddingVertical: space['3'], minHeight: sizes.touchMin },
   locked: { flexDirection: 'row', alignItems: 'center', gap: space['1'] },

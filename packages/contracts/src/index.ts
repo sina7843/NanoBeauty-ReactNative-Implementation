@@ -3,3 +3,4 @@ export * from './content';
 export * from './http';
 export * from './phone';
 export * from './settings';
+export * from './visits';

@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+**/.expo
+.git
+.env
+.env.*
+!.env.example
+reference
+docs
+prompts
+tools
+.claude
+*.log

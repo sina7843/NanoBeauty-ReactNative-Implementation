@@ -218,7 +218,7 @@ export function PhotoFrame({
   return (
     <View style={[styles.photo, { aspectRatio: RATIOS[ratio], backgroundColor: colors.surfaceMuted }]}>
       {source ? (
-        <Image source={source} accessible accessibilityLabel={alt} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        <Image source={source} accessible accessibilityLabel={alt} style={styles.photoImage} resizeMode="cover" />
       ) : (
         <View style={styles.photoPlaceholder} accessible accessibilityRole="image" accessibilityLabel={label}>
           <Svg viewBox="0 0 120 90" width={64} height={48} opacity={0.6}>
@@ -247,6 +247,8 @@ const styles = StyleSheet.create({
   actions: { alignSelf: 'stretch', gap: space['2'], marginTop: space['2'] },
   price: { gap: 2 },
   photo: { width: '100%', overflow: 'hidden', borderRadius: radius.lg },
+  // Explicit size: RN Image otherwise sizes a bundled asset to its own pixel dimensions, overriding the insets.
+  photoImage: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' },
   photoPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space['2'] },
   photoLabel: { paddingHorizontal: space['2'], paddingVertical: 2, borderRadius: radius.xs },
 });

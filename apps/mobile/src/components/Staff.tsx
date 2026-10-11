@@ -1,4 +1,5 @@
 import { radius, space } from '@nano/design-tokens';
+import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getEnv } from '../config/env';
@@ -42,6 +43,8 @@ export function StaffBar({
         { backgroundColor: colors.staff, paddingTop: insets.top + space['3'], paddingHorizontal: layout === 'tablet' ? space['8'] : space['5'] },
       ]}
     >
+      {/* The plum band runs under the status bar in both themes, so its icons are always light. */}
+      <StatusBar style="light" />
       <View style={styles.row}>
         <View style={styles.inline}>
           <Icon name="user-gear" size={18} color={colors.onStaff} />

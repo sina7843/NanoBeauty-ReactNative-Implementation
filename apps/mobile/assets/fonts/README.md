@@ -1,7 +1,8 @@
-# Owner-supplied fonts (optional)
+# Brand fonts (required)
 
-The app runs without these files and falls back to system fonts. To use the brand fonts, the project
-owner places licensed static TTFs here with exactly these names, then restarts Metro (`--clear`):
+The six brand fonts are supplied by the project owner and committed here (decision D-QA-02). They are
+required in every build: there is no system-font fallback. See `FONTS.md` for their source and
+`OFL.txt` for the licence (SIL Open Font License, decision D24).
 
 | File | Used by |
 | --- | --- |
@@ -12,7 +13,6 @@ owner places licensed static TTFs here with exactly these names, then restarts M
 | `Sora-Medium.ttf` | label |
 | `Sora-SemiBold.ttf` | headline, labelLg, overline, amount |
 
-Fraunces and Sora are SIL Open Font License (decision D24). Use the static instances (Fraunces at the
-72pt optical size for Light/Regular/Italic). Claude Code never downloads or commits font binaries;
-adding them is an owner action. Files are loaded at runtime with `expo-font` (`src/theme/fonts.ts`), so
-any missing file simply keeps its system fallback.
+The files are loaded with a static `require()` map in `src/theme/fonts.ts` (the splash stays up until
+they load) and embedded natively by the `expo-font` config plugin in `app.config.ts`.
+`npm run config:check` fails if any file is missing. Never download or substitute other fonts.

@@ -63,7 +63,7 @@ export function ServiceCard({ name, category, duration, price, consultation, pho
       <Card padded={false} onPress={onPress} accessibilityLabel={label}>
         <View style={styles.row}>
           <View style={[styles.thumb, { backgroundColor: colors.surfaceMuted }]}>
-            {source ? <Image source={source} style={StyleSheet.absoluteFill} resizeMode="cover" accessible={false} /> : <Icon name="compass" size={24} tone="inkMuted" />}
+            {source ? <Image source={source} style={styles.thumbImage} resizeMode="cover" accessible={false} /> : <Icon name="compass" size={24} tone="inkMuted" />}
           </View>
           <View style={styles.body}>{meta}</View>
         </View>
@@ -336,6 +336,7 @@ const styles = StyleSheet.create({
   meta: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: space['2'] },
   row: { flexDirection: 'row' },
   thumb: { width: 104, minHeight: 104, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  thumbImage: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' },
   body: { flex: 1, gap: space['1'], padding: space['3'] },
   stackedBody: { padding: space['4'] },
   offerTop: { flexDirection: 'row', alignItems: 'center', gap: space['2'], flexWrap: 'wrap' },

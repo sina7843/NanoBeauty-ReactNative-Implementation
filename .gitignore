@@ -76,3 +76,4 @@ pnpm-debug.log*
 # Expo / build output
 .expo/
 .ci-export/
+Edits/

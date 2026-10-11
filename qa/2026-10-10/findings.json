@@ -1,0 +1,1167 @@
+[
+ {
+  "area": "Sign-in and onboarding",
+  "items": [
+   [
+    "FE-1",
+    "High",
+    "Confirmed",
+    "AUT-03, AUT-04",
+    "Leaving sign-up halfway keeps the person signed in, and onboarding is never resumed",
+    "The session is saved at the code step (app/auth/code.tsx:60). Consents and profile are reached with router.replace (auth/flow.ts:25), the auth stack is a dismissible modal, and Android back / the header back on AUT-04 lead out. The person stays signed in with no terms or text consent and no name, and nothing reads me.next again on launch or Home. iOS also hides the designed Back on AUT-03 (app/auth/_layout.tsx:19), not documented.",
+    "app/auth/code.tsx:60 · auth/flow.ts:15-27 · app/_layout.tsx (auth modal) · app/auth/_layout.tsx:19"
+   ],
+   [
+    "API-14",
+    "Medium",
+    "Confirmed",
+    "AUT-03",
+    "The server doesn't enforce the consent step",
+    "A customer still at next:\"consents\" can PUT /v1/me/preferences {marketing:true} (200, marketing consent recorded, now counted in the STF-35 push audience) and can create orders and hand-offs.",
+    "apps/api/src/account/routes.ts:178-201 (no nextStep check on any route)"
+   ],
+   [
+    "API-15",
+    "Low",
+    "Confirmed",
+    "AUT-02",
+    "OTP challenges aren't tied to a purpose",
+    "A challenge from POST /v1/me/phone/start was accepted by POST /v1/auth/otp/verify and created an account and session for that number. Sign-in, phone change, deletion and web gift claim share one checkCode.",
+    "apps/api/src/auth/routes.ts:158-197"
+   ],
+   [
+    "API-9",
+    "Low",
+    "Confirmed",
+    "AUT-01, WEB-01",
+    "Rate-limit 429 body has no retryAfterSeconds",
+    "The per-address limiter returns {code:'rate_limited', message:'…retry in 53 seconds'} and only the retry-after header carries the wait. AUT-01 reads the body field (auth/flow.ts:39, ?? 0) and treats it as \"Try again in 0 seconds\".",
+    "apps/api/src/app.ts:131-133 · apps/mobile/src/auth/flow.ts:39"
+   ],
+   [
+    "FE-15",
+    "Low",
+    "Confirmed",
+    "AUT-05..07",
+    "Account-match badge says \"Sample\" and the match step ignores the return point",
+    "AUT-05 shows SampleBadge \"Sample\" instead of \"Sample records\" (aut.match.sample is unused). match.tsx calls router.dismissTo('/home') directly instead of goToNext('done'), so a stored returnTo is not followed and can fire after a later sign-in.",
+    "components/Auth.tsx:208 · app/auth/match.tsx:36, 60"
+   ]
+  ]
+ },
+ {
+  "area": "Home, treatments and offers",
+  "items": [
+   [
+    "FE-2",
+    "Medium",
+    "Confirmed",
+    "HOM-02",
+    "Home visit card has the wrong label and no Add to calendar",
+    "AppointmentPass is called without eyebrow, so it reads \"Next appointment\" instead of \"Booked in Fresha\", and without onAddToCalendar (the Visits tab wires it). The offline compact card is never used.",
+    "app/(tabs)/home.tsx:171-178"
+   ],
+   [
+    "FE-3",
+    "Medium",
+    "Confirmed",
+    "HOM-02 offline",
+    "Signed-in Home shows the guest offline message",
+    "Signed-in people see \"Showing treatments saved on this phone…\" (HOM-01 copy) instead of \"You're offline / Last updated today, 9:41 am…\"; no last-updated time is shown although visits come from cache.",
+    "app/(tabs)/home.tsx:63-67"
+   ],
+   [
+    "FE-4",
+    "Medium",
+    "Confirmed",
+    "TRT-02, OFR-01, OFR-04",
+    "\"Clear filters\" does nothing when the list's own category or concern is empty",
+    "The URL category/concern is kept apart from the sheet filters. With no results and no sheet filters, the screen says \"Try removing a filter\" and Clear filters resets nothing. Live: the Halloween offer and its fallback link to /treatments/list?category=facials, which has no services.",
+    "app/treatments/list.tsx:35, 61-72"
+   ],
+   [
+    "FE-5",
+    "Low",
+    "Confirmed",
+    "TRT-03",
+    "Filters sheet ignores the concern the list was opened with",
+    "The entry concern is a fixed extra condition: it shows unselected in the sheet, can't be removed, and picking another concern narrows instead of widening. The button reads \"Show 1 treatments\".",
+    "catalog/search.ts:93 · app/treatments/list.tsx:128, 148-153 · i18n/en.ts:637"
+   ],
+   [
+    "FE-6",
+    "Medium",
+    "Confirmed",
+    "OFR-03",
+    "Promo \"doesn't apply\" state can never appear",
+    "The server only returns noteligible when appliesTo is sent; promo.tsx sends only {code} and never reads the offer param passed from OFR-01.",
+    "app/promo.tsx:52 · app/offers/[id]/index.tsx:61 · apps/api/src/content/routes.ts:171, 199"
+   ],
+   [
+    "FE-7",
+    "Low",
+    "Confirmed",
+    "OFR-01",
+    "Offer Eligible rows can't be tapped",
+    "Rows render chevron={false} with no onPress (design: chevrons, open WAL-07). Eyebrow is ink instead of primary, title displayMd instead of title-lg, body bodyLg ink instead of muted body.",
+    "app/offers/[id]/index.tsx:70, 73, 97, 102"
+   ],
+   [
+    "FE-16",
+    "Low",
+    "Likely",
+    "OFR-03",
+    "Promo CTA link isn't validated before opening",
+    "promo.tsx pushes cta.href as-is; the offer page sends the same field through resolveLink, which safely handles unknown or mode-blocked links.",
+    "app/promo.tsx:100"
+   ],
+   [
+    "FE-11",
+    "Low",
+    "Confirmed",
+    "Main / HOM-01",
+    "Guest Home hero styled differently",
+    "Subtitle is bodyLg sans (design accent-italic serif); photo ratio 4/3 or 16/9 (design 16/11, 16/9, 16/5.6) with radius 20 (design 28); Book and Explore stay visible while loading; concern chips wrap instead of one scrolling row.",
+    "app/(tabs)/home.tsx:87, 91, 112-119, 156 · components/Status.tsx:248"
+   ],
+   [
+    "FE-12",
+    "Low",
+    "Confirmed",
+    "TRT-01",
+    "Treatments tab headings and category tiles styled differently",
+    "Headings use serif titleMd (design sans headline). Tiles are bordered cards with a 4:3 photo (design 76 px photo, radius 16, no card); an odd last tile stretches to full width.",
+    "app/(tabs)/treatments.tsx:32, 44, 84-85"
+   ],
+   [
+    "FE-13",
+    "Low",
+    "Confirmed",
+    "TRT-02, TRT-05..07",
+    "Treatment list, detail, profile and unavailable screens styled differently",
+    "Titles displayMd 32 (design title-lg 26). TRT-07 photo not dimmed; similar rows lack price. TRT-06 photo 4/3 (design 300 px crop). TRT-02 card photo 16/9 (design 5/2); filter group titles use label; \"Loading\" without ellipsis.",
+    "app/treatments/[id].tsx:108, 237, 256 · app/professionals/[id].tsx:42, 45 · app/treatments/list.tsx:83, 163, 190"
+   ],
+   [
+    "FE-14",
+    "Low",
+    "Confirmed",
+    "TRT-04",
+    "Search screen missing pieces",
+    "No category suggestion row; every result uses a magnifying-glass icon with \"Treatment · {category}\"; \"Did you mean\" is a tertiary button holding the whole sentence instead of an inline link.",
+    "app/treatments/search.tsx:46-51, 74-80"
+   ]
+  ]
+ },
+ {
+  "area": "Booking, visits, care and support",
+  "items": [
+   [
+    "BV-3",
+    "Medium",
+    "Confirmed",
+    "VIS-01/02/05/07, BKG-09, CAR-01, WAL-01..03, PAY-09",
+    "Dates drop the weekday and the year",
+    "clinicDate() builds only day + month: visits read \"16 Oct\" (design \"Thu 16 Oct\"), expiries read \"Use by 10 Oct\" for a date a year away (design \"28 Feb 2027\"), receipts have no year.",
+    "i18n/format.ts:21-26 (used by visits.tsx, visits/[id], fresha-return, care, cancelled, InstrumentView, receipt)"
+   ],
+   [
+    "BV-1",
+    "Medium",
+    "Confirmed",
+    "VIS-06",
+    "\"Sent to the clinic\" confirmation disappears immediately",
+    "send() sets sent, then invalidates visits; the refetch fills openRequest, which unmounts the Composer holding the confirmation. The reference is never seen.",
+    "app/visits/[id]/late-change.tsx:60-66, 95-96"
+   ],
+   [
+    "BV-2",
+    "Medium",
+    "Confirmed",
+    "VIS-02 requested",
+    "A visit with a pending request keeps the Fresha status badge",
+    "The pass always uses visit.status, so it reads \"Awaiting clinic\" or \"Confirmed\" next to a \"Change requested\" banner (design: \"Change requested\").",
+    "app/visits/[id]/index.tsx:78"
+   ],
+   [
+    "BV-4",
+    "Medium",
+    "Confirmed",
+    "SUP-04",
+    "A guest's \"Ask us\" question is lost after sign-in",
+    "send() pushes /auth/phone without setReturnTo; after sign-in the person lands on Home and the typed question is gone.",
+    "app/support/ask/index.tsx:44-47 · auth/flow.ts:21-24"
+   ],
+   [
+    "BV-5",
+    "Medium",
+    "Confirmed",
+    "VIS-02, VIS-01",
+    "\"Change in Fresha\" and \"Open Fresha\" skip the hand-off screens",
+    "Both open the browser directly, so no hand-off is recorded and there is no BKG-09 return check. With no Fresha URL both are disabled with no explanation; on VIS-02 the button is primary large (design secondary).",
+    "app/visits/[id]/index.tsx:91-99 · booking/NotSynced.tsx:20-28"
+   ],
+   [
+    "BV-6",
+    "Low",
+    "Confirmed",
+    "VIS-02",
+    "Care row counts aftercare as \"before your visit\"",
+    "count = all care steps, so HIFU reads \"4 steps before your visit\" (2 before, 2 after). Icon first-aid-kit (design calendar-check).",
+    "app/visits/[id]/index.tsx:110"
+   ],
+   [
+    "BV-7",
+    "Low",
+    "Confirmed",
+    "VIS-01 offline",
+    "Offline Visits still says \"Synced from Fresha a few minutes ago\"",
+    "The note always renders, including from a cache up to 7 days old, and is hard-coded although the server returns syncedAt.",
+    "app/(tabs)/visits.tsx:60-65, 124-126 · booking/visits.ts:171"
+   ],
+   [
+    "BV-8",
+    "Low",
+    "Confirmed",
+    "VIS-01",
+    "Visits lists don't match the design",
+    "Later upcoming visits are ListRows (design: compact passes, \"Upcoming\"); subtitle drops the professional when detail is empty; past list has no year header, wrong icons, and \"Completed\" instead of \"Done\".",
+    "app/(tabs)/visits.tsx:93-106, 137, 153"
+   ],
+   [
+    "BV-9",
+    "Low",
+    "Confirmed",
+    "VIS-01",
+    "Visits has no Account button",
+    "Design has a tonal user-circle IconButton beside the title; only Home passes one.",
+    "app/(tabs)/visits.tsx:18-20"
+   ],
+   [
+    "BV-10",
+    "Low",
+    "Confirmed",
+    "BKG-12",
+    "How-it-works button and step icons",
+    "Button reads \"Continue in Fresha\" with an external icon (design \"Continue\", no icon); no 40 px step icons; assumption badge warning instead of sample; header blank (design \"Book\").",
+    "app/book/how-it-works.tsx:49-51, 61-70"
+   ],
+   [
+    "BV-11",
+    "Low",
+    "Confirmed",
+    "BKG-01",
+    "Booking basket missing search, Close and labels",
+    "No \"Search treatments\" field; badge \"Sample\" instead of \"Sample prices\"; no Close on the modal; consultation subtitle lacks \"credited to your treatment\"; selection is a left square instead of a right circular check.",
+    "app/book/service.tsx:44, 94, 99, 110"
+   ],
+   [
+    "BV-12",
+    "Low",
+    "Confirmed",
+    "BKG-10",
+    "Area picker layout",
+    "Disabled button keeps its arrow icon; header \"Choose your areas\" (design \"Book\"); name and badge layout differ; total row has no surface-muted panel.",
+    "app/book/areas.tsx:160, 191, 196-199 · components/Booking.tsx:233-238"
+   ],
+   [
+    "BV-13",
+    "Low",
+    "Confirmed",
+    "BKG-08",
+    "Fresha hand-off screen icons, badge and buttons",
+    "Carry-over row icons differ; assumption badge warning instead of sample; buttons inline in the scroll instead of a fixed footer; header blank.",
+    "app/book/fresha.tsx:108, 171-180, 192-201"
+   ],
+   [
+    "BV-14",
+    "Low",
+    "Confirmed",
+    "BKG-09",
+    "Return check \"not visible\" and \"not yet\" states",
+    "\"Booked, not showing yet\" uses timeout instead of success with reference; \"Not yet\" has a secondary button without icon plus an extra \"Go to Visits\".",
+    "app/book/fresha-return.tsx:83-87, 119-150"
+   ],
+   [
+    "BV-15",
+    "Low",
+    "Confirmed",
+    "VIS-02",
+    "Visit detail label and banner order",
+    "Fresha visits show \"Booked in Fresha\" (design \"Your visit\"); banners sit above the pass (design below).",
+    "app/visits/[id]/index.tsx:54-79"
+   ],
+   [
+    "BV-16",
+    "Low",
+    "Confirmed",
+    "VIS-07",
+    "Missed visit banner and Book again",
+    "Banner is danger above the pass (design warning below); \"Book again\" is a ListRow (design primary large footer button).",
+    "app/visits/[id]/index.tsx:67-71, 121-123"
+   ],
+   [
+    "BV-17",
+    "Low",
+    "Likely",
+    "CAR-01",
+    "Care timeline never shows done/now progress",
+    "Steps are passed with no state, so every dot is empty; the heading sits in the content instead of the top bar.",
+    "app/care/[visitId].tsx:16, 30"
+   ],
+   [
+    "BV-18",
+    "Low",
+    "Confirmed",
+    "VIS-05",
+    "Cancelled confirmation uses the wrong layout",
+    "EmptyState with no reference and a secondary Back (design AsyncStatus success, reference, primary \"Book another time\", tertiary \"Back to visits\").",
+    "app/visits/[id]/cancelled.tsx:178, 191-206"
+   ],
+   [
+    "BV-19",
+    "Low",
+    "Likely",
+    "SUP-01",
+    "Help search filters in place",
+    "The field filters article titles in place (design opens search); no match leaves an empty \"Common questions\" header.",
+    "app/support/index.tsx:29-39"
+   ]
+  ]
+ },
+ {
+  "area": "Wallet, payments and gifts",
+  "items": [
+   [
+    "WP-1",
+    "High",
+    "Confirmed",
+    "PAY-01, PAY-04/08",
+    "An abandoned payment comes back as \"checking your payment\" on next launch",
+    "The pending marker is saved before any card is entered and cleared only on a final state. Back out of the card form, reopen the app: it shows \"Confirm with your bank\", then \"Still checking… Please don't pay again\" for a payment never made. A closed wallet sheet returns as \"Payment cancelled\".",
+    "app/pay/method.tsx:79-89 · app/index.tsx:34 · app/pay/status.tsx:152-155"
+   ],
+   [
+    "API-2",
+    "Medium",
+    "Confirmed",
+    "STF-18",
+    "Value can be added to a voided gift card",
+    "POST /v1/staff/adjustments on a voided gift returns 200, status voided, balance $5. Only kind is checked, not status.",
+    "apps/api/src/wallet/routes.ts:944-957"
+   ],
+   [
+    "API-3",
+    "Medium",
+    "Confirmed",
+    "WAL-04 sent",
+    "\"Resend\" on a voided gift reports success but sends nothing",
+    "POST /v1/wallet/gifts/:id/resend returns {ok:true}; deliverGift silently returns. Send-time on it says \"already been sent\" though it was cancelled.",
+    "apps/api/src/wallet/routes.ts:836, 843-848, 438"
+   ],
+   [
+    "API-4",
+    "Medium",
+    "Confirmed",
+    "WAL-01",
+    "A voided or refunded gift disappears from the buyer's Wallet",
+    "walletFor filters status <> 'voided', so \"Gifts you sent\" loses it (WALT 03 says cancelled and refunded states stay visible).",
+    "apps/api/src/wallet/routes.ts:183, 1087"
+   ],
+   [
+    "API-5",
+    "Medium",
+    "Likely",
+    "STF-25, WEB-01",
+    "An unclaimed gift can't be redeemed at the desk",
+    "Redemption returns 404 \"must be claimed first\", while WEB-01 tells the recipient to \"just keep the code\" and show it at the desk; staff can't claim on their behalf.",
+    "apps/api/src/wallet/routes.ts:900"
+   ],
+   [
+    "API-7",
+    "Low",
+    "Confirmed",
+    "WAL-03",
+    "Package session counts don't add up after a refund",
+    "6 sessions, 1 used, 1 refunded → total 6, used 1, remaining 4: bought ignores refund entries.",
+    "apps/api/src/wallet/routes.ts:137, 159"
+   ],
+   [
+    "API-8",
+    "Medium",
+    "Confirmed",
+    "OFR-03",
+    "Promo codes can be checked but never applied or recorded",
+    "The order schema has no promo field and nothing inserts promo_redemptions or increments used, so alreadyused/usedup can't happen.",
+    "packages/contracts/src/wallet.ts:46-49 · apps/api/src (no writer)"
+   ],
+   [
+    "API-12",
+    "Low",
+    "Confirmed",
+    "PAY-01",
+    "Reusing an idempotency key with a different order silently returns the first order",
+    "POST /v1/orders with the same key but another package returns the original order with no mismatch error.",
+    "apps/api/src/wallet/routes.ts:567-573"
+   ],
+   [
+    "WP-3",
+    "Medium",
+    "Confirmed",
+    "WAL-04 sent",
+    "Scheduled or failed gift is titled \"Sent to {name}\"",
+    "The heading is always wal.giftSent, even above \"We couldn't text it\".",
+    "app/wallet/gift-cards/[id].tsx:83-85"
+   ],
+   [
+    "WP-5",
+    "Medium",
+    "Confirmed",
+    "WAL-03",
+    "Package \"Used\" list includes the purchase line",
+    "All ledger lines render under Used, including \"Package bought +4\".",
+    "app/wallet/packages/[id].tsx:48"
+   ],
+   [
+    "WP-6",
+    "Medium",
+    "Confirmed",
+    "WAL-03",
+    "Package screen states and actions differ",
+    "No PackageBalance card; every ended package gets \"Buy again\" (expired should be \"Contact the clinic\"); banner tones swapped (expired warning, used-up info); no expiring state; terms shown as a list, not a link.",
+    "app/wallet/packages/[id].tsx:24-58"
+   ],
+   [
+    "WP-7",
+    "Medium",
+    "Confirmed",
+    "WAL-01",
+    "Wallet screen built differently",
+    "Credit is a plain row (design CreditRow with non-cash note); no Account button; actions are list rows, plus an extra \"Add a gift card\" row; help link and history in a separate group.",
+    "app/(tabs)/wallet.tsx:16, 50-56, 87, 95-97 · payments/InstrumentView.tsx:12-52"
+   ],
+   [
+    "WP-8",
+    "Medium",
+    "Confirmed",
+    "WAL-04 sent",
+    "Sent gift card has no amount, card or receipt link",
+    "No GiftCard face or amount, no Receipt row (no route to PAY-09), no help link for the sender, buttons inline instead of a footer.",
+    "app/wallet/gift-cards/[id].tsx:54-133"
+   ],
+   [
+    "WP-9",
+    "Low",
+    "Confirmed",
+    "WAL-02, WAL-04 mine",
+    "Credit and own-gift screens lack design components",
+    "No CreditRow or source line; CTA \"Book and use it\" (design \"Book and use my credit\"); own gift card has no GiftCard face.",
+    "app/wallet/credit.tsx:23-32 · app/wallet/gift-cards/[id].tsx:35-51"
+   ],
+   [
+    "WP-10",
+    "Medium",
+    "Confirmed",
+    "WAL-06",
+    "History has no Show filter",
+    "No SegmentedControl \"All / Payments / Refunds\" and no per-row icons.",
+    "app/wallet/history.tsx:59-74"
+   ],
+   [
+    "WP-11",
+    "Low",
+    "Confirmed",
+    "WAL-08, WAL-10",
+    "Gift value and review have no card preview",
+    "No GiftCard preview; presets are chips (design tiles); Continue stays enabled on error; Pay has no lock icon.",
+    "app/wallet/gift/value.tsx:39-77 · review.tsx:72-87"
+   ],
+   [
+    "WP-12",
+    "Low",
+    "Confirmed",
+    "WAL-08",
+    "A cleared custom amount is still used",
+    "Type 75 → Continue → Back → clear: no preset selected but Continue proceeds with the hidden $75.",
+    "app/wallet/gift/value.tsx:21-49"
+   ],
+   [
+    "WP-13",
+    "Low",
+    "Confirmed",
+    "WAL-09",
+    "Gift timing copy and field order",
+    "\"Now / Later\" (design \"Send now / Schedule\"); \"Send it by\" comes after the message.",
+    "app/wallet/gift/recipient.tsx:53-67"
+   ],
+   [
+    "WP-14",
+    "Medium",
+    "Confirmed",
+    "WAL-11",
+    "Claim screen shows the wrong state for short or mistyped codes",
+    "Under 6 characters: \"We couldn't find this gift card\"; 6-11: API notfound \"looks right but we can't find it\" (design: \"That code is too short…\"). Claimed/notfound replace the screen with a danger status (design Banner + support); success returns to Wallet, not WAL-04.",
+    "app/wallet/claim.tsx:41-44, 70-99"
+   ],
+   [
+    "WP-15",
+    "Low",
+    "Confirmed",
+    "WAL-12, ACC-07",
+    "Reference shown twice",
+    "Body text starts \"Reference {ref}.\" while AsyncStatus also prints it; ACC-07 sent state is an AsyncStatus instead of the form with a success Banner and disabled \"Requested\".",
+    "app/wallet/help.tsx:74 · app/account/data-request.tsx:79-86"
+   ],
+   [
+    "WP-16",
+    "Low",
+    "Confirmed",
+    "WAL-07",
+    "Package terms row isn't a link",
+    "Row is not tappable and its subtitle is every term joined (design: \"Transfers, refunds and expiry\" → SUP-02).",
+    "app/wallet/buy-package.tsx:115"
+   ],
+   [
+    "WP-17",
+    "Low",
+    "Confirmed",
+    "WAL-05",
+    "Membership screen lacks MemberStatus",
+    "Badge plus text instead of MemberStatus and the \"From the old app\" banner; the route takes no instrument id (flag is off by default).",
+    "app/wallet/membership.tsx:16-17"
+   ],
+   [
+    "WP-18",
+    "Medium",
+    "Confirmed",
+    "PAY-01",
+    "Apple Pay / Google Pay not filtered by platform",
+    "Every server method is a radio row; with both enabled, iOS shows Google Pay and Android Apple Pay. No WalletPayButton; financing copy differs; extra Sample badge.",
+    "app/pay/method.tsx:136-170 · apps/api/src/wallet/routes.ts:586-596"
+   ],
+   [
+    "WP-19",
+    "Low",
+    "Confirmed",
+    "PAY-02",
+    "Card form errors and Pay button",
+    "Any invalid field shows one error under the number; Pay is never disabled; no lock icon or amount header.",
+    "app/pay/card.tsx:46, 66-75"
+   ],
+   [
+    "WP-20",
+    "Low",
+    "Confirmed",
+    "PAY-05..08",
+    "Payment status states and buttons",
+    "Cancelled uses the timeout state (design failed); View receipt secondary without icon (design tertiary with icon); Get help and Check again lack icons.",
+    "app/pay/status.tsx:96, 106-109, 127, 141"
+   ],
+   [
+    "WP-21",
+    "Medium",
+    "Confirmed",
+    "PAY-09, WAL-06",
+    "Two different references for one purchase; receipt incomplete",
+    "History shows the order reference (NB-O-…), the receipt only the payment reference (PAY-…). No year, no logo, Paid badge without check.",
+    "app/pay/receipt/[id].tsx:59-67 · apps/api/src/wallet/routes.ts:704-718, 774-783"
+   ]
+  ]
+ },
+ {
+  "area": "Account and notifications",
+  "items": [
+   [
+    "WP-23",
+    "Medium",
+    "Confirmed",
+    "ACC-09",
+    "Account deletion fires on the 6th code digit",
+    "The code field submits on completion and requests deletion with no button; the designed destructive \"Delete my account\" (del.confirm) is unused.",
+    "app/account/delete.tsx:72-84 · account/CodeStep.tsx:83"
+   ],
+   [
+    "WP-24",
+    "Low",
+    "Confirmed",
+    "ACC-08",
+    "Delete-account hierarchy and wording",
+    "\"Talk to the clinic first\" is the primary large button and \"Continue to delete\" the smaller (design reversed); \"Before you go\" appears twice; balance label repeats \"(4 sessions)\".",
+    "app/account/delete.tsx:112-147 · apps/api/src/account/routes.ts:367"
+   ],
+   [
+    "WP-25",
+    "Medium",
+    "Confirmed",
+    "ACC-01, ACC-11",
+    "Booking policy can't be reached from Account",
+    "\"Terms and policies\" opens /legal/terms only; nothing reaches /legal/booking. Row icons and grouping differ; no \"Shown only to clinic staff.\" footer; pending-deletion date uses a hard-coded zone.",
+    "app/account/index.tsx:79, 86-106"
+   ],
+   [
+    "WP-26",
+    "Medium",
+    "Likely",
+    "ACC-02",
+    "Profile form starts empty if the account hasn't loaded",
+    "Fields are initialised once from me; if me is still null they stay empty, then count as changed: Save says \"Enter your first name\" and the button reads \"Send code to new number\".",
+    "app/account/profile.tsx:36-48, 63-67"
+   ],
+   [
+    "WP-27",
+    "Low",
+    "Confirmed",
+    "ACC-04/05",
+    "Inbox icons don't reflect message type",
+    "Bell for unread and check-circle for read (design: type icons such as calendar-check, ticket, receipt, gift); no summary subtitle; ACC-05 title displayMd.",
+    "app/account/inbox/index.tsx:42, 52-54 · inbox/[id].tsx:53-55"
+   ],
+   [
+    "WP-2",
+    "Medium",
+    "Likely",
+    "NTF-01..12",
+    "Tapping a push from a closed app is ignored",
+    "getLastNotificationResponseAsync resolves before /v1/me, so the recipient check drops the tap and marks it handled.",
+    "platform/NotificationBridge.tsx:49-60 · auth/AuthProvider.tsx:59-63"
+   ],
+   [
+    "WP-4",
+    "Medium",
+    "Confirmed",
+    "NTF-08",
+    "\"Send now\" gift tells the buyer \"at the time you chose\"",
+    "fulfil() always queues gift_scheduled (urgent) as well as the sent message.",
+    "apps/api/src/wallet/routes.ts:271 · notifications/templates.ts:46-50"
+   ],
+   [
+    "WP-28",
+    "Medium",
+    "Confirmed",
+    "NTF-01..04",
+    "Visit notifications have a double period and the wrong date style",
+    "Live: \"Laser Hair Removal, Fri, Nov 13, 12:00 p.m.. See you then.\" (en-CA month-first, \"p.m.\", extra period, no zone; house style \"Thu 16 Oct, 2:30 pm\"). Time zone is hard-coded instead of clinic.timezone (also campaign subtitles).",
+    "apps/api/src/visits/routes.ts:169 · notifications/dispatch.ts:163 · templates.ts:100 · staff/entities.ts:169"
+   ],
+   [
+    "WP-29",
+    "Medium",
+    "Likely",
+    "NTF-05..12",
+    "Notification content and links differ from the boards",
+    "Missing amounts and items (NTF-05, 07, 09), no scheduled time (NTF-08), refund opens the receipt not WAL-06 and has no \"on its way\" message (NTF-06), reply opens /support not ACC-05 (NTF-10), generic bodies (NTF-11/12), titles differ (NTF-01..04).",
+    "apps/api/src/notifications/templates.ts:31-128 · wallet/routes.ts:445, 913-918"
+   ]
+  ]
+ },
+ {
+  "area": "Staff workspace",
+  "items": [
+   [
+    "ST-1",
+    "High",
+    "Confirmed",
+    "STF-03, 06, 10, 16, 32",
+    "Fields that split into lists swallow spaces, line breaks and commas while typing",
+    "Controlled inputs are rebuilt from trimmed, filtered pieces on every keystroke: \"Valid \" becomes \"Valid\", Enter vanishes, \"hifu,\" becomes \"hifu\". Multi-word terms, paragraphs and a second alias can only be pasted.",
+    "app/staff/services/[id]/index.tsx:96 · campaigns/[id]/index.tsx:17, 108 · packages/[id].tsx:60 · support-content/[id].tsx:30 · settings/rules.tsx:86-92"
+   ],
+   [
+    "ST-2",
+    "High",
+    "Confirmed",
+    "STF-03, STF-40",
+    "After editing a service FAQ, Save or Publish always says \"Someone else changed this\"",
+    "Service edit and FAQ run separate useServiceEditor instances; service edit keeps the old version, so its next save gets 409 and \"Load the latest\" discards unsaved edits.",
+    "staff/useServiceEditor.ts:29 · app/staff/services/[id]/faq.tsx:15"
+   ],
+   [
+    "ST-3",
+    "High",
+    "Confirmed",
+    "STF-09, Submit on STF-03/06/16/20/22",
+    "\"Approve and publish\" fails silently; Editors can submit items that can't be approved",
+    "The approve error is only shown in the hidden reason field. Submit ignores missing fields (unlike Publish), and the server refuses incomplete items with 409, so the Owner's approve does nothing.",
+    "app/staff/approvals/[id].tsx:41-43, 79 · staff/EditorChrome.tsx:111 · apps/api/src/staff/routes.ts:240 · entities.ts (publish)"
+   ],
+   [
+    "ST-4",
+    "High",
+    "Confirmed",
+    "STF-35",
+    "A mistyped \"Send at\" time sends the marketing push immediately or at the old time",
+    "The date field only reports a value once it parses; \"2026-10-3\" or \"25:00\" keeps the last valid value or empty (= now), and Schedule stays enabled.",
+    "staff/WallTimeField.tsx:17-21 · app/staff/push.tsx:67-68"
+   ],
+   [
+    "FE-8",
+    "Medium",
+    "Confirmed",
+    "STF-35 / TAB-06",
+    "Push messages default to an \"Opens\" link that doesn't exist",
+    "opens defaults to '/offers' (no such route; only /offers/[id]); the only check is startsWith('/'). Customers land on Home with \"Link not found\".",
+    "app/staff/push.tsx:173, 217 · platform/NotificationBridge.tsx:54"
+   ],
+   [
+    "ST-5",
+    "Medium",
+    "Confirmed",
+    "STF-05",
+    "Campaign calendar groups by day of month, not by month",
+    "Headers read \"20\" and \"1\" (second word of \"Oct 20 – Nov 1\"); list is newest-first instead of date order.",
+    "app/staff/campaigns/index.tsx:21 · apps/api/src/staff/entities.ts (ORDER BY starts_at DESC)"
+   ],
+   [
+    "ST-6",
+    "Medium",
+    "Confirmed",
+    "STF-24",
+    "\"Approve and move\" shows in hand-off mode; \"Call\" changes status",
+    "Approve sends the customer \"approved\" (NTF-03) before anything is moved in Fresha; Call sets call_needed and messages the customer with no confirmation.",
+    "app/staff/requests/[id].tsx:69-73, 84-86 · apps/api/src/visits/routes.ts:40-44"
+   ],
+   [
+    "ST-7",
+    "Medium",
+    "Confirmed",
+    "STF-14",
+    "Self-action refusals land on \"No permission\" with a garbled sentence",
+    "Every 403 routes to denied, including \"another staff member must…\" rules; with no key it reads \"Your role (Front desk) can't no permission.\", otherwise raw keys like \"can't selling.publish\". No \"Ask an admin\" button.",
+    "staff/api.ts:14-16 · app/staff/denied.tsx:13-16"
+   ],
+   [
+    "ST-8",
+    "Medium",
+    "Confirmed",
+    "STF-05/10/15/19/21",
+    "A restored item shows an Archive button that always fails",
+    "Restore clears published_at but keeps first_published_at; Archive is refused (\"never live: delete it instead\") and shown as \"Someone else changed this\"; Delete is refused too.",
+    "apps/api/src/staff/entities.ts:587, 604 · staff/EntityList.tsx:108"
+   ],
+   [
+    "ST-9",
+    "Medium",
+    "Confirmed",
+    "STF-36",
+    "Media \"in use\" ignores campaign and professional photos",
+    "Only services are counted, so a photo on a live campaign or profile can be archived or deleted and customers get a 404 image.",
+    "apps/api/src/staff/routes.ts:767"
+   ],
+   [
+    "ST-10",
+    "Medium",
+    "Likely",
+    "STF-17, 31, 32",
+    "Settings saves can overwrite another Owner's changes",
+    "The save sends the currently cached version, not the one the form was built from; after a background refetch it wins without a 409.",
+    "staff/useSettingsSave.ts:37 · app/staff/settings/rules.tsx"
+   ],
+   [
+    "ST-11",
+    "Medium",
+    "Confirmed",
+    "STF-42 / TAB-07",
+    "Import review gives the Owner \"Submit\"; result says \"Catalogue published\" after a submit",
+    "Both roles see Submit (Owner should see Save draft + Publish); an Owner's submit files approvals they can't decide; badge tones success/info/warning (design primary/warning/danger); no count tiles.",
+    "app/staff/import/review.tsx:71, 95-101, 118"
+   ],
+   [
+    "ST-12",
+    "Medium",
+    "Confirmed",
+    "STF-32 / TAB-05",
+    "Card payments can be switched off",
+    "Card is a normal switch (design: locked \"Always on\") and the API accepts card:false.",
+    "app/staff/settings/rules.tsx:107-109 · apps/api/src/staff/ops.ts (rules PUT)"
+   ],
+   [
+    "ST-13",
+    "Medium",
+    "Confirmed",
+    "STF-03, 16, 20, 32",
+    "Money fields can't take cents",
+    "Each keystroke is converted to a number: \"25.\" becomes \"25\", 49.99 can't be typed; package price snaps to 0 when cleared.",
+    "app/staff/services/[id]/index.tsx:15, 121 · packages/[id].tsx:14, 54 · promo-codes/[id].tsx:49-51 · settings/rules.tsx:53"
+   ],
+   [
+    "ST-14",
+    "Medium",
+    "Confirmed",
+    "STF-01",
+    "Staff home doesn't match its design",
+    "Plain rows instead of the tile grid with Today counts; Editor banner title is the whole sentence. deviations.md still says this \"arrives with NANO-08\", which has shipped.",
+    "app/staff/index.tsx:9-60, 75"
+   ],
+   [
+    "ST-15",
+    "Medium",
+    "Confirmed",
+    "STF-11, STF-25",
+    "Value lookup: misleading empty state and missing links",
+    "\"Not found\" and \"found, no value\" both say \"Nothing to redeem\" and hide the customer; no link to gift-card actions and no Redeem button.",
+    "staff/ValueFinder.tsx:92-106"
+   ],
+   [
+    "ST-16",
+    "Medium",
+    "Confirmed",
+    "STF-06",
+    "Campaign edit missing Eligible items and Discount",
+    "eligible can't be edited; the bundled photo has no chip; Pause and End now show for ended campaigns; End now has no confirmation.",
+    "app/staff/campaigns/[id]/index.tsx:72-82, 111-122"
+   ],
+   [
+    "API-6",
+    "Medium",
+    "Confirmed",
+    "STF-05/06",
+    "Campaign template returns an end date before its start",
+    "Start and end are shifted forward independently (start 2027-10-01, end 2026-10-31); the seeded Halloween campaign has no template.",
+    "apps/api/src/staff/entities.ts:672-677"
+   ],
+   [
+    "API-1",
+    "Medium",
+    "Confirmed",
+    "STF-27",
+    "Issuing credit to an unknown customer returns 500",
+    "The insert runs without checking the customer exists (foreign-key violation → internal_error); deleted customers are accepted too.",
+    "apps/api/src/wallet/routes.ts:936-942"
+   ],
+   [
+    "API-13",
+    "Low",
+    "Confirmed",
+    "STF-18",
+    "Adjusting an unknown instrument returns 409 instead of 404",
+    "\"Only credit or gift-card balances can be adjusted.\"",
+    "apps/api/src/wallet/routes.ts:945"
+   ],
+   [
+    "API-18",
+    "Low",
+    "Confirmed",
+    "STF-25",
+    "Redemption response is missing serviceId",
+    "Returns serviceId:null where lookup returns svc_laser for the same package.",
+    "apps/api/src/wallet/routes.ts:899"
+   ],
+   [
+    "FE-9",
+    "Medium",
+    "Confirmed",
+    "TAB-05, TAB-06",
+    "Rules and Push have no two-column tablet layout",
+    "StaffScreen only splits when aside is set; both stay one phone column with no preview or right-hand actions.",
+    "app/staff/settings/rules.tsx:43 · app/staff/push.tsx:208 · StaffScreen.tsx:51"
+   ],
+   [
+    "ST-17",
+    "Low",
+    "Confirmed",
+    "STF-39",
+    "Archive/delete dialog repeats \"This is recorded in the audit log.\"",
+    "Callers pass it in affects and ConfirmDialog adds it again.",
+    "components/Overlay.tsx:106 · staff/EntityList.tsx:138"
+   ],
+   [
+    "ST-18",
+    "Low",
+    "Confirmed",
+    "STF-19, STF-20",
+    "Promo code labels",
+    "A taken code shows \"Someone else changed this\" (design \"Already used by…\"); the no-campaign chip is labelled \"No photo\".",
+    "app/staff/promo-codes/index.tsx:41 · [id].tsx:71"
+   ],
+   [
+    "ST-19",
+    "Low",
+    "Confirmed",
+    "STF-27, STF-28",
+    "Customer profile and match copy",
+    "Empty visits text is wrong; statuses show raw values; Messages row doesn't open STF-30; title \"Customers\"; account check shows the raw status.",
+    "app/staff/customers/[id]/index.tsx:39 · match.tsx:77"
+   ],
+   [
+    "ST-20",
+    "Low",
+    "Confirmed",
+    "STF-34",
+    "Read-only Editors see \"You can save and submit\"",
+    "Home layout shows the editing hint to Editors, who can't edit it.",
+    "app/staff/home-layout.tsx:94"
+   ],
+   [
+    "ST-21",
+    "Low",
+    "Confirmed",
+    "STF-19, 21, 29",
+    "Filter sets differ from design",
+    "Generic All/Live/Draft/Archived or Open/Done/All instead of the per-screen sets (e.g. Active/Scheduled/Used up/Archived).",
+    "staff list screens"
+   ],
+   [
+    "ST-22",
+    "Low",
+    "Confirmed",
+    "STF-07, 08, 10, 23, 25, 30, 35",
+    "Copy and tone mismatches",
+    "Header and banner titles differ; STF-07 lacks \"Preview only\" and \"Back to editing\"; save errors use warning instead of danger.",
+    "see screens"
+   ],
+   [
+    "ST-23",
+    "Low",
+    "Confirmed",
+    "STF-01, 11, 25",
+    "Permission checks don't match the API exactly",
+    "Redeem gated on value.redeem but calls lookup (value.lookup); Approvals row needs content.publish while the API accepts any publish permission; editors 403 into STF-14. Works today only because no role splits them.",
+    "staff/ValueFinder.tsx:41 · apps/api/src/wallet/routes.ts:873"
+   ],
+   [
+    "ST-24",
+    "Low",
+    "Confirmed",
+    "STF-12",
+    "Audit log shows raw item IDs",
+    "\"service:svc_new_service_3e48\" instead of readable names; times use a fixed zone.",
+    "app/staff/audit.tsx"
+   ],
+   [
+    "ST-25",
+    "Low",
+    "Confirmed",
+    "STF-38",
+    "Team member has no Resend invite or Give access again",
+    "Invited and removed members have no follow-up action.",
+    "app/staff/team/[id].tsx"
+   ]
+  ]
+ },
+ {
+  "area": "Design-system components",
+  "items": [
+   [
+    "DS-4",
+    "Medium",
+    "Confirmed",
+    "ACC-01, WAL-01, all lists",
+    "ListRow icon circle and value colours",
+    "Icon circle is lavender surfaceTint with onTint icon (design surface-muted with ink); value text ink (design muted); chevron 20 (design 18).",
+    "components/Card.tsx:67-68, 82, 86"
+   ],
+   [
+    "DS-5",
+    "Medium",
+    "Confirmed",
+    "HOM-02, VIS-01, VIS-02",
+    "AppointmentPass styling",
+    "Padding 16 (design 20) with no card shadow; eyebrow ink (design ink-muted); meta block has no top divider and ink captions; badge text can wrap (design nowrap).",
+    "components/Booking.tsx:49, 64-73, 249-252"
+   ],
+   [
+    "DS-6",
+    "Medium",
+    "Confirmed",
+    "HOM-03, OFR",
+    "OfferCard",
+    "Eyebrow ink (design primary); state badge beside the eyebrow instead of on the right; inactive offers aren't dimmed; Terms is a tertiary button (design underlined text link).",
+    "components/Discovery.tsx:102-124, 342"
+   ],
+   [
+    "DS-7",
+    "Medium",
+    "Likely",
+    "HOM-03",
+    "OfferCard hides its inner buttons from VoiceOver",
+    "The whole card is an accessible button wrapping the CTA and Terms buttons; on iOS VoiceOver can't reach Terms (design: an article, not pressable).",
+    "components/Discovery.tsx:102 · components/Card.tsx:38-41"
+   ],
+   [
+    "DS-8",
+    "Low",
+    "Confirmed",
+    "HOM-03, ServiceCard",
+    "PhotoFrame always has rounded corners, even inside cards",
+    "The photo's bottom corners round off and leave notches against the card body (design: no radius, the card clips).",
+    "components/Status.tsx:249"
+   ],
+   [
+    "DS-9",
+    "Low",
+    "Confirmed",
+    "TRT-01, TRT-04",
+    "SearchField border and focus",
+    "Always a strong border with no focus state (design transparent border on surface-muted, focus border + surface fill); clear button 48/22 (design 36/16).",
+    "components/Discovery.tsx:149"
+   ],
+   [
+    "DS-10",
+    "Medium",
+    "Confirmed",
+    "WAL-01..05",
+    "Wallet components missing",
+    "CreditRow, PackageBalance, GiftCard and MemberStatus don't exist in the app; screens render plain rows and text.",
+    "components/ (missing)"
+   ],
+   [
+    "DS-11",
+    "Low",
+    "Confirmed",
+    "PAY-01",
+    "Payment rows differ from PaymentMethodRow",
+    "No tint fill on the selected row; filled check icon; unavailable rows use opacity 0.5 (design surface-muted + prohibit icon); no WalletPayButton.",
+    "app/pay/method.tsx:141-163"
+   ],
+   [
+    "DS-12",
+    "Low",
+    "Confirmed",
+    "STF-03, 09, 12",
+    "Staff governance components missing",
+    "No ApprovalItem diff, AuditEntry timeline or PublishState (draft shows the info tone instead of neutral with a pencil).",
+    "app/staff/approvals/[id].tsx:58-64 · audit.tsx · services/index.tsx:85"
+   ],
+   [
+    "DS-13",
+    "Low",
+    "Confirmed",
+    "TRT-05, CAR-01",
+    "CareTimeline dots",
+    "20 px dots (design 24), \"now\" only recolours the border (design 7 px primary ring), no connecting line.",
+    "components/Discovery.tsx:211-215, 361"
+   ],
+   [
+    "DS-14",
+    "Low",
+    "Confirmed",
+    "Main, TRT-05",
+    "Rating stars use primary instead of warning",
+    "",
+    "components/Discovery.tsx:319"
+   ],
+   [
+    "DS-15",
+    "Low",
+    "Confirmed",
+    "TRT-05",
+    "FAQ opens the first answer by default",
+    "useState(0) (design: nothing opens unless flagged).",
+    "components/Discovery.tsx:172"
+   ],
+   [
+    "DS-16",
+    "Low",
+    "Confirmed",
+    "AUT-03",
+    "ConsentRow tag and checkbox",
+    "Tag is plain caption text (design small tinted tag); checkbox border 1.5 (design 2).",
+    "components/Auth.tsx:148, 255"
+   ],
+   [
+    "DS-17",
+    "Low",
+    "Confirmed",
+    "TRT-02, TRT-05",
+    "PriceTag secondary text too small",
+    "\"From\" and was-price use body 15 (design inherits the 18 headline size at weight 400).",
+    "components/Status.tsx:139, 154, 179"
+   ],
+   [
+    "DS-18",
+    "Low",
+    "Confirmed",
+    "AUT-01/02, forms",
+    "Input text sizes",
+    "Inputs use bodyLg 17/26 (design 16/22); OTP digits headline 18/24 (design 600 22/28).",
+    "components/Field.tsx:65 · Discovery.tsx:162 · Auth.tsx:60"
+   ],
+   [
+    "DS-19",
+    "Low",
+    "Confirmed",
+    "Banners",
+    "Banner dismiss button too big",
+    "48 px IconButton with a 22 px icon (design 32 × 32, 16 px icon).",
+    "components/Banner.tsx:304"
+   ],
+   [
+    "DS-20",
+    "Low",
+    "Confirmed",
+    "BKG-10",
+    "AreaPicker tile styling",
+    "Unselected border lineStrong (design line 1.5); disabled opacity 0.4 (design 0.55); selected name onTint (design ink).",
+    "components/Booking.tsx:212-218"
+   ],
+   [
+    "DS-21",
+    "Low",
+    "Confirmed",
+    "—",
+    "Some tokens never reached the RN package",
+    "opacity-disabled, opacity-pressed-overlay and focus-ring are missing from packages/design-tokens; literals are hard-coded; the pressed overlay on photo cards isn't implemented.",
+    "packages/design-tokens/src/index.ts · components/press.ts"
+   ]
+  ]
+ },
+ {
+  "area": "Server and web pages",
+  "items": [
+   [
+    "WEB-1",
+    "Medium",
+    "Confirmed",
+    "WEB-01, WEB-03",
+    "Every button on the web pages renders in the wrong font",
+    "font: 600 16px/1 inherit is invalid CSS, so the declaration is dropped: Arial 13.33px regular instead of 600/16px.",
+    "apps/api/src/web/routes.ts:21"
+   ],
+   [
+    "WEB-2",
+    "Medium",
+    "Confirmed",
+    "WEB-01",
+    "Gift page shows \"not found\" for rate limits and server errors",
+    "Any non-OK answer is treated as not found.",
+    "apps/api/src/web/app-js.ts:24"
+   ],
+   [
+    "WEB-3",
+    "Low",
+    "Confirmed",
+    "WEB-01, WEB-03",
+    "Web pages can get stuck",
+    "api() has no catch, so a network failure leaves \"Opening your gift…\" or a disabled button forever; no \"get a new code\" path; /delete for a number with no account stays on the code step.",
+    "apps/api/src/web/app-js.ts:9-11"
+   ],
+   [
+    "WEB-4",
+    "Low",
+    "Confirmed",
+    "WEB-01..04",
+    "Web pages differ from the design",
+    "No logo; WEB-01 has no GiftCard, message card or helper text; WEB-02 title \"It's yours\" (design \"Gift card claimed\"), no reference; WEB-03 lacks the delete/keep list and destructive button; WEB-04 lacks the CareTimeline.",
+    "apps/api/src/web/routes.ts"
+   ],
+   [
+    "API-11",
+    "Low",
+    "Confirmed",
+    "—",
+    "A rotated-out refresh token is still accepted after a grace retry",
+    "Refresh R → R1, R again within 30 s → R2, then R1 → 200: two token chains stay alive (docs say a rotated token revokes the session).",
+    "apps/api/src/auth/session.ts:106-138"
+   ],
+   [
+    "API-17",
+    "Low",
+    "Confirmed",
+    "—",
+    "development.md contradicts the running behaviour",
+    "Docs say dev OTP accepts only 000000 and payments never become paid; codes are random and tok_visa payments succeed.",
+    "docs/development.md:49-50"
+   ]
+  ]
+ }
+]

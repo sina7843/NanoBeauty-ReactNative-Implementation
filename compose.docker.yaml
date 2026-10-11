@@ -1,0 +1,65 @@
+# Full local stack in Docker: Postgres + API + Metro.
+#   docker compose -f compose.docker.yaml up -d --build
+# API:   http://localhost:4000/health/ready      Metro: http://localhost:8081
+# Phone: set NANO_LAN_IP to this PC's IP as seen by the phone, then scan the QR from `docker compose ... logs metro`.
+name: nano-beauty
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: nano
+      POSTGRES_PASSWORD: nano_dev_only
+      POSTGRES_DB: nano
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U nano -d nano']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    build: { context: ., target: api }
+    image: nano-beauty-api
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      NODE_ENV: development
+      APP_ENV: development
+      HOST: 0.0.0.0
+      PORT: 4000
+      DATABASE_URL: postgres://nano:nano_dev_only@postgres:5432/nano
+      INTEGRATIONS_MODE: dev
+      # Local sign-in helpers (development only): code via GET /v1/dev/otp?phone=..., sample accounts/visits.
+      DEV_OTP_SINK: 'true'
+      DEV_SAMPLE_LEGACY: 'true'
+      DEV_SAMPLE_FRESHA: 'true'
+    ports:
+      - '4000:4000'
+    restart: unless-stopped
+
+  metro:
+    build: { context: ., target: metro }
+    image: nano-beauty-metro
+    depends_on: [api]
+    environment:
+      # Hostname baked into the bundle/manifest URLs; must be reachable from the phone.
+      REACT_NATIVE_PACKAGER_HOSTNAME: ${NANO_LAN_IP:-127.0.0.1}
+      EXPO_PUBLIC_API_URL: http://${NANO_LAN_IP:-127.0.0.1}:4000
+      # --go = Expo Go (no native build needed). Use '' to target the development build instead.
+      EXPO_START_FLAGS: ${EXPO_START_FLAGS:---go}
+      # Skip expo.dev calls (manifest signing etc.); they hang Expo Go when the container can't reach expo.dev.
+      EXPO_OFFLINE: '1'
+      # Expo Go on Android refuses expo-notifications; stub it (set to 0 when using a development build).
+      EXPO_GO_STUB_NOTIFICATIONS: ${EXPO_GO_STUB_NOTIFICATIONS:-1}
+    ports:
+      - '8081:8081'
+    tty: true
+    restart: unless-stopped
+
+volumes:
+  postgres-data:

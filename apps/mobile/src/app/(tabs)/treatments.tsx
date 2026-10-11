@@ -59,7 +59,7 @@ export default function Treatments() {
                         style={({ pressed }) => [styles.tile, { backgroundColor: pressed ? colors.surfacePressed : colors.surface, borderColor: colors.line }]}
                       >
                         <View style={[styles.tilePhoto, { backgroundColor: colors.surfaceMuted }]}>
-                          {source ? <Image source={source} style={StyleSheet.absoluteFill} resizeMode="cover" accessible={false} /> : <Icon name="compass" size={24} tone="inkMuted" />}
+                          {source ? <Image source={source} style={styles.tileImage} resizeMode="cover" accessible={false} /> : <Icon name="compass" size={24} tone="inkMuted" />}
                         </View>
                         <Text variant="label" strong style={styles.tileLabel}>
                           {c.name}
@@ -82,5 +82,6 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space['3'] },
   tile: { flexBasis: '47%', flexGrow: 1, borderRadius: radius.lg, borderWidth: 1, overflow: 'hidden' },
   tilePhoto: { aspectRatio: 4 / 3, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  tileImage: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' },
   tileLabel: { padding: space['3'] },
 });

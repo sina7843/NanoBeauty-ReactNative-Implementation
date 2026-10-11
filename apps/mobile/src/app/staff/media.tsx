@@ -9,7 +9,7 @@ import { useAuth } from '../../auth/AuthProvider';
 import { getEnv } from '../../config/env';
 import { Badge, Banner, Button, Card, ConfirmDialog, EmptyState, SearchField, Skeleton, Switch, Text, TextField, useToast } from '../../components';
 import { t } from '../../i18n';
-import { problemOf, useStaffQuery } from '../../staff/api';
+import { problemOf, useStaffQuery, problemText } from '../../staff/api';
 import { StaffScreen } from '../../staff/StaffScreen';
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -88,8 +88,7 @@ function MediaCard({ media: m, canPublish, onChanged, onProblem }: { media: Medi
       await session.authed(path, { method, body });
       onChanged();
     } catch (e) {
-      const p = problemOf(e);
-      onProblem(p.kind === 'conflict' ? t('stf.conflict') : t('error.body'));
+      onProblem(problemText(e));
     } finally {
       setBusy(false);
       setConfirm(null);
@@ -153,7 +152,6 @@ function MediaCard({ media: m, canPublish, onChanged, onProblem }: { media: Medi
         kind={confirm ?? 'archive'}
         item={m.filename}
         loading={busy}
-        affects={[t('confirm.audit')]}
         onCancel={() => setConfirm(null)}
         onConfirm={() => confirm && call(`/v1/staff/media/${m.id}/${confirm}`, 'POST', { version: m.version })}
       />

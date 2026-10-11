@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { useIsOnline } from '../lib/network';
+import { mergeDraft } from './mergeDraft';
 import { problemOf, useStaffQuery, type SaveProblem } from './api';
 
 /** Unsaved edits survive a failed save on this phone (STF-03 savefailed): staff tooling only, no customer data. */
@@ -21,6 +22,7 @@ export function useServiceEditor(id: string | undefined) {
   const [form, setForm] = useState<ServiceDraft | null>(null);
   const [base, setBase] = useState<StaffService | null>(null);
   const [problem, setProblem] = useState<SaveProblem | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [restored, setRestored] = useState(false);
   const [busy, setBusy] = useState<null | 'save' | 'publish' | 'submit'>(null);
 
@@ -50,6 +52,7 @@ export function useServiceEditor(id: string | undefined) {
       setBase(next);
       setForm(next.draft);
       setProblem(null);
+      setMessage(null);
       setRestored(false);
       AsyncStorage.removeItem(localKey(next.id)).catch(() => undefined);
       queryClient.setQueryData(['staff', 'service', next.id], next);
@@ -67,6 +70,7 @@ export function useServiceEditor(id: string | undefined) {
     } catch (e) {
       const p = problemOf(e);
       setProblem(p.kind);
+      setMessage(p.message);
       // Keep the edits on the phone; nothing was published.
       if (p.kind !== 'conflict') await AsyncStorage.setItem(localKey(base.id), JSON.stringify({ version: base.version, draft: form })).catch(() => undefined);
       return null;
@@ -76,6 +80,26 @@ export function useServiceEditor(id: string | undefined) {
   }
 
   const dirty = !!form && !!base && JSON.stringify(form) !== JSON.stringify(base.draft);
+
+  // ST-2: another screen (the FAQ editor) saved a newer version: fold it in instead of sending a stale version later.
+  useEffect(() => {
+    const server = query.data;
+    if (!server || !base || !form || server.version <= base.version) return;
+    if (!dirty) {
+      // Syncing from the shared query cache (an external store) is what this effect is for.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setBase(server);
+      setForm(server.draft);
+      return;
+    }
+    const m = mergeDraft(base.draft as Record<string, unknown>, form as Record<string, unknown>, server.draft as Record<string, unknown>);
+    if (m.conflict) setProblem('conflict');
+    else {
+      setBase(server);
+      setForm(m.draft as ServiceDraft);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query.data]);
 
   /** Saves the draft if it changed; returns the server's version to publish/submit. */
   async function saveIfNeeded(): Promise<StaffService | null> {
@@ -94,6 +118,7 @@ export function useServiceEditor(id: string | undefined) {
     dirty,
     problem: online === false ? ('offline' as const) : problem,
     readOnly: online === false,
+    message,
     restored,
     busy,
     save: () => run('save', saveIfNeeded),

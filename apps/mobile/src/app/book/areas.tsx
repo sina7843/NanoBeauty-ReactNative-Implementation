@@ -1,7 +1,9 @@
 import type { Service } from '@nano/contracts';
+import { space } from '@nano/design-tokens';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { AreaPicker, Button, SampleBadge, Screen, Skeleton, Text } from '../../components';
+import { StyleSheet, View } from 'react-native';
+import { AreaPicker, Badge, Button, Screen, Skeleton, Text } from '../../components';
 import { basket } from '../../booking/basket';
 import { ContentGate } from '../../content/ContentGate';
 import { useCatalog } from '../../content/queries';
@@ -15,7 +17,7 @@ export default function ChooseAreas() {
   const catalog = useCatalog();
   return (
     <>
-      <Stack.Screen options={{ title: t('trt.chooseAreas') }} />
+      <Stack.Screen options={{ title: t('bkg.title') }} />
       <ContentGate query={catalog} skeleton={<Skeleton lines={4} media={false} />}>
         {(data) => {
           const svc = data.services.find((s) => s.id === service && s.status === 'live' && s.perArea && s.areas);
@@ -46,15 +48,17 @@ function Areas({ service }: { service: Service }) {
     <Screen
       topInset={false}
       footer={
-        <Button size="lg" fullWidth disabled={names.length === 0} iconAfter={mode === 'handoff' ? 'arrow-square-out' : undefined} onPress={done}>
+        <Button size="lg" fullWidth disabled={names.length === 0} iconAfter={mode === 'handoff' && names.length > 0 ? 'arrow-square-out' : undefined} onPress={done}>
           {names.length === 0 ? t('areas.chooseOne') : mode === 'handoff' ? t('bkg.continueFresha') : t('bkg.continue')}
         </Button>
       }
     >
-      <Text variant="titleLg" accessibilityRole="header">
-        {service.name}
-      </Text>
-      {service.sample ? <SampleBadge /> : null}
+      <View style={styles.title}>
+        <Text variant="titleMd" accessibilityRole="header" style={styles.flex}>
+          {service.name}
+        </Text>
+        {service.sample ? <Badge tone="sample">{t('bkg.samplePrices')}</Badge> : null}
+      </View>
       <AreaPicker
         areas={areas[set]}
         set={set}
@@ -69,3 +73,8 @@ function Areas({ service }: { service: Service }) {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  title: { flexDirection: 'row', alignItems: 'center', gap: space['2'] },
+});

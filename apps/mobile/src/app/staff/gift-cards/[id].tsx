@@ -9,7 +9,7 @@ import { newIdempotencyKey } from '../../../booking/visits';
 import { Banner, Button, Dialog, ListGroup, ListRow, Skeleton, Switch, Text, TextField, useToast } from '../../../components';
 import { t } from '../../../i18n';
 import { money } from '../../../i18n/format';
-import { problemOf, useStaffQuery } from '../../../staff/api';
+import { useStaffQuery, problemText } from '../../../staff/api';
 import { StaffScreen } from '../../../staff/StaffScreen';
 
 type Action = 'resend' | 'recipient' | 'void';
@@ -43,8 +43,7 @@ export default function GiftCard() {
       setOpen(null);
       setKey(newIdempotencyKey());
     } catch (e) {
-      const p = problemOf(e);
-      toast({ tone: 'warning', message: p.kind === 'conflict' ? t('stf.conflict') : t('error.body') });
+      toast({ tone: 'danger', message: problemText(e) });
     } finally {
       setBusy(false);
     }

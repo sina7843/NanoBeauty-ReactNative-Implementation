@@ -18,7 +18,9 @@ export default function Today() {
     <StaffScreen title={t('stf.today')}>
       {d ? (
         <>
-          {d.bookingMode === 'handoff' ? <Banner tone="info" title={t('today.fresha')} /> : null}
+          {d.bookingMode === 'handoff' ? <Banner tone="info" title={t('today.handoffTitle')}>
+              {t('today.fresha')}
+            </Banner> : null}
           <ListGroup header={t('today.appointments', { count: d.visits.length })} footer={d.visits.length ? undefined : t('today.noVisits')}>
             {d.visits.map((v) => (
               <ListRow key={v.id} title={`${clinicTime(v.at, tz)} · ${v.customer}`} subtitle={[v.service, v.professional, v.status].filter(Boolean).join(' · ')} chevron={false} />

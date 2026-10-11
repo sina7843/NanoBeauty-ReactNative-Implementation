@@ -6,8 +6,10 @@ import { StyleSheet, View } from 'react-native';
 import { useAuth } from '../../../auth/AuthProvider';
 import { Chip, Dialog, ListGroup, ListRow, SegmentedControl, Text, useToast } from '../../../components';
 import { t } from '../../../i18n';
-import { problemOf } from '../../../staff/api';
-import { EntityList, stateBadge } from '../../../staff/EntityList';
+import { problemText } from '../../../staff/api';
+import { PublishState } from '../../../staff/Governance';
+import { groupByMonth } from '../../../staff/readable';
+import { EntityList } from '../../../staff/EntityList';
 import { StaffScreen } from '../../../staff/StaffScreen';
 
 const TEMPLATES = ['halloween', 'canada_day', 'black_friday', 'holidays', 'own'] as const;
@@ -15,20 +17,14 @@ const TEMPLATES = ['halloween', 'canada_day', 'black_friday', 'holidays', 'own']
 /** Calendar view: campaigns grouped by the month they start, in date order (STF-05). */
 function Calendar({ rows }: { rows: EntityRow[] }) {
   const router = useRouter();
-  const months = new Map<string, EntityRow[]>();
-  for (const r of rows) {
-    // The subtitle starts with the start date ("31 Oct – 2 Nov"); the server list is ordered by start.
-    const key = r.subtitle?.split(' – ')[0]?.split(' ')[1] ?? '—';
-    months.set(key, [...(months.get(key) ?? []), r]);
-  }
   return (
     <>
-      {[...months.entries()].map(([month, items]) => (
-        <ListGroup key={month} header={month}>
+      {groupByMonth(rows).map(({ month, rows: items }, n) => (
+        <ListGroup key={`${month}-${n}`} header={month}>
           {items.map((r) => (
             <View key={r.id}>
               <ListRow title={r.name} subtitle={r.subtitle ?? undefined} onPress={() => router.push(`/staff/campaigns/${r.id}` as Href)} />
-              <View style={styles.badge}>{stateBadge(r.state, r.phase)}</View>
+              <View style={styles.badge}><PublishState state={r.state} phase={r.phase} /></View>
             </View>
           ))}
         </ListGroup>
@@ -56,8 +52,7 @@ export default function Campaigns() {
       setPicking(false);
       router.push(`/staff/campaigns/${created.id}` as Href);
     } catch (e) {
-      problemOf(e);
-      toast({ tone: 'warning', message: t('error.body') });
+      toast({ tone: 'danger', message: problemText(e) });
     } finally {
       setCreating(false);
     }

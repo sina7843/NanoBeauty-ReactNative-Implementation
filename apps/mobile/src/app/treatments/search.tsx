@@ -4,6 +4,7 @@ import { useDeferredValue, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Banner, Button, Chip, EmptyState, ListGroup, ListRow, SearchField, Text } from '../../components';
+import { priceLabel } from '../../booking/summary';
 import { searchCatalog } from '../../catalog/search';
 import { ContentGate } from '../../content/ContentGate';
 import { useCatalog } from '../../content/queries';
@@ -35,7 +36,7 @@ export default function Search() {
         <ContentGate query={catalog}>
           {(data) => {
             if (!deferred.trim()) return null;
-            const { results, alias, didYouMean } = searchCatalog(data, deferred);
+            const { results, alias, didYouMean, groups } = searchCatalog(data, deferred);
             const category = (id: string) => data.categories.find((c) => c.id === id)?.name ?? '';
             if (results.length === 0) {
               return (
@@ -44,11 +45,25 @@ export default function Search() {
                     {t('search.noMatch.body')}
                   </EmptyState>
                   {didYouMean ? (
-                    <Button variant="tertiary" onPress={() => open(didYouMean.service.id)}>
-                      {t('search.didYouMean', { term: didYouMean.term })}
-                    </Button>
+                    // TRT-04: an inline link in the sentence, not a button.
+                    <Text variant="body">
+                      {t('search.didYouMeanLead')}{' '}
+                      <Text
+                        variant="body"
+                        strong
+                        tone="primary"
+                        accessibilityRole="link"
+                        accessibilityLabel={t('search.didYouMean', { term: didYouMean.term })}
+                        onPress={() => open(didYouMean.service.id)}
+                      >
+                        {didYouMean.term}
+                      </Text>
+                      ?
+                    </Text>
                   ) : null}
-                  <Text variant="label">{t('search.byConcern')}</Text>
+                  <Text variant="overline" tone="inkMuted">
+                    {t('search.byConcern')}
+                  </Text>
                   <View style={styles.chips}>
                     {data.concerns.slice(0, 3).map((c) => (
                       <Chip key={c.id} onPress={() => router.push(`/treatments/list?concern=${c.id}` as Href)}>
@@ -69,17 +84,41 @@ export default function Search() {
                     {t('search.aliasBody', { term: alias.term.charAt(0).toUpperCase() + alias.term.slice(1), name: alias.service.name })}
                   </Banner>
                 ) : null}
-                <ListGroup header={alias ? undefined : t('search.suggestions')}>
-                  {results.map((s) => (
-                    <ListRow
-                      key={s.id}
-                      icon="magnifying-glass"
-                      title={s.name}
-                      subtitle={t('search.treatmentIn', { category: category(s.categoryId) })}
-                      onPress={() => open(s.id)}
-                    />
-                  ))}
-                </ListGroup>
+                {alias ? (
+                  // Results for an alias: plain rows with the price, as on the TRT-04 results board.
+                  <ListGroup>
+                    {results.map((s) => (
+                      <ListRow
+                        key={s.id}
+                        title={s.name}
+                        subtitle={priceLabel(s.price, null)}
+                        value={s.price.kind === 'consultation' ? t('search.consult') : undefined}
+                        onPress={() => open(s.id)}
+                      />
+                    ))}
+                  </ListGroup>
+                ) : (
+                  <ListGroup header={t('search.suggestions')}>
+                    {results.map((s) => (
+                      <ListRow
+                        key={s.id}
+                        icon="magnifying-glass"
+                        title={s.name}
+                        subtitle={t('search.treatmentIn', { category: category(s.categoryId) })}
+                        onPress={() => open(s.id)}
+                      />
+                    ))}
+                    {groups.map((g) => (
+                      <ListRow
+                        key={`${g.kind}-${g.id}`}
+                        icon="compass"
+                        title={g.name}
+                        subtitle={g.count === 1 ? t('search.groupOne') : t('search.groupMany', { count: g.count })}
+                        onPress={() => router.push(`/treatments/list?${g.kind}=${g.id}` as Href)}
+                      />
+                    ))}
+                  </ListGroup>
+                )}
               </View>
             );
           }}

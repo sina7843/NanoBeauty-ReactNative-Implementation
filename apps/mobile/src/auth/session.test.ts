@@ -117,4 +117,19 @@ describe('SessionManager', () => {
     expect(seen).toEqual(['/v1/auth/logout:a1', '/v1/auth/refresh:-', '/v1/auth/logout:a2']);
     expect(onExpired).not.toHaveBeenCalled();
   });
+
+  it('FE-1: an onboarding_required refusal reports the pending step and keeps the session', async () => {
+    const request = jest.fn(async () => {
+      throw new ApiError('onboarding_required', 403, null, { nextStep: 'consents' });
+    });
+    const onExpired = jest.fn();
+    const manager = new SessionManager(memoryStore(pair(1)), onExpired, request);
+    const seen: (string | undefined)[] = [];
+    manager.setOnboardingHandler((step) => seen.push(step));
+    await manager.load();
+    await expect(manager.authed('/v1/me/preferences', { method: 'PUT', body: { marketing: true } })).rejects.toMatchObject({ code: 'onboarding_required' });
+    expect(seen).toEqual(['consents']);
+    expect(onExpired).not.toHaveBeenCalled();
+    expect(manager.signedIn).toBe(true);
+  });
 });

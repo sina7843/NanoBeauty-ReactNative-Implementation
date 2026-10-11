@@ -44,7 +44,8 @@ describe('navigation (real route tree)', () => {
       expect(await screen.findByRole('tab', { name: tab })).toBeTruthy();
     }
     expect(await screen.findByRole('button', { name: 'Sign in' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Book appointment' })).toBeTruthy();
+    // Main: while the hero loads a skeleton stands in; Book shows once content arrives or fails (FE-11).
+    expect(await screen.findByRole('button', { name: 'Book appointment' }, { timeout: 15_000 })).toBeTruthy();
   });
 
   it('maintenance blocks deep links too (ENT-03 at the root, not only on /)', async () => {

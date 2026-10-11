@@ -28,6 +28,8 @@ export interface SearchResult {
   alias: { term: string; service: Service } | null;
   /** Spelling help when nothing matched ("botoxx" → Botox). */
   didYouMean: { term: string; service: Service } | null;
+  /** TRT-04 typing: categories and concerns whose name matches, as a link to their list (FE-14). */
+  groups: { kind: 'category' | 'concern'; id: string; name: string; count: number }[];
 }
 
 /**
@@ -37,7 +39,7 @@ export interface SearchResult {
 export function searchCatalog(catalog: Catalog, query: string): SearchResult {
   const q = normalize(query);
   const visible = catalog.services.filter((s) => s.status !== 'archived');
-  if (!q) return { results: [], alias: null, didYouMean: null };
+  if (!q) return { results: [], alias: null, didYouMean: null, groups: [] };
   const categoryName = new Map(catalog.categories.map((c) => [c.id, normalize(c.name)]));
   const concernName = new Map(catalog.concerns.map((c) => [c.id, normalize(c.name)]));
 
@@ -50,7 +52,11 @@ export function searchCatalog(catalog: Catalog, query: string): SearchResult {
       s.concerns.some((c) => (concernName.get(c) ?? '').includes(q)),
   );
   const alias = aliasHit && !normalize(aliasHit.name).includes(q) ? { term: query.trim(), service: aliasHit } : null;
-  if (results.length > 0 || q.length < 4) return { results, alias, didYouMean: null };
+  const groups = [
+    ...catalog.categories.map((c) => ({ kind: 'category' as const, id: c.id, name: c.name, count: visible.filter((s) => s.categoryId === c.id).length })),
+    ...catalog.concerns.map((c) => ({ kind: 'concern' as const, id: c.id, name: c.name, count: visible.filter((s) => s.concerns.includes(c.id)).length })),
+  ].filter((g) => g.count > 0 && normalize(g.name).includes(q));
+  if (results.length > 0 || q.length < 4) return { results, alias, didYouMean: null, groups };
 
   let best: { term: string; service: Service; d: number } | null = null;
   for (const s of visible) {
@@ -60,7 +66,7 @@ export function searchCatalog(catalog: Catalog, query: string): SearchResult {
     }
   }
   const didYouMean = best ? { term: best.term.charAt(0).toUpperCase() + best.term.slice(1), service: best.service } : null;
-  return { results, alias, didYouMean };
+  return { results, alias, didYouMean, groups };
 }
 
 /** TRT-03 price groups: the board offers "Fixed price", "Price range" and "Consultation first". */
@@ -101,3 +107,12 @@ export function filterServices(services: Service[], f: Filters): Service[] {
 }
 
 export const activeFilterCount = (f: Filters) => f.concerns.length + f.prices.length + (f.duration === 'any' ? 0 : 1) + f.professionals.length;
+
+/**
+ * FE-4: why TRT-02 is empty. `scope` when the list's own category has no services, or nothing is filtered at all;
+ * `filters` when sheet filters (including the entry concern) narrowed it to nothing.
+ */
+export function emptyCause(catalog: Catalog, category: string | undefined, filters: Filters): 'scope' | 'filters' {
+  const scope = filterServices(catalog.services, { ...EMPTY_FILTERS, category });
+  return scope.length === 0 || activeFilterCount(filters) === 0 ? 'scope' : 'filters';
+}

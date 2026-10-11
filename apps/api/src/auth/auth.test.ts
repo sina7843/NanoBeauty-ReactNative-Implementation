@@ -223,6 +223,38 @@ describe('sessions (AUTH 05)', () => {
     expect(t.error(await t.post('/v1/auth/refresh', { refreshToken: s0.refreshToken })).code).toBe('session_expired');
   });
 
+  it('API-11: after a grace retry, the token it replaced is a replay and revokes the session', async () => {
+    const t = await setup();
+    const s0 = await t.signIn(MARIA);
+    const lost = tokenPairSchema.parse((await t.post('/v1/auth/refresh', { refreshToken: s0.refreshToken })).json());
+    t.clock.t += 5_000;
+    const s2 = tokenPairSchema.parse((await t.post('/v1/auth/refresh', { refreshToken: s0.refreshToken })).json());
+    // `lost` turns up after all: two chains must never stay alive.
+    expect(t.error(await t.post('/v1/auth/refresh', { refreshToken: lost.refreshToken })).code).toBe('session_expired');
+    expect(t.error(await t.get('/v1/me', s2.accessToken)).code).toBe('session_expired');
+  });
+
+  it('API-9: a 429 carries the wait in the body as well as the header', async () => {
+    const t = await setup();
+    let last;
+    for (let i = 0; i < 21; i++) last = await t.post('/v1/auth/refresh', { refreshToken: 'nope' });
+    expect(last!.statusCode).toBe(429);
+    const wait = t.error(last!).retryAfterSeconds;
+    expect(wait).toBeGreaterThan(0);
+    expect(Number(last!.headers['retry-after'])).toBe(wait);
+  });
+
+  it('API-15: a code asked for one purpose can’t be used for another', async () => {
+    const t = await setup();
+    const { session } = await t.onboard(MARIA, { firstName: 'Maria', lastName: 'Chen' });
+    t.clock.t += 31_000;
+    const change = await t.post('/v1/me/phone/start', { phone: NEW.input }, session.accessToken);
+    const { challengeId } = change.json();
+    // A phone-change code can't sign in (or create an account for) the new number.
+    expect(t.error(await t.verify(challengeId, t.dev.otpSink.get(NEW.e164)!)).code).toBe('code_expired');
+    expect(await t.db.query('SELECT 1 FROM customers WHERE phone_e164 = $1', [NEW.e164])).toHaveLength(0);
+  });
+
   it('access tokens expire in 15 minutes; customer sessions end after 30 days', async () => {
     const t = await setup();
     const session = await t.signIn(MARIA);

@@ -15,8 +15,9 @@ export default function AuthLayout() {
       }}
     >
       <Stack.Screen name="phone" options={{ headerShown: false }} />
-      {/* After the code, there's no going back into the code screen. */}
+      {/* FE-1: after the code, sign-up steps can't be left half-done (no back, no swipe); Android Back asks to sign out. */}
       <Stack.Screen name="consents" options={{ headerBackVisible: false, gestureEnabled: false }} />
+      <Stack.Screen name="profile" options={{ headerBackVisible: false, gestureEnabled: false }} />
       <Stack.Screen name="match" options={{ headerShown: false, gestureEnabled: false }} />
     </Stack>
   );

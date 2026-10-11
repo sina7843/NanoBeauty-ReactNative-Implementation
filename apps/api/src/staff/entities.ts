@@ -19,7 +19,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { Queryable } from '../db';
 import { HttpError } from '../errors';
-import { notify } from '../visits/routes';
+import { clinicTz, notify } from '../visits/routes';
 import { diffFields, iso, staffKit } from './kit';
 
 type Row = Record<string, unknown> & {
@@ -45,7 +45,8 @@ interface Def {
   highRisk: HighRisk[];
   liveOf(row: Row): Record<string, unknown>;
   name(d: Record<string, unknown>): string;
-  subtitle(row: Row, d: Record<string, unknown>, now: number): string | null;
+  /** `tz` is the clinic's time zone (dates in the subtitle are clinic dates). */
+  subtitle(row: Row, d: Record<string, unknown>, now: number, tz: string): string | null;
   /** Live, non-archived state for customers: live or unavailable/paused. */
   liveState(row: Row): PublishState;
   phase?(row: Row, now: number): string | null;
@@ -165,8 +166,9 @@ export const DEFS: Def[] = [
       fallback: r.fallback,
     }),
     name: (d) => String(d.title),
-    subtitle: (r, d) => {
-      const fmt = (s: unknown) => new Date(String(s)).toLocaleDateString('en-CA', { day: 'numeric', month: 'short', timeZone: 'America/Vancouver' });
+    subtitle: (r, d, _now, tz) => {
+      // House style "20 Oct – 1 Nov" in the clinic's time zone (WP-28).
+      const fmt = (s: unknown) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: tz }).format(new Date(String(s)));
       return `${fmt(d.startsAt)} – ${fmt(d.endsAt)}${r.home_rank ? ` · Home slot ${r.home_rank}` : ''}`;
     },
     liveState: (r) => (r.paused ? 'unavailable' : 'live'),
@@ -448,8 +450,7 @@ export function registerEntityRoutes(app: FastifyInstance, { now }: { now: () =>
     /** Makes the draft live; field-by-field audit; settles waiting approvals. */
     async function publish(tx: Queryable, request: FastifyRequest, r: Row, reason: string) {
       const d = draftOf(r);
-      const missing = def.missing ? await def.missing(ctx(tx), d, r) : [];
-      if (missing.length) throw new HttpError(409, 'conflict', `${missing.length} thing${missing.length > 1 ? 's' : ''} to fix: ${missing.join(', ')}.`);
+      await assertComplete(tx, r);
       const before = r.published_at ? def.liveOf(r) : null;
       await def.apply(ctx(tx), r, d);
       const id = String(r[def.idCol]);
@@ -463,7 +464,13 @@ export function registerEntityRoutes(app: FastifyInstance, { now }: { now: () =>
         iso(now()),
       ]);
     }
+    /** Same completeness rule for submit, second-approver hand-off and publish, so an Owner never gets an item they can't approve (ST-3). */
+    async function assertComplete(tx: Queryable, r: Row) {
+      const missing = def.missing ? await def.missing(ctx(tx), draftOf(r), r) : [];
+      if (missing.length) throw new HttpError(409, 'conflict', `${missing.length} thing${missing.length > 1 ? 's' : ''} to fix: ${missing.join(', ')}.`);
+    }
     async function openApproval(tx: Queryable, request: FastifyRequest, r: Row, fields: string[], why: string) {
+      await assertComplete(tx, r);
       const id = String(r[def.idCol]);
       const d = draftOf(r);
       await tx.query(
@@ -473,7 +480,8 @@ export function registerEntityRoutes(app: FastifyInstance, { now }: { now: () =>
       );
       await bump(tx, id, 'in_review = true');
       await audit(tx, request, `${def.type}:${id}`, 'state', stateOf(r), 'review', why);
-      await notify(tx, { audience: 'staff', permission: def.perm.publish, template: 'NTF-12.approval_needed', data: { item: def.name(d) }, now: now() });
+      const [who] = await tx.query<{ first_name: string | null }>('SELECT first_name FROM customers WHERE id = $1', [auth(request).customerId]);
+      await notify(tx, { audience: 'staff', permission: def.perm.publish, template: 'NTF-12.approval_needed', data: { item: def.name(d), who: who?.first_name ?? '' }, now: now() });
     }
 
     // Approvals queue (STF-08/09) publishes or sends back through the same rules.
@@ -491,7 +499,9 @@ export function registerEntityRoutes(app: FastifyInstance, { now }: { now: () =>
 
     app.get(base, pre(def.perm.draft), async (request): Promise<EntityRow[]> => {
       const q = z.object({ filter: z.enum(['all', 'live', 'draft', 'archived']).default('all'), q: z.string().max(80).optional() }).parse(request.query);
-      const rows = await db.query<Row>(`SELECT * FROM ${def.table} ORDER BY ${def.table === 'campaigns' ? 'starts_at DESC' : def.idCol}`);
+      // Campaigns in date order, soonest first (ST-5).
+      const rows = await db.query<Row>(`SELECT * FROM ${def.table} ORDER BY ${def.table === 'campaigns' ? 'starts_at ASC' : def.idCol}`);
+      const tz = await clinicTz(db);
       const term = q.q?.trim().toLowerCase();
       return rows
         .filter((r) => {
@@ -505,7 +515,7 @@ export function registerEntityRoutes(app: FastifyInstance, { now }: { now: () =>
         .map((r) => ({
           id: String(r[def.idCol]),
           name: def.name(draftOf(r)),
-          subtitle: def.subtitle(r, draftOf(r), now()),
+          subtitle: def.subtitle(r, draftOf(r), now(), tz),
           state: stateOf(r),
           phase: def.phase?.(r, now()) ?? null,
           hasDraft: !!r.draft && !!r.published_at,
@@ -584,7 +594,8 @@ export function registerEntityRoutes(app: FastifyInstance, { now }: { now: () =>
         const { version } = versionedSchema.parse(request.body);
         return db.transaction(async (tx) => {
           const r = await versioned(tx, id, version);
-          if (!r.published_at) throw new HttpError(409, 'conflict', 'This draft was never live: delete it instead.');
+          // A restored item is a draft again but was live before, so it can be archived; only never-live drafts are deleted instead (ST-8).
+          if (!r.first_published_at) throw new HttpError(409, 'conflict', 'This draft was never live: delete it instead.');
           if (r.archived_at) throw conflict();
           await def.archive!(ctx(tx), r);
           await withdraw(tx, request, id, 'archived');
@@ -670,9 +681,13 @@ export function registerEntityRoutes(app: FastifyInstance, { now }: { now: () =>
         const [last] = await db.query<Row>(`SELECT * FROM campaigns WHERE template = $1 ORDER BY starts_at DESC LIMIT 1`, [template]);
         if (last) {
           const d = { ...def.liveOf(last) };
+          // Both dates move by the same number of years, so the range stays valid (API-6).
+          let years = 0;
+          const start = new Date(String(d.startsAt));
+          while (new Date(start).setUTCFullYear(start.getUTCFullYear() + years) < now()) years++;
           const shift = (s: unknown) => {
             const dt = new Date(String(s));
-            while (dt.getTime() < now()) dt.setUTCFullYear(dt.getUTCFullYear() + 1);
+            dt.setUTCFullYear(dt.getUTCFullYear() + years);
             return dt.toISOString();
           };
           return { ...d, startsAt: shift(d.startsAt), endsAt: shift(d.endsAt) };

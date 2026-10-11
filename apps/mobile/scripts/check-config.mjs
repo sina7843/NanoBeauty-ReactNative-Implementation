@@ -1,6 +1,6 @@
 // Validates the Expo app config for every variant without secrets: identifiers, schemes, API URL rule.
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
 
@@ -79,3 +79,22 @@ for (const variant of ['staging', 'production']) {
   console.log('ok production: permissions, backup, privacy manifest, push mode, usage strings');
 }
 
+
+// D-QA-02 / F-1: the six brand fonts exist, match fontFamily in @nano/design-tokens, are required by fonts.ts and
+// are embedded through the expo-font plugin.
+{
+  const tokens = readFileSync(new URL('../../../packages/design-tokens/src/index.ts', import.meta.url), 'utf8');
+  const block = tokens.match(/export const fontFamily = \{([\s\S]*?)\} as const;/)?.[1] ?? '';
+  const names = [...block.matchAll(/'([A-Za-z]+-[A-Za-z]+)'/g)].map((m) => m[1]);
+  assert.equal(names.length, 6, 'fontFamily lists six faces');
+  const fontsTs = readFileSync(new URL('../src/theme/fonts.ts', import.meta.url), 'utf8');
+  const c = config('production', PLACEHOLDER_URL);
+  const fontPlugin = c.plugins.find((p) => Array.isArray(p) && p[0] === 'expo-font');
+  assert.ok(fontPlugin, 'expo-font plugin configured');
+  for (const name of names) {
+    assert.ok(existsSync(new URL(`../assets/fonts/${name}.ttf`, import.meta.url)), `assets/fonts/${name}.ttf exists`);
+    assert.ok(fontsTs.includes(`assets/fonts/${name}.ttf`), `fonts.ts requires ${name}.ttf`);
+    assert.ok(fontPlugin[1].fonts.some((f) => f.endsWith(`/${name}.ttf`)), `expo-font plugin embeds ${name}.ttf`);
+  }
+  console.log('ok brand fonts: six files, fonts.ts require map, expo-font plugin');
+}

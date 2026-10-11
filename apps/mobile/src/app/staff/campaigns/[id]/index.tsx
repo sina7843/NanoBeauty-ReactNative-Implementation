@@ -5,16 +5,16 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 import { useAuth } from '../../../../auth/AuthProvider';
-import { Button, Chip, SegmentedControl, Text, TextField, useToast } from '../../../../components';
+import { Button, Chip, Dialog, SegmentedControl, Text, TextField, useToast } from '../../../../components';
 import { t } from '../../../../i18n';
 import { useSettings } from '../../../../settings/useSettings';
-import { problemOf, useStaffQuery } from '../../../../staff/api';
+import { problemText, useStaffQuery } from '../../../../staff/api';
+import { joinEligible, ListTextField, splitEligible, splitLines } from '../../../../staff/ListTextField';
 import { WallTimeField } from '../../../../staff/WallTimeField';
 import { EntityEditScreen, PreviewCard } from '../../../../staff/EntityEditScreen';
 import { useEntityEditor } from '../../../../staff/useEntityEditor';
 
 const TEMPLATES = ['halloween', 'canada_day', 'black_friday', 'holidays', 'own'] as const;
-const lines = (v: string) => v.split('\n').map((l) => l.trim()).filter(Boolean);
 
 /** `/staff/campaigns/[id]` — STF-06 editor with lifecycle actions (pause / resume / end / reuse) and STF-07 preview. */
 export default function CampaignEdit() {
@@ -31,7 +31,11 @@ export default function CampaignEdit() {
   const ro = editor.readOnly || s?.state === 'archived';
   const canPublish = !!me?.permissions.includes('selling.publish');
   const [copying, setCopying] = useState(false);
-  const live = s?.state === 'live' || s?.state === 'unavailable';
+  const [ending, setEnding] = useState(false);
+  const [nowMs] = useState(() => Date.now());
+  // ST-16: an ended campaign can't be paused or ended again; the server refuses it too.
+  const ended = !!s?.live && Date.parse(String(s.live.endsAt)) <= nowMs;
+  const live = (s?.state === 'live' || s?.state === 'unavailable') && !ended;
   const paused = s?.state === 'unavailable';
 
   async function duplicate() {
@@ -41,8 +45,7 @@ export default function CampaignEdit() {
       toast({ tone: 'success', message: t('cmp.duplicated') });
       router.push(`/staff/campaigns/${copy.id}` as Href);
     } catch (e) {
-      problemOf(e);
-      toast({ tone: 'warning', message: t('error.body') });
+      toast({ tone: 'danger', message: problemText(e) });
     } finally {
       setCopying(false);
     }
@@ -72,7 +75,7 @@ export default function CampaignEdit() {
               <Button variant="secondary" loading={editor.busy === 'action'} onPress={() => editor.action(paused ? 'resume' : 'pause')}>
                 {paused ? t('cmp.resume') : t('cmp.pause')}
               </Button>
-              <Button variant="secondary" onPress={() => editor.action('end')}>
+              <Button variant="secondary" onPress={() => setEnding(true)}>
                 {t('cmp.end')}
               </Button>
             </>
@@ -80,6 +83,23 @@ export default function CampaignEdit() {
           <Button variant="tertiary" loading={copying} onPress={duplicate}>
             {t('cmp.duplicate')}
           </Button>
+          <Dialog
+            visible={ending}
+            title={t('cmp.endTitle', { name: f?.title ?? '' })}
+            confirmLabel={t('cmp.end')}
+            cancelLabel={t('common.cancel')}
+            destructive
+            loading={editor.busy === 'action'}
+            onCancel={() => setEnding(false)}
+            onConfirm={async () => {
+              await editor.action('end');
+              setEnding(false);
+            }}
+          >
+            <Text variant="body" tone="inkMuted">
+              {t('cmp.endBody')}
+            </Text>
+          </Dialog>
         </>
       }
     >
@@ -105,7 +125,19 @@ export default function CampaignEdit() {
             value={t(`cmp.audience.${f.audience}`)}
             onChange={(v) => !ro && editor.setForm({ audience: v === t('cmp.audience.all') ? 'all' : 'returning' })}
           />
-          <TextField label={t('ent.terms')} value={f.terms.join('\n')} onChangeText={(v) => editor.setForm({ terms: lines(v) })} multiline disabled={ro} />
+          <ListTextField
+            key={`g${s?.version}`}
+            label={t('cmp.eligible')}
+            helper={t('cmp.eligibleHelp')}
+            items={f.eligible}
+            onItems={(eligible) => editor.setForm({ eligible })}
+            split={splitEligible}
+            join={joinEligible}
+            tidyOnBlur={false}
+            multiline
+            disabled={ro}
+          />
+          <ListTextField key={`t${s?.version}`} label={t('ent.terms')} items={f.terms} onItems={(terms) => editor.setForm({ terms })} split={splitLines} join={(i) => i.join('\n')} multiline disabled={ro} />
           <TextField label={t('cmp.cta')} value={f.cta.label} onChangeText={(v) => editor.setForm({ cta: { ...f.cta, label: v } })} maxLength={60} disabled={ro} />
           <TextField label={t('cmp.ctaHref')} value={f.cta.href} onChangeText={(v) => editor.setForm({ cta: { ...f.cta, href: v } })} autoCapitalize="none" disabled={ro} />
           <Text variant="label">{t('svc.photo')}</Text>
@@ -113,6 +145,7 @@ export default function CampaignEdit() {
             <Chip selected={!f.photo} onPress={() => !ro && editor.setForm({ photo: null })}>
               {t('svc.photoNone')}
             </Chip>
+            {f.photo && !f.photo.startsWith('media:') ? <Chip selected>{t('cmp.photoBundled')}</Chip> : null}
             {(media.data ?? [])
               .filter((m) => m.status === 'active')
               .map((m) => (

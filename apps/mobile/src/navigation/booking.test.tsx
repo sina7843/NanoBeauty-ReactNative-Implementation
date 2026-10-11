@@ -152,7 +152,7 @@ describe('Fresha hand-off (BOOK 15, 16) on the real screens', () => {
     fireEvent.press(screen.getByRole('button', { name: 'Continue in Fresha' }));
     await waitFor(() => expect(router.getPathname()).toBe('/book/how-it-works'));
     expect(screen.getByText('Assumption: depends on Fresha sharing bookings')).toBeTruthy();
-    fireEvent.press(screen.getByRole('button', { name: 'Continue in Fresha' }));
+    fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
     await waitFor(() => expect(router.getPathname()).toBe('/book/fresha'));
 
     // A failed hand-off opens nothing; the retry reuses the same idempotency key (no duplicate hand-off).
@@ -247,13 +247,39 @@ describe('Visits (BOOK 08, 18, 19) on the real screens', () => {
     expect(await screen.findByText('Your visits live here')).toBeTruthy();
   });
 
-  it('without a Fresha read-back it says so and offers Open Fresha', async () => {
+  it('without a Fresha read-back it says so; Open Fresha goes through the hand-off screens (BV-5)', async () => {
     await signIn();
     scriptApi({ 'GET /v1/visits': () => ({ status: 200, body: visits({ sync: 'not_connected', syncedAt: null, upcoming: [], past: [] }) }) });
-    renderRouter(APP_DIR, { initialUrl: '/visits' });
+    const router = renderRouter(APP_DIR, { initialUrl: '/visits' });
     expect(await screen.findByText('Your bookings are in Fresha')).toBeTruthy();
     fireEvent.press(screen.getByRole('button', { name: 'Open Fresha' }));
-    expect(WebBrowser.openBrowserAsync).toHaveBeenCalledWith(FRESHA);
+    await waitFor(() => expect(router.getPathname()).toBe('/book/how-it-works'));
+    expect(WebBrowser.openBrowserAsync).not.toHaveBeenCalled();
+  });
+
+  it('with no Fresha link configured, the hand-off screen says so up front (BKG-08 not configured)', async () => {
+    await signIn();
+    await AsyncStorage.setItem('nano.booking.howItWorksDismissed', '1');
+    scriptApi({ 'GET /v1/visits': () => ({ status: 200, body: visits({ sync: 'not_connected', syncedAt: null, upcoming: [], past: [], freshaUrl: null }) }) });
+    const router = renderRouter(APP_DIR, { initialUrl: '/visits' });
+    fireEvent.press(await screen.findByRole('button', { name: 'Open Fresha' }));
+    await waitFor(() => expect(router.getPathname()).toBe('/book/fresha'));
+    expect(await screen.findByText('Online booking isn’t set up yet. Call the clinic to book.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Continue to Fresha' })).toBeDisabled();
+  });
+
+  it('offline from the saved copy: no "Synced from Fresha" note (BV-7)', async () => {
+    await signIn();
+    scriptApi({ 'GET /v1/visits': () => ({ status: 200, body: visits() }) });
+    const first = renderRouter(APP_DIR, { initialUrl: '/visits' });
+    expect(await screen.findByText(/^Synced from Fresha a few minutes ago/)).toBeTruthy();
+    first.unmount();
+    global.fetch = jest.fn(async () => {
+      throw new TypeError('Network request failed');
+    }) as unknown as typeof fetch;
+    renderRouter(APP_DIR, { initialUrl: '/visits' });
+    expect(await screen.findByText('You’re offline')).toBeTruthy();
+    expect(screen.queryByText(/^Synced from Fresha/)).toBeNull();
   });
 
   it('synced visits: next visit pass with Fresha status, past list, and detail with Change in Fresha', async () => {
@@ -263,14 +289,28 @@ describe('Visits (BOOK 08, 18, 19) on the real screens', () => {
     expect(await screen.findByText('Next appointment')).toBeTruthy();
     expect(screen.getByText('Confirmed')).toBeTruthy();
     fireEvent.press(screen.getByRole('tab', { name: 'Past' }));
-    expect(await screen.findByText('Completed')).toBeTruthy();
+    expect(await screen.findByText('Done')).toBeTruthy();
     fireEvent.press(screen.getByRole('tab', { name: 'Upcoming' }));
     fireEvent.press(await screen.findByRole('button', { name: 'Manage' }));
     await waitFor(() => expect(router.getPathname()).toBe('/visits/a1111111-1111-4111-8111-111111111111'));
     expect(await screen.findByText('Changes happen in Fresha. Late changes still go to the clinic.')).toBeTruthy();
-    fireEvent.press(screen.getByRole('button', { name: 'Change in Fresha' }));
-    expect(WebBrowser.openBrowserAsync).toHaveBeenCalledWith(FRESHA);
     expect(screen.getByText('Reference NB-20418')).toBeTruthy();
+    fireEvent.press(screen.getByRole('button', { name: 'Change in Fresha' }));
+    await waitFor(() => expect(router.getPathname()).toBe('/book/how-it-works'));
+    expect(basket.get()).toEqual([{ serviceId: 'svc_hifu' }]);
+    expect(WebBrowser.openBrowserAsync).not.toHaveBeenCalled();
+  });
+
+  it('a visit with an open request reads "Change requested" on the pass, not the Fresha status (BV-2)', async () => {
+    await signIn();
+    const asked = visit({
+      openRequest: { id: 'r1', reference: 'NB-R1', visitId: 'a1111111-1111-4111-8111-111111111111', type: 'change', status: 'submitted', message: 'Tuesday?', declineReason: null, createdAt: new Date().toISOString() },
+    });
+    scriptApi({ 'GET /v1/visits': () => ({ status: 200, body: visits({ upcoming: [asked] }) }) });
+    renderRouter(APP_DIR, { initialUrl: `/visits/${asked.id}` });
+    expect(await screen.findByText('You asked to move this visit. The clinic will confirm by text; your current time stays booked until then.')).toBeTruthy();
+    expect(screen.getAllByText('Change requested').length).toBe(2); // pass badge + banner title
+    expect(screen.queryByText('Confirmed')).toBeNull();
   });
 
   it('inside 48 hours: late banner from settings, and a request lands in the clinic queue once', async () => {
@@ -278,7 +318,17 @@ describe('Visits (BOOK 08, 18, 19) on the real screens', () => {
     const soon = visit({ startsAt: inDays(1) });
     let sent = 0;
     scriptApi({
-      'GET /v1/visits': () => ({ status: 200, body: visits({ upcoming: [soon] }) }),
+      // After the send the refetched list carries the open request (BV-1: the confirmation must stay on screen).
+      'GET /v1/visits': () => ({
+        status: 200,
+        body: visits({
+          upcoming: [
+            sent
+              ? { ...soon, openRequest: { id: 'r1', reference: 'NB-R1A2B3C', visitId: soon.id, type: 'cancel', status: 'submitted', message: 'x', declineReason: null, createdAt: new Date().toISOString() } }
+              : soon,
+          ],
+        }),
+      }),
       [`POST /v1/visits/${soon.id}/requests`]: (body) => {
         sent++;
         return { status: 200, body: { id: 'r1', reference: 'NB-R1A2B3C', visitId: soon.id, type: body.type, status: 'submitted', message: body.message, declineReason: null, createdAt: new Date().toISOString() } };
@@ -297,6 +347,8 @@ describe('Visits (BOOK 08, 18, 19) on the real screens', () => {
     fireEvent.changeText(screen.getByLabelText('Your message'), 'I can’t make it this week.');
     fireEvent.press(screen.getByRole('button', { name: 'Send to the clinic' }));
     expect(await screen.findByText('Sent to the clinic')).toBeTruthy();
+    await waitFor(() => expect(calls.filter((c) => c.key === 'GET /v1/visits').length).toBeGreaterThan(1));
+    expect(screen.getByText('Sent to the clinic')).toBeTruthy();
     expect(sent).toBe(1);
     const post = calls.find((c) => c.key.startsWith('POST /v1/visits/'))!;
     expect(post.body).toMatchObject({ type: 'cancel', message: 'I can’t make it this week.' });
@@ -335,5 +387,20 @@ describe('Visits (BOOK 08, 18, 19) on the real screens', () => {
     scriptApi({ 'GET /v1/visits': () => ({ status: 200, body: visits() }) });
     const router = renderRouter(APP_DIR, { initialUrl: '/visits/c3333333-3333-4333-8333-333333333333' });
     await waitFor(() => expect(router.getPathname()).toBe('/home'));
+  });
+});
+
+describe('Ask us after sign-in (BV-4)', () => {
+  it('a guest’s typed question comes back on the Ask us screen after sign-in', async () => {
+    scriptApi({ 'GET /v1/support': () => ({ status: 200, body: { articles: [], askTopics: ['Unwanted hair', 'Something else'] } }) });
+    const router = renderRouter(APP_DIR, { initialUrl: '/support/ask' });
+    fireEvent.press(await screen.findByText('Something else'));
+    fireEvent.changeText(screen.getByLabelText('Your question'), 'Is laser OK for tanned skin?');
+    fireEvent.press(screen.getByRole('button', { name: 'Send question' }));
+    await waitFor(() => expect(router.getPathname()).toBe('/auth/phone'));
+    await act(async () => goToNext('done'));
+    await waitFor(() => expect(router.getPathname()).toBe('/support/ask'));
+    expect(await screen.findByDisplayValue('Is laser OK for tanned skin?')).toBeTruthy();
+    expect(calls.some((c) => c.key.startsWith('POST /v1/support'))).toBe(false);
   });
 });

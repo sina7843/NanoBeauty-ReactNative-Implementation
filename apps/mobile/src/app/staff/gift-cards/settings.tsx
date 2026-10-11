@@ -17,10 +17,13 @@ export default function GiftSettings() {
     (gift && s.settings
       ? { presets: gift.presetsCAD.join(', '), min: String(gift.customRangeCAD[0]), max: String(gift.customRangeCAD[1]), designs: gift.designs.join(', '), refundDays: String(s.settings.settings.giftRefundDays) }
       : null);
-  const set = (patch: Partial<NonNullable<typeof f>>) => f && setForm({ ...f, ...patch });
+  const set = (patch: Partial<NonNullable<typeof f>>) => {
+    s.pin();
+    if (f) setForm({ ...f, ...patch });
+  };
   return (
     <StaffScreen title={t('gift.settings')}>
-      <SettingsBanners problem={s.problem} notice={s.notice} reload={() => (setForm(null), s.reload())} />
+      <SettingsBanners problem={s.problem} message={s.message} notice={s.notice} reload={() => (setForm(null), s.reload())} />
       {f ? (
         <>
           <Banner tone="info" title={t('gift.noExpiry')} />

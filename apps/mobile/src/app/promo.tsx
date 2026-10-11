@@ -1,6 +1,6 @@
 import { promoValidateResponseSchema, type PromoValidation } from '@nano/contracts';
 import { space } from '@nano/design-tokens';
-import { Stack, useRouter, type Href } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ApiError, apiRequest } from '../api/client';
@@ -11,6 +11,7 @@ import { t } from '../i18n';
 import { clinicDate } from '../i18n/format';
 import { useSettings } from '../settings/useSettings';
 import { analytics } from '../lib/analytics';
+import { resolveLink } from '../navigation/links';
 
 /** Error copy for each OFR-03 state (PROMO 06). Dates come from the server. */
 function messageFor(r: PromoValidation, zone: string): string | undefined {
@@ -36,7 +37,10 @@ function messageFor(r: PromoValidation, zone: string): string | undefined {
 export default function PromoCode() {
   const router = useRouter();
   const { status, session } = useAuth();
-  const zone = useSettings().data?.data.clinic.timezone ?? 'America/Vancouver';
+  // FE-6: opened from an offer (OFR-01), the check says whether the code applies to that offer.
+  const { offer } = useLocalSearchParams<{ offer?: string }>();
+  const settings = useSettings().data?.data;
+  const zone = settings?.clinic.timezone ?? 'America/Vancouver';
   const [code, setCode] = useState('');
   const [result, setResult] = useState<PromoValidation | null>(null);
   const [network, setNetwork] = useState(false);
@@ -49,7 +53,7 @@ export default function PromoCode() {
     setNetwork(false);
     setWaitSeconds(null);
     try {
-      const init = { method: 'POST' as const, body: { code } };
+      const init = { method: 'POST' as const, body: { code, ...(offer ? { appliesTo: `offer:${offer}` } : {}) } };
       // Signed in, the server can also say "already used"; anonymous checks skip that (the purchase re-checks).
       const res = status === 'signedIn' ? await session.authed('/v1/promo/validate', init) : await apiRequest('/v1/promo/validate', init);
       const parsed = promoValidateResponseSchema.parse(res.body);
@@ -97,7 +101,8 @@ export default function PromoCode() {
             title={t('promo.applied', { code: result.code })}
             action={
               cta ? (
-                <Button fullWidth onPress={() => router.push(cta.href as Href)}>
+                // FE-16: the same safe link handling as the offer page (unknown or mode-blocked links don't open blindly).
+                <Button fullWidth onPress={() => router.push(resolveLink(cta.href, settings?.settings.bookingMode) as Href)}>
                   {cta.label}
                 </Button>
               ) : undefined

@@ -76,7 +76,7 @@ function Status({ attemptId, orderId }: { attemptId: string; orderId: string }) 
     return <Redirect href={OLD_LINK_HREF} />;
   }
   const help = (
-    <Button variant="tertiary" fullWidth onPress={() => router.push({ pathname: '/support/contact', params: { reference: a?.reference, topic: t('pay.topic') } })}>
+    <Button variant="tertiary" icon="question" fullWidth onPress={() => router.push({ pathname: '/support/contact', params: { reference: a?.reference, topic: t('pay.topic') } })}>
       {t('pay.help')}
     </Button>
   );
@@ -93,7 +93,7 @@ function Status({ attemptId, orderId }: { attemptId: string; orderId: string }) 
             <Button size="lg" fullWidth onPress={() => router.dismissTo('/wallet')}>
               {t('pay.continue')}
             </Button>
-            <Button variant="secondary" fullWidth onPress={() => router.replace({ pathname: '/pay/receipt/[id]', params: { id: orderId } })}>
+            <Button variant="tertiary" icon="receipt" fullWidth onPress={() => router.replace({ pathname: '/pay/receipt/[id]', params: { id: orderId } })}>
               {t('pay.paid.receipt')}
             </Button>
           </>
@@ -124,7 +124,7 @@ function Status({ attemptId, orderId }: { attemptId: string; orderId: string }) 
   }
   if (a?.status === 'cancelled') {
     return (
-      <AsyncStatus state="timeout" title={t('pay.cancelled.title')} actions={<Button size="lg" fullWidth onPress={chooseMethod}>{t('pay.cancelled.choose')}</Button>}>
+      <AsyncStatus state="failed" title={t('pay.cancelled.title')} actions={<Button size="lg" fullWidth onPress={chooseMethod}>{t('pay.cancelled.choose')}</Button>}>
         {t('pay.cancelled.body')}
       </AsyncStatus>
     );
@@ -137,7 +137,7 @@ function Status({ attemptId, orderId }: { attemptId: string; orderId: string }) 
         reference={a?.reference}
         actions={
           <>
-            <Button size="lg" fullWidth loading={status.isFetching} onPress={() => status.refetch()}>
+            <Button size="lg" icon="arrow-clockwise" fullWidth loading={status.isFetching} onPress={() => status.refetch()}>
               {t('pay.checkAgain')}
             </Button>
             {help}

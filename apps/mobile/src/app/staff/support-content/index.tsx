@@ -5,7 +5,7 @@ import { useAuth } from '../../../auth/AuthProvider';
 import { Banner, Button, useToast } from '../../../components';
 import { t } from '../../../i18n';
 import { useSettings } from '../../../settings/useSettings';
-import { problemOf } from '../../../staff/api';
+import { problemText } from '../../../staff/api';
 import { EntityList } from '../../../staff/EntityList';
 import { StaffScreen } from '../../../staff/StaffScreen';
 
@@ -23,18 +23,17 @@ export default function SupportContent() {
       const created = entitySchema.parse((await session.authed('/v1/staff/articles', { method: 'POST', body: { draft } })).body);
       router.push(`/staff/support-content/${created.id}` as Href);
     } catch (e) {
-      problemOf(e);
-      toast({ tone: 'warning', message: t('error.body') });
+      toast({ tone: 'danger', message: problemText(e) });
     } finally {
       setCreating(false);
     }
   }
   return (
-    <StaffScreen title={t('stf.supportContent')}>
+    <StaffScreen title={t('art.listTitle')}>
       {clinic && !clinic.settings.clinicHours ? (
         <Banner
-          tone="info"
-          title={t('art.hoursMissing')}
+          tone="warning"
+          title={t('art.hoursMissingTitle')}
           action={
             me?.permissions.includes('clinic.manage') ? (
               <Button variant="secondary" size="sm" onPress={() => router.push('/staff/settings/clinic')}>
@@ -42,7 +41,9 @@ export default function SupportContent() {
               </Button>
             ) : undefined
           }
-        />
+        >
+          {t('art.hoursMissing')}
+        </Banner>
       ) : null}
       <EntityList plural="articles" basePath="/staff/support-content" publishPermission="content.publish" onCreate={create} creating={creating} newLabel={t('art.new')} />
     </StaffScreen>

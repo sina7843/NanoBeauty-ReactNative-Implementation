@@ -3,6 +3,8 @@ import { useRouter, type Href } from 'expo-router';
 import { Banner, Button, EmptyState, ListGroup, ListRow, Skeleton } from '../../../components';
 import { t } from '../../../i18n';
 import { clinicDateTime } from '../../../i18n/format';
+import { useAuth } from '../../../auth/AuthProvider';
+import { useSettings } from '../../../settings/useSettings';
 import { useStaffQuery } from '../../../staff/api';
 import { StaffScreen } from '../../../staff/StaffScreen';
 
@@ -13,7 +15,8 @@ import { StaffScreen } from '../../../staff/StaffScreen';
 export default function Approvals() {
   const router = useRouter();
   const q = useStaffQuery(['approvals'], '/v1/staff/approvals', approvalsResponseSchema);
-  const zone = 'America/Vancouver';
+  const { me } = useAuth();
+  const zone = useSettings().data?.data.clinic.timezone ?? 'America/Vancouver';
   return (
     <StaffScreen title={t('appr.title')}>
       {!q.data ? (
@@ -27,8 +30,18 @@ export default function Approvals() {
       ) : (
         <>
           {!q.data.secondApprover ? (
-            <Banner tone="info" title={t('appr.offTitle')}>
-              {t('appr.offBody')}
+            <Banner
+              tone="info"
+              title={t('appr.offTitle')}
+              action={
+                me?.permissions.includes('rules.manage') ? (
+                  <Button variant="secondary" size="sm" onPress={() => router.push('/staff/settings/rules')}>
+                    {t('appr.openRules')}
+                  </Button>
+                ) : undefined
+              }
+            >
+              {t('appr.offBodyRules')}
             </Banner>
           ) : null}
           {q.data.waiting.length ? (

@@ -25,6 +25,8 @@ const schema = z
     DEV_SAMPLE_LEGACY: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
     /** Local development only: simulate a connected Fresha read-back with sample bookings (NANO-04). */
     DEV_SAMPLE_FRESHA: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
+    /** Local development only: made-up clinic phone, opening hours and Fresha link (D-QA-06). */
+    DEV_SAMPLE_CLINIC: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
     /** App Review demo sign-in (NANO-11): a reviewer-only number and its fixed code. Set only while a review is open. */
     REVIEW_PHONE: z.string().regex(/^\+1\d{10}$/, 'E.164, e.g. +16045550100').optional(),
     REVIEW_CODE: z.string().regex(/^\d{6}$/, '6 digits').optional(),
@@ -40,7 +42,7 @@ const schema = z
       ctx.addIssue({ code: 'custom', path: ['DATABASE_URL'], message: `required when APP_ENV=${env.APP_ENV}` });
     }
     // The OTP sink is a sign-in bypass by design; it must never be reachable on shared environments.
-    for (const flag of ['DEV_OTP_SINK', 'DEV_SAMPLE_LEGACY', 'DEV_SAMPLE_FRESHA'] as const) {
+    for (const flag of ['DEV_OTP_SINK', 'DEV_SAMPLE_LEGACY', 'DEV_SAMPLE_FRESHA', 'DEV_SAMPLE_CLINIC'] as const) {
       if (env.APP_ENV !== 'development' && env[flag]) {
         ctx.addIssue({ code: 'custom', path: [flag], message: 'is a local development switch and is refused outside APP_ENV=development' });
       }

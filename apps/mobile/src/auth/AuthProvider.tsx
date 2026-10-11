@@ -14,6 +14,8 @@ interface AuthValue {
   status: Status;
   /** `null` while signed in but not yet loaded (or offline). */
   me: Me | null;
+  /** True once the stored session is read and, if signed in, the first /v1/me attempt has settled (WP-2). */
+  ready: boolean;
   session: SessionManager;
   /** After a successful code check (AUT-02). */
   completeSignIn(tokens: TokenPair): Promise<Me | null>;
@@ -31,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<Status>('loading');
   const [me, setMe] = useState<Me | null>(null);
+  const [ready, setReady] = useState(false);
   const [session] = useState(
     () =>
       new SessionManager(secureSessionStore, () => {
@@ -57,9 +60,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [session]);
 
   useEffect(() => {
-    session.load().then((signedIn) => {
+    // FE-1: the refusal names the pending step: record it at once (OnboardingGate opens it), then re-read /v1/me.
+    session.setOnboardingHandler((step) => {
+      if (step) setMe((m) => (m ? { ...m, next: step } : m));
+      void refreshMe();
+    });
+    return () => session.setOnboardingHandler(null);
+  }, [session, refreshMe]);
+
+  useEffect(() => {
+    session.load().then(async (signedIn) => {
       setStatus(signedIn ? 'signedIn' : 'guest');
-      if (signedIn) refreshMe();
+      if (signedIn) await refreshMe();
+      setReady(true);
     });
   }, [session, refreshMe]);
 
@@ -67,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       status,
       me,
+      ready,
       session,
       async completeSignIn(tokens) {
         await session.start(tokens);
@@ -85,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       can: (permission) => me?.permissions.includes(permission) ?? false,
     }),
-    [status, me, session, refreshMe, queryClient],
+    [status, me, ready, session, refreshMe, queryClient],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

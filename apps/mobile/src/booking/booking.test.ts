@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { basket } from './basket';
 import { clearPendingHandoff, loadPendingHandoff, RESUME_WINDOW_MS, savePendingHandoff } from './pendingHandoff';
 import { summarize } from './summary';
-import { isLate, lateBannerText, outcomeText } from './visits';
+import { careBeforeCount, careProgress, isLate, lateBannerText, outcomeText, passStatus, syncNote } from './visits';
 
 const svc = (over: Partial<Service>): Service => ({
   id: 'x',
@@ -119,5 +119,42 @@ describe('pending hand-off (relaunch)', () => {
     await savePendingHandoff({ id: 'h1', openedAt });
     await clearPendingHandoff();
     expect(await loadPendingHandoff(openedAt)).toBeNull();
+  });
+});
+
+describe('visit display rules (NANO-12)', () => {
+  const zone = 'America/Toronto';
+  const request = { id: 'r', reference: 'NB-R', visitId: 'v', type: 'change' as const, status: 'submitted' as const, message: 'm', declineReason: null, createdAt: '2026-10-10T12:00:00Z' };
+
+  it('BV-2: an open request shows "Change requested" only while the visit is still on', () => {
+    expect(passStatus({ status: 'confirmed', openRequest: request })).toBe('changed');
+    expect(passStatus({ status: 'pending', openRequest: request })).toBe('changed');
+    expect(passStatus({ status: 'confirmed', openRequest: null })).toBe('confirmed');
+    expect(passStatus({ status: 'cancelled', openRequest: request })).toBe('cancelled');
+  });
+
+  it('BV-7: the sync note comes from the server time, never from a saved copy', () => {
+    const serverTime = '2026-10-16T18:00:00Z';
+    expect(syncNote({ syncedAt: '2026-10-16T17:55:00Z', serverTime }, false, zone)).toMatch(/^Synced from Fresha a few minutes ago/);
+    expect(syncNote({ syncedAt: '2026-10-16T17:55:00Z', serverTime }, true, zone)).toBeNull();
+    expect(syncNote({ syncedAt: null, serverTime }, false, zone)).toBeNull();
+    expect(syncNote({ syncedAt: '2026-10-16T13:30:00Z', serverTime }, false, zone)).toMatch(/^Synced from Fresha at 9:30 am\./);
+    expect(syncNote({ syncedAt: '2026-10-15T13:30:00Z', serverTime }, false, zone)).toMatch(/^Synced from Fresha at Thu 15 Oct, 9:30 am\./);
+  });
+
+  const steps = [{ when: '2 days before', title: 'Prepare' }, { when: 'Day of visit', title: 'Arrive early' }, { when: 'First 24 hours', title: 'Aftercare' }, { when: 'In 4 weeks', title: 'Check-in' }];
+  const startsAt = '2026-10-16T18:30:00Z'; // Fri 16 Oct 2026, 2:30 pm Toronto
+
+  it('BV-6: only steps before or on the day count as "before your visit"', () => {
+    expect(careBeforeCount(steps)).toBe(2);
+  });
+
+  it('BV-17: done / now follow the clinic-zone day of the visit', () => {
+    const states = (now: string) => careProgress(steps, startsAt, zone, Date.parse(now)).map((s) => s.state);
+    expect(states('2026-10-14T15:00:00Z')).toEqual(['now', undefined, undefined, undefined]);
+    expect(states('2026-10-16T13:00:00Z')).toEqual(['done', 'now', undefined, undefined]);
+    // 16 Oct 11 pm in Toronto is 03:00Z on the 17th: still the visit day.
+    expect(states('2026-10-17T03:00:00Z')).toEqual(['done', 'now', undefined, undefined]);
+    expect(states('2026-10-18T15:00:00Z')).toEqual(['done', 'done', 'now', undefined]);
   });
 });

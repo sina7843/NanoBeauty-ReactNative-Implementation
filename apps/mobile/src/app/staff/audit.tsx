@@ -3,16 +3,20 @@ import { space } from '@nano/design-tokens';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { z } from 'zod';
-import { Banner, Button, Chip, EmptyState, ListGroup, ListRow, Skeleton, TextField } from '../../components';
+import { Banner, Button, Card, Chip, EmptyState, Skeleton, TextField } from '../../components';
 import { t } from '../../i18n';
 import { clinicDateTime } from '../../i18n/format';
+import { useSettings } from '../../settings/useSettings';
 import { useStaffQuery } from '../../staff/api';
+import { AuditEntry } from '../../staff/Governance';
+import { humanize } from '../../staff/readable';
 import { StaffScreen } from '../../staff/StaffScreen';
 
 const SPANS = [1, 7, 30, 90];
 
 /** `/staff/audit` — STF-12. Read only: entries can't be edited or deleted (DB trigger); filter by time, person, item. */
 export default function Audit() {
+  const tz = useSettings().data?.data.clinic.timezone ?? 'America/Vancouver';
   const [days, setDays] = useState(7);
   const [person, setPerson] = useState('');
   const [item, setItem] = useState('');
@@ -38,16 +42,19 @@ export default function Audit() {
       </View>
       {q.data ? (
         q.data.length ? (
-          <ListGroup>
-            {q.data.map((e) => (
-              <ListRow
+          <Card>
+            {q.data.map((e, i) => (
+              <AuditEntry
                 key={e.id}
-                title={`${e.actor} · ${e.item}`}
-                subtitle={[e.field ? t('audit.change', { field: e.field, old: short(e.oldValue), new: short(e.newValue) }) : null, e.reason, clinicDateTime(e.at, 'America/Vancouver')].filter(Boolean).join(' · ')}
-                chevron={false}
+                actor={e.actor}
+                item={e.item}
+                change={e.field ? t('audit.change', { field: humanize(e.field), old: short(e.oldValue), new: short(e.newValue) }) : null}
+                reason={e.reason}
+                time={clinicDateTime(e.at, tz)}
+                last={i === q.data!.length - 1}
               />
             ))}
-          </ListGroup>
+          </Card>
         ) : (
           <EmptyState icon="clock-counter-clockwise" title={t('audit.empty')} />
         )

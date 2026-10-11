@@ -63,7 +63,7 @@ function Flow({ onRequested }: { onRequested: (token: string) => void }) {
   if (challenge) {
     return (
       <>
-        <Text variant="displayMd" accessibilityRole="header">
+        <Text variant="titleLg" accessibilityRole="header">
           {t('del.confirmHeading')}
         </Text>
         <Text variant="body" tone="inkMuted">
@@ -82,6 +82,7 @@ function Flow({ onRequested }: { onRequested: (token: string) => void }) {
             onRequested(status.token);
           }}
           describe={(e) => (e.code === 'conflict' ? t('del.lastOwner') : undefined)}
+          submit={{ label: t('del.confirm'), variant: 'destructive' }}
         />
         <Button variant="tertiary" fullWidth onPress={() => router.back()}>
           {t('del.keep')}
@@ -107,11 +108,12 @@ function Flow({ onRequested }: { onRequested: (token: string) => void }) {
           {t('error.body')}
         </Banner>
       ) : null}
+      {/* ACC-08: "Talk to the clinic first" is secondary; the destructive "Continue to delete" is the large footer action. */}
       <View style={styles.actions}>
-        <Button size="lg" fullWidth onPress={() => router.push({ pathname: '/support/contact', params: { topic: t('del.title') } })}>
+        <Button variant="secondary" icon="chat-circle-text" fullWidth onPress={() => router.push({ pathname: '/support/contact', params: { topic: t('del.title') } })}>
           {t('del.talk')}
         </Button>
-        <Button variant="destructive" fullWidth loading={busy} disabled={online === false} onPress={start}>
+        <Button variant="destructive" size="lg" fullWidth loading={busy} disabled={online === false} onPress={start}>
           {t('del.continue')}
         </Button>
       </View>
@@ -123,12 +125,16 @@ function Flow({ onRequested }: { onRequested: (token: string) => void }) {
 function Explain({ preview }: { preview: DeletionPreview }) {
   const zone = useSettings().data?.data.clinic.timezone ?? 'America/Vancouver';
   const { upcomingVisits: v } = preview;
+  const warn = Boolean(v.count || preview.balances.length);
   return (
     <>
-      <Text variant="displayMd" accessibilityRole="header">
-        {t('del.before')}
-      </Text>
-      {v.count || preview.balances.length ? (
+      {/* "Before you go" once: as the Banner title when there is something to warn about, else as the heading (WP-24). */}
+      {warn ? null : (
+        <Text variant="displayMd" accessibilityRole="header">
+          {t('del.before')}
+        </Text>
+      )}
+      {warn ? (
         <Banner tone="warning" title={t('del.before')}>
           {[
             v.count && v.next ? (v.count === 1 ? t('del.visitsOne', { date: clinicDate(v.next, zone) }) : t('del.visitsMany', { count: v.count, date: clinicDate(v.next, zone) })) : '',

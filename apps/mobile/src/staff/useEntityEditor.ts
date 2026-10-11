@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { useIsOnline } from '../lib/network';
+import { mergeDraft } from './mergeDraft';
 import { problemOf, useStaffQuery, type SaveProblem } from './api';
 
 /** Staff API path segment per draftable kind (NANO-08). */
@@ -25,6 +26,7 @@ export function useEntityEditor<D extends Record<string, unknown>>(plural: Entit
   const [form, setForm] = useState<D | null>(null);
   const [base, setBase] = useState<Entity | null>(null);
   const [problem, setProblem] = useState<SaveProblem | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [restored, setRestored] = useState(false);
   const [busy, setBusy] = useState<null | 'save' | 'publish' | 'submit' | 'action'>(null);
 
@@ -53,6 +55,7 @@ export function useEntityEditor<D extends Record<string, unknown>>(plural: Entit
       setBase(next);
       setForm(next.draft as D);
       setProblem(null);
+      setMessage(null);
       setRestored(false);
       AsyncStorage.removeItem(localKey(plural, next.id)).catch(() => undefined);
       queryClient.setQueryData(['staff', plural, 'item', next.id], next);
@@ -70,6 +73,7 @@ export function useEntityEditor<D extends Record<string, unknown>>(plural: Entit
     } catch (e) {
       const p = problemOf(e);
       setProblem(p.kind);
+      setMessage(p.message);
       if (p.kind !== 'conflict') await AsyncStorage.setItem(localKey(plural, base.id), JSON.stringify({ version: base.version, draft: form })).catch(() => undefined);
       return null;
     } finally {
@@ -78,6 +82,26 @@ export function useEntityEditor<D extends Record<string, unknown>>(plural: Entit
   }
 
   const dirty = !!form && !!base && JSON.stringify(form) !== JSON.stringify(base.draft);
+
+  // Same as the service editor (ST-2): a newer server copy in the shared cache is folded in, never silently lost.
+  useEffect(() => {
+    const server = query.data;
+    if (!server || !base || !form || server.version <= base.version) return;
+    if (!dirty) {
+      // Syncing from the shared query cache (an external store) is what this effect is for.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setBase(server);
+      setForm(server.draft as D);
+      return;
+    }
+    const m = mergeDraft(base.draft as D, form, server.draft as D);
+    if (m.conflict) setProblem('conflict');
+    else {
+      setBase(server);
+      setForm(m.draft);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query.data]);
 
   async function saveIfNeeded(): Promise<Entity | null> {
     if (!dirty) return base;
@@ -95,6 +119,7 @@ export function useEntityEditor<D extends Record<string, unknown>>(plural: Entit
     dirty,
     problem: online === false ? ('offline' as const) : problem,
     readOnly: online === false,
+    message,
     restored,
     busy,
     save: () => run('save', saveIfNeeded),

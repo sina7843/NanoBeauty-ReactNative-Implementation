@@ -134,7 +134,8 @@ export async function rotateSession(db: Db, refreshToken: string, now: number): 
     await tx.query('INSERT INTO used_refresh_tokens (hash, session_id, used_at) VALUES ($1, $2, $3) ON CONFLICT (hash) DO NOTHING', [
       session.refresh_hash,
       session.id,
-      iso(now),
+      // A token replaced during a grace retry gets no grace of its own: presenting it later is a replay (API-11).
+      iso(used ? now - LIMITS.refreshGraceMs - 1 : now),
     ]);
     return { accessToken: access, refreshToken: refresh, accessExpiresAt, sessionExpiresAt: iso(end) };
   });
@@ -164,8 +165,16 @@ export async function authenticate(db: Db, authorization: string | undefined, no
   return { customerId: session.customer_id, sessionId: session.id, sessionExpiresAt: iso(end), ...access };
 }
 
+/** Customer writes wait for sign-up to finish (API-14): consents, then the profile name. */
+export async function assertOnboarded(db: Queryable, customerId: string): Promise<void> {
+  const step = await nextStep(db, customerId, false);
+  if (step === 'consents' || step === 'profile') {
+    throw new HttpError(403, 'onboarding_required', 'Finish setting up your account first.', { nextStep: step });
+  }
+}
+
 /** AUT-03 → AUT-04 → AUT-05…07 → done. Matching is only asked once the old-app records are connected. */
-export async function nextStep(db: Db, customerId: string, legacyConnected: boolean): Promise<NextStep> {
+export async function nextStep(db: Queryable, customerId: string, legacyConnected: boolean): Promise<NextStep> {
   const consents = await db.query<{ purpose: string; granted: boolean }>(
     `SELECT DISTINCT ON (purpose) purpose, granted FROM consents
       WHERE customer_id = $1 AND purpose IN ('terms', 'transactional') ORDER BY purpose, recorded_at DESC, id DESC`,

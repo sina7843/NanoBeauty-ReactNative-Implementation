@@ -4,6 +4,7 @@ import { buildApp } from '../app';
 import { openDb } from '../db';
 import { createDevIntegrations, type FreshaVisit } from '../integrations';
 import { migrate } from '../migrate';
+import { onboard } from '../testOnboard';
 
 let close: (() => Promise<unknown>) | undefined;
 afterEach(async () => {
@@ -34,8 +35,9 @@ async function setup({ connected = true } = {}) {
   async function signIn(phone: string, e164: string) {
     const { challengeId } = (await req('POST', '/v1/auth/otp/start', undefined, { phone })).json();
     clock.t += 1; // keep timestamps strictly increasing between steps
-    return otpVerifyResponseSchema.parse((await req('POST', '/v1/auth/otp/verify', undefined, { challengeId, code: dev.otpSink.get(e164)! })).json())
-      .accessToken;
+    const token = otpVerifyResponseSchema.parse((await req('POST', '/v1/auth/otp/verify', undefined, { challengeId, code: dev.otpSink.get(e164)! })).json()).accessToken;
+    await onboard(db, e164);
+    return token;
   }
   const visits = async (token: string) => visitsResponseSchema.parse((await req('GET', '/v1/visits', token)).json());
   const handoff = async (token: string, key = 'handoff-key-1', items: object[] = [{ serviceId: 'svc_hifu' }]) =>
@@ -208,6 +210,10 @@ describe('visit requests (BOOK 18)', () => {
     expect(decline.statusCode).toBe(400); // a decline needs a reason the customer is told
     const approved = await t.req('POST', `/v1/staff/requests/${created.id}/transition`, desk, { to: 'approved', note: 'Moved in Fresha' });
     expect(approved.json()).toMatchObject({ status: 'approved' });
+    // ST-6: hand-off mode — nothing has moved in Fresha yet, so the customer isn't told "approved" until it's done.
+    const toldNow = async () =>
+      (await t.db.query<{ template: string }>("SELECT template FROM notifications WHERE audience = 'customer' AND template NOT LIKE 'NTF-01%' ORDER BY id")).map((n) => n.template);
+    expect(await toldNow()).toEqual(['visit_request_submitted']);
     expect((await t.req('POST', `/v1/staff/requests/${created.id}/transition`, desk, { to: 'declined', reason: 'too late' })).statusCode).toBe(409);
     expect((await t.visits(maria)).upcoming[0]!.openRequest).toBeNull();
     // Approved stays in the staff queue until marked done (moved in Fresha).
@@ -234,5 +240,12 @@ describe('visit requests (BOOK 18)', () => {
     const created = (await t.req('POST', `/v1/visits/${v.upcoming[0]!.id}/requests`, maria, { type: 'cancel', message: 'Please cancel', idempotencyKey: 'req-key-own' })).json();
     await t.db.query(`INSERT INTO staff_roles (customer_id, role) SELECT id, 'Owner' FROM customers WHERE phone_e164 = $1`, [MARIA[1]]);
     expect((await t.req('POST', `/v1/staff/requests/${created.id}/transition`, maria, { to: 'approved' })).statusCode).toBe(403);
+
+    // ST-6: "Call" is the clinic's own to-do; it never messages the customer.
+    t.clock.t += 31_000;
+    const desk = await t.signIn(...OTHER);
+    await t.db.query(`INSERT INTO staff_roles (customer_id, role) SELECT id, 'Front desk' FROM customers WHERE phone_e164 = $1`, [OTHER[1]]);
+    expect((await t.req('POST', `/v1/staff/requests/${created.id}/transition`, desk, { to: 'call_needed' })).json()).toMatchObject({ status: 'call_needed' });
+    expect(await t.db.query("SELECT 1 FROM notifications WHERE template = 'visit_request_call_needed'")).toHaveLength(0);
   });
 });

@@ -175,7 +175,7 @@ export function registerAccountRoutes(app: FastifyInstance, { now, kit }: { now:
 
   // ACC-03 (NOTIF 04). Offers are a consent decision, recorded append-only only when it changes.
   app.get('/v1/me/preferences', signedIn, async (request) => preferences(auth(request).customerId));
-  app.put('/v1/me/preferences', signedIn, async (request) => {
+  app.put('/v1/me/preferences', { preHandler: kit.requireOnboarded }, async (request) => {
     const body = preferencesUpdateSchema.parse(request.body);
     const id = auth(request).customerId;
     const t = iso(now());
@@ -203,12 +203,12 @@ export function registerAccountRoutes(app: FastifyInstance, { now, kit }: { now:
   // ACC-02 phone change: the number changes only after a code to the NEW number is verified.
   app.post('/v1/me/phone/start', { ...signedIn, ...throttled }, async (request) => {
     const { phone } = phoneChangeStartSchema.parse(request.body);
-    return kit.startCode(phone);
+    return kit.startCode(phone, 'phone_change');
   });
   app.post('/v1/me/phone/verify', { ...signedIn, ...throttled }, async (request) => {
     const { challengeId, code } = phoneChangeVerifySchema.parse(request.body);
     const ctx = auth(request);
-    const phone = await kit.checkCode(challengeId, code);
+    const phone = await kit.checkCode(challengeId, code, 'phone_change');
     const t = iso(now());
     // Ownership is proven by the code, so saying the number is taken reveals nothing new.
     const taken = new HttpError(409, 'conflict', 'That number belongs to another account. Contact the clinic to merge them.');
@@ -246,7 +246,7 @@ export function registerAccountRoutes(app: FastifyInstance, { now, kit }: { now:
   type NoteRow = { id: string; template: string; data: Record<string, string>; created_at: Date; read_at: Date | null };
   const toItem = (n: NoteRow): InboxItem | null => {
     const render = INBOX[n.template];
-    return render ? { id: String(n.id), ...render(n.data), createdAt: n.created_at.toISOString(), read: n.read_at !== null } : null;
+    return render ? { id: String(n.id), ...render({ ...n.data, id: String(n.id) }), createdAt: n.created_at.toISOString(), read: n.read_at !== null } : null;
   };
   app.get('/v1/me/inbox', signedIn, async (request) => {
     const rows = await db.query<NoteRow>(
@@ -364,7 +364,7 @@ export function registerAccountRoutes(app: FastifyInstance, { now, kit }: { now:
           i.balanceCents
             ? [{ label: i.kind === 'gift_card' ? `gift card •••• ${i.last4 ?? ''}`.trim() : i.label.toLowerCase(), amountCAD: i.balanceCents / 100 }]
             : i.sessions?.remaining
-              ? [{ label: `${i.label} (${i.sessions.remaining} sessions)`, amountCAD: 0 }]
+              ? [{ label: `${i.label.replace(/\s*[·,-]\s*\d+ sessions$/i, '')} (${i.sessions.remaining} sessions)`, amountCAD: 0 }]
               : [],
         ),
       delete: DELETION_PLAN.delete.map((d) => d.label),
@@ -409,12 +409,12 @@ export function registerAccountRoutes(app: FastifyInstance, { now, kit }: { now:
   // ACC-09: confirm it's you with a code to the account's own number.
   app.post('/v1/me/deletion/start', { ...signedIn, ...throttled }, async (request) => {
     const [c] = await db.query<{ phone_e164: string }>('SELECT phone_e164 FROM customers WHERE id = $1', [auth(request).customerId]);
-    return kit.startCode(c!.phone_e164);
+    return kit.startCode(c!.phone_e164, 'deletion');
   });
   app.post('/v1/me/deletion', { ...signedIn, ...throttled }, async (request) => {
     const { challengeId, code } = deletionConfirmSchema.parse(request.body);
     const id = auth(request).customerId;
-    const phone = await kit.checkCode(challengeId, code);
+    const phone = await kit.checkCode(challengeId, code, 'deletion');
     const [c] = await db.query<{ phone_e164: string }>('SELECT phone_e164 FROM customers WHERE id = $1', [id]);
     if (c!.phone_e164 !== phone) throw new HttpError(403, 'forbidden', 'Use the code sent to this account’s number.');
     return requestDeletion(id, 'app', phone);
@@ -447,11 +447,11 @@ export function registerAccountRoutes(app: FastifyInstance, { now, kit }: { now:
   // WEB-03 contract (Google Play web deletion route; the page itself ships in NANO-11). Same code limits as sign-in.
   app.post('/v1/privacy/deletion/start', throttled, async (request) => {
     const { phone } = webDeletionStartSchema.parse(request.body);
-    return kit.startCode(phone);
+    return kit.startCode(phone, 'deletion');
   });
   app.post('/v1/privacy/deletion/confirm', throttled, async (request) => {
     const { challengeId, code } = deletionConfirmSchema.parse(request.body);
-    const phone = await kit.checkCode(challengeId, code);
+    const phone = await kit.checkCode(challengeId, code, 'deletion');
     // The code proves the number is theirs, so "no account" reveals nothing about anyone else.
     const [c] = await db.query<{ id: string }>('SELECT id FROM customers WHERE phone_e164 = $1 AND deleted_at IS NULL', [phone]);
     if (!c) throw new HttpError(404, 'not_found', 'No Nano Beauty account uses this number.');

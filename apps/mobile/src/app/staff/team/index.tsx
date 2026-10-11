@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { useAuth } from '../../../auth/AuthProvider';
 import { Badge, Banner, Button, Chip, ListGroup, ListRow, Skeleton, Text, TextField, useToast } from '../../../components';
 import { t } from '../../../i18n';
-import { problemOf, useStaffQuery } from '../../../staff/api';
+import { problemOf, useStaffQuery, problemText } from '../../../staff/api';
 import { StaffScreen } from '../../../staff/StaffScreen';
 
 /** `/staff/team` — STF-13: who has access, their roles, and invites (Owner only, D34). */
@@ -35,7 +35,7 @@ export default function Team() {
       toast({ tone: 'success', message: t('team.invited') });
     } catch (e) {
       const p = problemOf(e);
-      setError(p.kind === 'invalid' ? t('aut.phone.invalid') : p.kind === 'conflict' ? t('stf.conflict') : t('error.body'));
+      setError(p.kind === 'invalid' ? t('aut.phone.invalid') : problemText(e));
     } finally {
       setBusy(false);
     }

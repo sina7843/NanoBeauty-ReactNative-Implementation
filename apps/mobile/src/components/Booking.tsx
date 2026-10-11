@@ -36,21 +36,23 @@ export interface AppointmentPassProps {
 
 /** A visit (DISC 01, BOOK 08, BOOK 11). Calendar uses the system sheet without full calendar permission. */
 export function AppointmentPass({ service, date, time, provider, status, eyebrow = t('pass.next'), compact, sample, onAddToCalendar, onManage }: AppointmentPassProps) {
-  const { colors } = useTheme();
+  const { colors, elevation } = useTheme();
   const [tone, label] = STATUS[status];
   const active = status !== 'cancelled' && status !== 'completed' && status !== 'noshow';
   return (
     <View
-      style={[styles.pass, { backgroundColor: colors.surface, borderColor: colors.line }]}
+      style={[styles.pass, { backgroundColor: colors.surface, borderColor: colors.line }, elevation.card]}
       accessible={!onAddToCalendar && !onManage}
       accessibilityLabel={`${service}, ${date} at ${time}, ${t(label)}`}
     >
       <View style={styles.top}>
-        <Text variant="overline" style={styles.flex}>
+        <Text variant="overline" tone="inkMuted" numberOfLines={1} style={styles.eyebrow}>
           {eyebrow}
         </Text>
-        {sample ? <SampleBadge /> : null}
-        <Badge tone={tone}>{t(label)}</Badge>
+        <View style={styles.badges}>
+          {sample ? <SampleBadge /> : null}
+          <Badge tone={tone}>{t(label)}</Badge>
+        </View>
       </View>
       <Text variant="titleLg">{service}</Text>
       <View style={styles.when}>
@@ -61,16 +63,16 @@ export function AppointmentPass({ service, date, time, provider, status, eyebrow
       </View>
       {compact ? null : (
         <>
-          <View style={styles.meta}>
+          <View style={[styles.meta, { borderTopColor: colors.line }]}>
             {provider ? (
               <View style={styles.inline}>
                 <Icon name="user-circle" size={16} tone="inkMuted" />
-                <Text variant="caption">{provider}</Text>
+                <Text variant="caption" tone="inkMuted">{provider}</Text>
               </View>
             ) : null}
             <View style={styles.inline}>
               <Icon name="map-pin" size={16} tone="inkMuted" />
-              <Text variant="caption">{t('pass.location')}</Text>
+              <Text variant="caption" tone="inkMuted">{t('pass.location')}</Text>
             </View>
           </View>
           {active && (onAddToCalendar || onManage) ? (
@@ -89,6 +91,28 @@ export function AppointmentPass({ service, date, time, provider, status, eyebrow
           ) : null}
         </>
       )}
+    </View>
+  );
+}
+
+/**
+ * `.nb-stepper`: "Step 2 of 4" overline, the current step name as headline and a segmented track
+ * (done and current segments primary, current at 55%). Used on booking and the four gift steps (Design, Value, Recipient, Review).
+ */
+export function BookingStepper({ steps, current }: { steps: string[]; current: number }) {
+  const { colors } = useTheme();
+  const label = t('stepper.step', { n: current + 1, total: steps.length });
+  return (
+    <View accessible accessibilityRole="progressbar" accessibilityLabel={`${label}: ${steps[current]}`} accessibilityValue={{ min: 1, max: steps.length, now: current + 1 }} style={styles.stepper}>
+      <Text variant="overline" tone="inkMuted">
+        {label}
+      </Text>
+      <Text variant="headline">{steps[current]}</Text>
+      <View style={styles.track}>
+        {steps.map((name, i) => (
+          <View key={name} style={[styles.seg, { backgroundColor: i <= current ? colors.primary : colors.line, opacity: i === current ? 0.55 : 1 }]} />
+        ))}
+      </View>
     </View>
   );
 }
@@ -209,13 +233,13 @@ export function AreaPicker({
                 styles.area,
                 {
                   backgroundColor: on ? colors.surfaceTint : colors.surface,
-                  borderColor: on ? colors.primary : colors.lineStrong,
+                  borderColor: on ? colors.primary : colors.line,
                   borderWidth: on ? 2 : 1.5,
-                  opacity: disabled ? 0.4 : 1,
+                  opacity: disabled ? 0.55 : 1,
                 },
               ]}
             >
-              <Text variant="body" strong tone={on ? 'onTint' : 'ink'}>
+              <Text variant="body" strong>
                 {a.name}
               </Text>
               <Text variant="caption" tone="inkMuted" style={styles.tabular}>
@@ -230,7 +254,7 @@ export function AreaPicker({
           );
         })}
       </View>
-      <View style={styles.total}>
+      <View style={[styles.total, { backgroundColor: colors.surfaceMuted }]}>
         <Text variant="body" style={styles.flex} accessibilityLiveRegion="polite">
           {atMax ? t('areas.countMax', { n: selected.length, max }) : t('areas.count', { n: selected.length, max })}
         </Text>
@@ -246,12 +270,17 @@ export function AreaPicker({
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   tabular: { fontVariant: ['tabular-nums'] },
-  pass: { gap: space['2'], padding: space['4'], borderRadius: radius.lg, borderWidth: 1 },
-  top: { flexDirection: 'row', alignItems: 'center', gap: space['2'], flexWrap: 'wrap' },
+  pass: { gap: space['2'], padding: space['5'], borderRadius: radius.lg, borderWidth: 1 },
+  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space['2'], flexWrap: 'wrap', minHeight: 24 },
+  eyebrow: { flexShrink: 1 },
+  badges: { flexDirection: 'row', alignItems: 'center', gap: space['2'] },
   when: { flexDirection: 'row', gap: space['2'], flexWrap: 'wrap' },
-  meta: { gap: space['1'] },
+  meta: { gap: space['1'], paddingTop: space['2'], marginTop: space['1'], borderTopWidth: 1 },
   inline: { flexDirection: 'row', alignItems: 'center', gap: space['1'] },
   actions: { flexDirection: 'row', gap: space['2'], flexWrap: 'wrap', marginTop: space['2'] },
+  stepper: { gap: space['1'] },
+  track: { flexDirection: 'row', gap: space['1'], marginTop: space['2'] },
+  seg: { flex: 1, height: 4, borderRadius: radius.full },
   basket: { gap: space['3'] },
   box: { borderRadius: radius.md, borderWidth: 1, overflow: 'hidden' },
   basketRow: { flexDirection: 'row', alignItems: 'center', gap: space['3'], minHeight: 56, paddingHorizontal: space['4'], paddingVertical: space['2'] },
@@ -259,5 +288,6 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space['2'] },
   area: { flexBasis: '47%', flexGrow: 1, minHeight: sizes.touchMin + 16, padding: space['3'], borderRadius: radius.md, gap: 2 },
   check: { position: 'absolute', top: space['2'], right: space['2'] },
-  total: { flexDirection: 'row', alignItems: 'center', gap: space['2'] },
+  // `.nb-areas__total`: surface-muted panel, 12/16 padding, radius md.
+  total: { flexDirection: 'row', alignItems: 'center', gap: space['2'], paddingVertical: space['3'], paddingHorizontal: space['4'], borderRadius: radius.md },
 });

@@ -5,7 +5,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 import { useAuth } from '../../../auth/AuthProvider';
-import { AsyncStatus, Banner, Button, ListGroup, ListRow, Screen, SegmentedControl, SupportContext, Text, TextField } from '../../../components';
+import { AsyncStatus, Banner, Button, ListGroup, ListRow, SegmentedControl, SupportContext, Text, TextField } from '../../../components';
 import { VisitGate } from '../../../booking/VisitGate';
 import { newIdempotencyKey, outcomeText } from '../../../booking/visits';
 import { hoursLabel } from '../../../content/clinic';
@@ -23,15 +23,16 @@ export default function LateChange() {
     <>
       <Stack.Screen options={{ title: t('late.title') }} />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <Screen topInset={false}>
-          <VisitGate id={id}>{(visit, data, offline) => <Late visit={visit} data={data} offline={offline} />}</VisitGate>
-        </Screen>
+        <VisitGate id={id}>{(visit, data, offline) => <Late visit={visit} data={data} offline={offline} />}</VisitGate>
       </KeyboardAvoidingView>
     </>
   );
 }
 
 function Late({ visit, data, offline }: { visit: Visit; data: VisitsResponse; offline: boolean }) {
+  const router = useRouter();
+  // BV-1: held here, not in the composer, so the refetch that fills `openRequest` can't unmount the confirmation.
+  const [sent, setSent] = useState<VisitRequest | null>(null);
   const bootstrap = useSettings().data?.data;
   const settings = bootstrap?.settings;
   const hours = settings?.freeChangeHours ?? 48;
@@ -56,20 +57,33 @@ function Late({ visit, data, offline }: { visit: Visit; data: VisitsResponse; of
         hours={hoursLabel(settings?.clinicHours ?? null) ?? t('sup.hoursPending')}
         response={bootstrap?.clinic.supportReplyTime ? t('sup.replies', { time: bootstrap.clinic.supportReplyTime }) : undefined}
         phone={bootstrap?.clinic.phone ?? null}
+        onAsk={() => router.push('/support/ask')}
       />
-      {!upcoming ? null : visit.openRequest ? (
+      {sent ? (
+        <AsyncStatus
+          state="success"
+          title={t('req.sent.title')}
+          reference={sent.reference}
+          actions={
+            <Button size="lg" fullWidth onPress={() => router.back()}>
+              {t('ret.done')}
+            </Button>
+          }
+        >
+          {t('req.sent.body', { reference: sent.reference })}
+        </AsyncStatus>
+      ) : !upcoming ? null : visit.openRequest ? (
         <Banner tone="info" title={t('visit.requested.title')}>
           {t(visit.openRequest.type === 'cancel' ? 'visit.requested.cancel' : 'visit.requested.change')}
         </Banner>
       ) : (
-        <Composer visit={visit} offline={offline} />
+        <Composer visit={visit} offline={offline} onSent={setSent} />
       )}
     </>
   );
 }
 
-function Composer({ visit, offline }: { visit: Visit; offline: boolean }) {
-  const router = useRouter();
+function Composer({ visit, offline, onSent }: { visit: Visit; offline: boolean; onSent: (r: VisitRequest) => void }) {
   const online = useIsOnline();
   const queryClient = useQueryClient();
   const { session } = useAuth();
@@ -78,7 +92,6 @@ function Composer({ visit, offline }: { visit: Visit; offline: boolean }) {
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [sent, setSent] = useState<VisitRequest | null>(null);
   // One key per request as written: retrying the same text reuses it (no duplicate in the queue); editing the
   // text or type makes it a new request, so the server never answers with an older message.
   const [idempotencyKey, setIdempotencyKey] = useState(newIdempotencyKey);
@@ -92,30 +105,13 @@ function Composer({ visit, offline }: { visit: Visit; offline: boolean }) {
     setFailed(false);
     try {
       const res = await session.authed(`/v1/visits/${visit.id}/requests`, { method: 'POST', body: { type, message: message.trim(), idempotencyKey } });
-      setSent(visitRequestSchema.parse(res.body));
+      onSent(visitRequestSchema.parse(res.body));
       queryClient.invalidateQueries({ queryKey: ['visits'] });
     } catch {
       setFailed(true); // nothing confirmed as sent; the text stays for a safe retry
     } finally {
       setBusy(false);
     }
-  }
-
-  if (sent) {
-    return (
-      <AsyncStatus
-        state="success"
-        title={t('req.sent.title')}
-        reference={sent.reference}
-        actions={
-          <Button size="lg" fullWidth onPress={() => router.back()}>
-            {t('ret.done')}
-          </Button>
-        }
-      >
-        {t('req.sent.body', { reference: sent.reference })}
-      </AsyncStatus>
-    );
   }
 
   return (

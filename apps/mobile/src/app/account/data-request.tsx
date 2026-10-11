@@ -6,11 +6,12 @@ import { KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { useDataRequest } from '../../account/queries';
 import { useAuth } from '../../auth/AuthProvider';
 import { SignInGate } from '../../auth/SignInGate';
-import { AsyncStatus, Badge, Banner, Button, Screen, Skeleton, Text, TextField } from '../../components';
+import { Badge, Banner, Button, Screen, Skeleton, Text, TextField } from '../../components';
 import { newIdempotencyKey } from '../../booking/visits';
 import { t } from '../../i18n';
 import { clinicDate } from '../../i18n/format';
 import { useIsOnline } from '../../lib/network';
+import { useSettings } from '../../settings/useSettings';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -33,6 +34,7 @@ function Form() {
   const online = useIsOnline();
   const queryClient = useQueryClient();
   const current = useDataRequest();
+  const zone = useSettings().data?.data.clinic.timezone ?? 'America/Vancouver';
   const [email, setEmail] = useState(me?.customer.email ?? '');
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
@@ -71,33 +73,23 @@ function Form() {
     );
   }
   const latest: PrivacyRequest | null = current.data.latest;
-  if (latest?.status === 'received') {
-    return (
-      <Screen topInset={false}>
-        <AsyncStatus state="success" title={t('dr.sentTitle')} reference={latest.reference}>
-          {t('dr.sentBody', { reference: latest.reference })}
-        </AsyncStatus>
-        <Badge tone="info">{`${t('dr.requested')} ${clinicDate(latest.createdAt, 'America/Vancouver')}`}</Badge>
-      </Screen>
-    );
-  }
+  // ACC-07 sent state: the same form, read-only, with a success Banner and a disabled "Requested" (WP-15).
+  const sent = latest?.status === 'received';
   return (
     <Screen
       topInset={false}
       footer={
-        <Button size="lg" fullWidth loading={busy} disabled={online === false} onPress={submit}>
-          {t('dr.submit')}
+        <Button size="lg" fullWidth loading={busy} disabled={sent || online === false} onPress={submit}>
+          {sent ? t('dr.requested') : t('dr.submit')}
         </Button>
       }
     >
-      <Text variant="displayMd" accessibilityRole="header">
+      <Text variant="titleLg" accessibilityRole="header">
         {t('dr.heading')}
       </Text>
-      <Text variant="body" tone="inkMuted">
-        {t('dr.body')}
-      </Text>
+      <Text variant="body">{t('dr.body')}</Text>
       {latest?.status === 'completed' && latest.completedAt ? (
-        <Badge tone="success">{`${t('dr.completed')} ${clinicDate(latest.completedAt, 'America/Vancouver')}`}</Badge>
+        <Badge tone="success">{`${t('dr.completed')} ${clinicDate(latest.completedAt, zone)}`}</Badge>
       ) : null}
       <TextField
         label={t('dr.sendTo')}
@@ -107,12 +99,18 @@ function Form() {
           if (error) setError(undefined);
         }}
         error={error}
+        disabled={sent}
         keyboardType="email-address"
         autoCapitalize="none"
         autoComplete="email"
         textContentType="emailAddress"
         maxLength={254}
       />
+      {sent ? (
+        <Banner tone="success" title={t('dr.sentTitle')}>
+          {t('dr.sentBody', { reference: latest.reference })}
+        </Banner>
+      ) : null}
       {failed ? (
         <Banner tone="danger" title={t('error.title')}>
           {t('error.body')}

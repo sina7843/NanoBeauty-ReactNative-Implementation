@@ -64,7 +64,7 @@ function Form() {
     return (
       <Screen topInset={false}>
         <AsyncStatus state="success" title={t('help.sentTitle')} reference={sent} actions={<Button size="lg" fullWidth onPress={() => router.dismissTo('/wallet')}>{t('help.back')}</Button>}>
-          {t('help.sentBody', { reference: sent })}
+          {t('help.sentBody')}
         </AsyncStatus>
       </Screen>
     );

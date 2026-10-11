@@ -6,9 +6,8 @@ import { StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 import { useAuth } from '../../auth/AuthProvider';
 import { Banner, Button, Chip, ConfirmDialog, Dialog, ListGroup, ListRow, Skeleton, Text, TextField, useToast } from '../../components';
-import { ApiError } from '../../api/client';
 import { t } from '../../i18n';
-import { problemOf, useStaffQuery } from '../../staff/api';
+import { useStaffQuery, problemText } from '../../staff/api';
 import { StaffScreen } from '../../staff/StaffScreen';
 
 /**
@@ -36,8 +35,7 @@ export default function Taxonomy() {
       await refresh();
       return true;
     } catch (e) {
-      const p = problemOf(e);
-      toast({ tone: 'warning', message: p.kind === 'conflict' && e instanceof ApiError ? t('stf.conflict') : t('error.body') });
+      toast({ tone: 'danger', message: problemText(e) });
       return false;
     } finally {
       setBusy(false);
@@ -145,7 +143,6 @@ export default function Taxonomy() {
         kind={confirm?.kind ?? 'archive'}
         item={confirm?.row.name ?? ''}
         loading={busy}
-        affects={[t('confirm.audit')]}
         onCancel={() => setConfirm(null)}
         onConfirm={async () => {
           if (confirm && (await call(`/v1/staff/categories/${confirm.row.id}/${confirm.kind}`, { version: confirm.row.version }))) setConfirm(null);

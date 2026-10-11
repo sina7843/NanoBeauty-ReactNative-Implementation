@@ -25,6 +25,7 @@ import { imageFor } from '../../content/images';
 import { useCatalog } from '../../content/queries';
 import { t } from '../../i18n';
 import { money } from '../../i18n/format';
+import { priceLabel } from '../../booking/summary';
 import { OLD_LINK_HREF } from '../../navigation/routes';
 import { useSettings } from '../../settings/useSettings';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -105,7 +106,7 @@ function Detail({ service, catalog }: { service: Service; catalog: Catalog }) {
             {category}
           </Text>
         ) : null}
-        <Text variant="displayMd" accessibilityRole="header">
+        <Text variant="titleLg" accessibilityRole="header">
           {service.name}
         </Text>
         <View style={styles.meta}>
@@ -227,14 +228,14 @@ function NotBookable({ service, catalog }: { service: Service; catalog: Catalog 
         </Button>
       }
     >
-      <PhotoFrame source={imageFor(service.photo)} alt={service.name} ratio="16 / 10" />
+      <PhotoFrame source={imageFor(service.photo)} alt={service.name} ratio="16 / 10" dimmed />
       <View style={styles.heading}>
         {category ? (
           <Text variant="overline" tone="inkMuted">
             {category}
           </Text>
         ) : null}
-        <Text variant="displayMd" accessibilityRole="header">
+        <Text variant="titleLg" accessibilityRole="header">
           {service.name}
         </Text>
       </View>
@@ -253,7 +254,7 @@ function NotBookable({ service, catalog }: { service: Service; catalog: Catalog 
             <ListRow
               key={s.id}
               title={s.name}
-              subtitle={s.price.kind === 'consultation' ? t('price.consultation') : undefined}
+              subtitle={priceLabel(s.price, null)}
               onPress={() => router.push({ pathname: '/treatments/[id]', params: { id: s.id } })}
             />
           ))}

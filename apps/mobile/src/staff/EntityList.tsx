@@ -6,20 +6,13 @@ import { useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 import { useAuth } from '../auth/AuthProvider';
-import { Badge, Banner, Button, ConfirmDialog, EmptyState, ListGroup, ListRow, SearchField, SegmentedControl, Skeleton, Text, useToast } from '../components';
-import { t, type StringKey } from '../i18n';
-import { problemOf, useStaffQuery } from './api';
+import { Banner, Button, ConfirmDialog, EmptyState, ListGroup, ListRow, SearchField, SegmentedControl, Skeleton, Text, useToast } from '../components';
+import { t } from '../i18n';
+import { problemText, useStaffQuery } from './api';
+import { DEFAULT_FILTERS, type ListFilter } from './filters';
+import { PublishState } from './Governance';
 import type { EntityPlural } from './useEntityEditor';
 
-const FILTERS = ['all', 'live', 'draft', 'archived'] as const;
-type Filter = (typeof FILTERS)[number];
-const FILTER_LABEL = { all: 'stf.all', live: 'stf.live', draft: 'stf.drafts', archived: 'stf.archived' } as const;
-
-export const stateBadge = (state: EntityRow['state'], phase?: string | null) => (
-  <Badge tone={phase === 'paused' || phase === 'ended' ? 'neutral' : state === 'live' ? 'success' : state === 'review' ? 'warning' : state === 'archived' ? 'neutral' : 'info'}>
-    {phase ? t(`stf.phase.${phase}` as StringKey) : t(`stf.state.${state}`)}
-  </Badge>
-);
 
 /** STF-05/15/19/21/33 lists: filter, search, open, and STF-39 archive / restore / delete-draft (D36). */
 export function EntityList({
@@ -32,6 +25,7 @@ export function EntityList({
   creating,
   newLabel,
   render,
+  filters = DEFAULT_FILTERS,
 }: {
   plural: EntityPlural;
   /** App route when it differs from the API name (STF-10 articles live at /staff/support-content). */
@@ -44,15 +38,18 @@ export function EntityList({
   newLabel?: string;
   /** Replaces the plain list (campaign calendar view). */
   render?: (rows: EntityRow[]) => ReactNode;
+  /** Per-screen filter chips (ST-21); the default is All / Live / Draft / Archived. */
+  filters?: ListFilter[];
 }) {
   const router = useRouter();
   const toast = useToast();
   const queryClient = useQueryClient();
   const { session, me } = useAuth();
   const canPublish = !!me?.permissions.includes(publishPermission);
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilter] = useState<ListFilter>(filters[0]!);
   const [q, setQ] = useState('');
-  const list = useStaffQuery([plural, 'list', filter, q], `/v1/staff/${plural}?filter=${filter}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ''}`, z.array(entityRowSchema));
+  const list = useStaffQuery([plural, 'list', filter.server, q], `/v1/staff/${plural}?filter=${filter.server}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ''}`, z.array(entityRowSchema));
+  const rows = list.data && filter.keep ? list.data.filter(filter.keep) : list.data;
   const [confirm, setConfirm] = useState<{ kind: 'archive' | 'restore' | 'delete'; row: EntityRow } | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -63,8 +60,8 @@ export function EntityList({
       await session.authed(`/v1/staff/${plural}/${encodeURIComponent(confirm.row.id)}/${confirm.kind}`, { method: 'POST', body: { version: confirm.row.version } });
       await queryClient.invalidateQueries({ queryKey: ['staff', plural] });
     } catch (e) {
-      const p = problemOf(e);
-      toast({ tone: 'warning', message: p.kind === 'conflict' ? t('stf.conflict') : t('error.body') });
+      // The server's own sentence ("Customers have seen this: archive it instead."), not a version conflict (ST-8).
+      toast({ tone: 'danger', message: problemText(e) });
     } finally {
       setBusy(false);
       setConfirm(null);
@@ -75,7 +72,7 @@ export function EntityList({
     <>
       <SearchField value={q} onChangeText={setQ} placeholder={t('stf.searchAll')} />
       {archivable ? (
-        <SegmentedControl label={t('stf.all')} options={FILTERS.map((f) => t(FILTER_LABEL[f]))} value={t(FILTER_LABEL[filter])} onChange={(v) => setFilter(FILTERS.find((f) => t(FILTER_LABEL[f]) === v)!)} />
+        <SegmentedControl label={t('stf.all')} options={filters.map((f) => t(f.label))} value={t(filter.label)} onChange={(v) => setFilter(filters.find((f) => t(f.label) === v)!)} />
       ) : null}
       {onCreate ? (
         <View style={styles.actions}>
@@ -85,18 +82,18 @@ export function EntityList({
         </View>
       ) : null}
       {header}
-      {list.data ? (
-        list.data.length === 0 ? (
+      {rows ? (
+        rows.length === 0 ? (
           <EmptyState title={t('stf.nothingHere')} />
         ) : render ? (
-          render(list.data)
+          render(rows)
         ) : (
           <ListGroup>
-            {list.data.map((r) => (
+            {rows.map((r) => (
               <View key={r.id}>
                 <ListRow title={r.name} subtitle={[r.subtitle, r.hasDraft ? t('stf.edited') : null].filter(Boolean).join(' · ')} onPress={() => router.push(`${basePath ?? `/staff/${plural}`}/${encodeURIComponent(r.id)}` as Href)} />
                 <View style={styles.rowActions}>
-                  {stateBadge(r.state, r.phase)}
+                  <PublishState state={r.state} phase={r.phase} />
                   {!archivable ? null : r.state === 'archived' && canPublish ? (
                     <Button variant="tertiary" size="sm" onPress={() => setConfirm({ kind: 'restore', row: r })}>
                       {t('stf.restore')}
@@ -130,12 +127,12 @@ export function EntityList({
       ) : (
         <Skeleton lines={5} media={false} />
       )}
-      {filter === 'archived' ? (
+      {filter.server === 'archived' ? (
         <Text variant="caption" tone="inkMuted">
           {t('stf.restoreDraft')}
         </Text>
       ) : null}
-      <ConfirmDialog visible={!!confirm} kind={confirm?.kind ?? 'archive'} item={confirm?.row.name ?? ''} loading={busy} onConfirm={act} onCancel={() => setConfirm(null)} affects={[t('confirm.audit')]} />
+      <ConfirmDialog visible={!!confirm} kind={confirm?.kind ?? 'archive'} item={confirm?.row.name ?? ''} loading={busy} onConfirm={act} onCancel={() => setConfirm(null)} />
     </>
   );
 }

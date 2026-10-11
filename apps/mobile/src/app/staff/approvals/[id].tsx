@@ -3,9 +3,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Redirect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { useAuth } from '../../../auth/AuthProvider';
-import { AsyncStatus, Banner, Button, Card, Skeleton, Text, TextField } from '../../../components';
+import { AsyncStatus, Banner, Button, Skeleton, Text, TextField } from '../../../components';
 import { t } from '../../../i18n';
-import { problemOf, useStaffQuery } from '../../../staff/api';
+import { problemText, useStaffQuery } from '../../../staff/api';
+import { ApprovalItem } from '../../../staff/Governance';
+import { auditItemName } from '../../../staff/readable';
 import { StaffScreen } from '../../../staff/StaffScreen';
 
 const ITEM_PATH = { service: 'services', package: 'packages', campaign: 'campaigns', promo: 'promo-codes', professional: 'professionals', policy: 'policies', article: 'support-content' } as const;
@@ -20,6 +22,8 @@ export default function ApprovalDetail() {
   const [reason, setReason] = useState('');
   const [rejecting, setRejecting] = useState(false);
   const [error, setError] = useState<string>();
+  /** ST-3: why approve / send back failed, shown in a visible Banner (not only under the hidden reason field). */
+  const [failed, setFailed] = useState<{ title: string; body: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<'approved' | 'rejected' | null>(null);
   const back = { to: '/staff/approvals' as Href, label: t('appr.title') };
@@ -34,13 +38,13 @@ export default function ApprovalDetail() {
       return;
     }
     setBusy(true);
+    setFailed(null);
     try {
       await session.authed(`/v1/staff/approvals/${id}/decide`, { method: 'POST', body: decision === 'approve' ? { decision } : { decision, reason: reason.trim() } });
       setDone(decision === 'approve' ? 'approved' : 'rejected');
       await queryClient.invalidateQueries({ queryKey: ['staff'] });
     } catch (e) {
-      problemOf(e);
-      setError(t('error.body'));
+      setFailed({ title: decision === 'approve' ? t('appr.failed') : t('appr.rejectFailed'), body: problemText(e) });
     } finally {
       setBusy(false);
     }
@@ -55,13 +59,12 @@ export default function ApprovalDetail() {
   }
   return (
     <StaffScreen title={t('appr.detail')} back={back}>
-      <Card>
-        <Text variant="titleLg">{a!.itemName}</Text>
-        <Text variant="body">{a!.summary}</Text>
-        <Text variant="caption" tone="inkMuted">
-          {t('appr.by', { name: a!.submittedBy })}
-        </Text>
-      </Card>
+      <ApprovalItem kind={auditItemName(`${a!.itemType}:`).type ?? undefined} name={a!.itemName} summary={a!.summary} by={a!.submittedBy} />
+      {failed ? (
+        <Banner tone="danger" title={failed.title}>
+          {failed.body}
+        </Banner>
+      ) : null}
       <Button variant="tertiary" onPress={() => router.push(`/staff/${ITEM_PATH[a!.itemType]}/${encodeURIComponent(a!.itemId)}` as Href)}>
         {t('svc.preview')}
       </Button>

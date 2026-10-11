@@ -41,7 +41,7 @@ export function Badge({ tone = 'neutral', icon, children }: { tone?: Tone; icon?
       ]}
     >
       {name ? <Icon name={name} size={14} color={fg} /> : null}
-      <Text variant="overline" style={[styles.text, { color: fg }]}>
+      <Text variant="overline" numberOfLines={1} style={[styles.text, { color: fg }]}>
         {children}
       </Text>
     </View>
@@ -80,5 +80,5 @@ const styles = StyleSheet.create({
     borderRadius: radius.xs,
   },
   // Badge text is 12/16 semibold like `overline`, but sentence case (not uppercase).
-  text: { textTransform: 'none', letterSpacing: 0 },
+  text: { flexShrink: 0, textTransform: 'none', letterSpacing: 0 },
 });

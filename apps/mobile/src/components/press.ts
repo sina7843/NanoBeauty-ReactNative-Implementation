@@ -1,7 +1,10 @@
+import { opacity } from '@nano/design-tokens';
 import { Platform, type PressableProps, type PressableStateCallbackType, type StyleProp, type ViewStyle } from 'react-native';
 
-/** tokens.json `opacity-disabled` (not in the RN export). Fills and imagery only, never text contrast. */
-export const OPACITY_DISABLED = 0.4;
+/** tokens.json `opacity-disabled` (local token, DS-21). Fills and imagery only, never text contrast. */
+export const OPACITY_DISABLED = opacity.disabled;
+/** tokens.json `opacity-pressed-overlay`: ink overlay on pressed photo cards. */
+export const OPACITY_PRESSED_OVERLAY = opacity.pressedOverlay;
 
 /**
  * Platform press feedback (guideline 08): Android ripple in `surfacePressed`; iOS swaps the fill to the

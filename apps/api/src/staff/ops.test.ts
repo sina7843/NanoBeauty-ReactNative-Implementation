@@ -4,6 +4,7 @@ import { buildApp } from '../app';
 import { openDb } from '../db';
 import { createDevIntegrations } from '../integrations';
 import { migrate } from '../migrate';
+import { onboard } from '../testOnboard';
 
 let close: (() => Promise<unknown>) | undefined;
 afterEach(async () => {
@@ -37,7 +38,9 @@ export async function opsSetup() {
       await db.query(`INSERT INTO staff_roles (customer_id, role) SELECT id, $2 FROM customers WHERE phone_e164 = $1 ON CONFLICT DO NOTHING`, [e164, role]);
     }
     const { challengeId } = (await req('POST', '/v1/auth/otp/start', undefined, { phone })).json();
-    return otpVerifyResponseSchema.parse((await req('POST', '/v1/auth/otp/verify', undefined, { challengeId, code: dev.otpSink.get(e164)! })).json()).accessToken;
+    const token = otpVerifyResponseSchema.parse((await req('POST', '/v1/auth/otp/verify', undefined, { challengeId, code: dev.otpSink.get(e164)! })).json()).accessToken;
+    await onboard(db, e164);
+    return token;
   }
   const entity = async (token: string, plural: string, id: string) => entitySchema.parse((await req('GET', `/v1/staff/${plural}/${id}`, token)).json());
   return { db, dev, clock, req, signIn, entity, OWNER, OWNER2, EDITOR, DESK, CUSTOMER };
@@ -145,6 +148,8 @@ describe('selling items share the draft model (STF-05/07/15/16, D35/D36)', () =>
     expect(restored.deletable).toBe(false);
     expect((await t.req('POST', `/v1/staff/campaigns/${c.id}/delete`, owner, { version: restored.version })).statusCode).toBe(409);
     expect((await t.req('GET', `/v1/offers/${c.id}`)).json().offer.state).toBe('expired');
+    // ST-8: not deletable means archivable again (the list shows Archive exactly when `deletable` is false).
+    expect((await t.req('POST', `/v1/staff/campaigns/${c.id}/archive`, owner, { version: restored.version })).json().state).toBe('archived');
 
     const d = entitySchema.parse((await t.req('POST', '/v1/staff/campaigns', owner, { draft: cmp({ title: 'Never live' }) })).json());
     expect((await t.req('POST', `/v1/staff/campaigns/${d.id}/delete`, owner, { version: d.version })).json()).toEqual({ deleted: true });
@@ -163,6 +168,26 @@ describe('selling items share the draft model (STF-05/07/15/16, D35/D36)', () =>
     const copy = entitySchema.parse((await t.req('POST', `/v1/staff/campaigns/${c.id}/duplicate`, owner, {})).json());
     expect(copy.state).toBe('draft');
     expect(copy.draft.startsAt).toBe('2027-10-01T17:00:00.000Z');
+  });
+
+  it('API-6: the Halloween template starts from the seeded campaign and both dates move together', async () => {
+    const t = await opsSetup();
+    t.clock.t = Date.parse('2026-11-15T17:00:00Z'); // after this year's Halloween offer
+    const owner = await t.signIn(...OWNER, 'Owner');
+    const d = (await t.req('GET', '/v1/staff/campaign-templates/halloween', owner)).json();
+    expect(d.title).toBeTruthy(); // from the seeded campaign, not a blank one
+    expect(d.startsAt.startsWith('2027-')).toBe(true);
+    expect(Date.parse(d.endsAt)).toBeGreaterThan(Date.parse(d.startsAt));
+  });
+
+  it('ST-5: the campaign list is in date order (soonest first)', async () => {
+    const t = await opsSetup();
+    const owner = await t.signIn(...OWNER, 'Owner');
+    await t.req('POST', '/v1/staff/campaigns', owner, { draft: cmp({ title: 'Later', startsAt: '2027-03-01T17:00:00Z', endsAt: '2027-03-10T17:00:00Z' }) });
+    const ids = (await t.req('GET', '/v1/staff/campaigns', owner)).json().map((r: { id: string }) => r.id);
+    const starts = await Promise.all(ids.map(async (id: string) => (await t.db.query<{ starts_at: Date }>('SELECT starts_at FROM campaigns WHERE id = $1', [id]))[0]!.starts_at.getTime()));
+    expect(ids.length).toBeGreaterThan(1);
+    expect(starts).toEqual([...starts].sort((a, b) => a - b));
   });
 
   it('promo codes: unique, not renameable; a draft code is invalid to customers until published', async () => {
@@ -247,6 +272,8 @@ describe('settings change app behaviour without a rebuild (STF-17/31/32/34)', ()
     const body = (over: Record<string, unknown> = {}) => ({ version: boot.version, settings: { ...pick(boot.settings), ...over }, features: { legacyMembership: true } });
     expect((await t.req('PUT', '/v1/staff/settings/rules', editor, body())).json().error.missingPermission).toBe('rules.manage');
     expect((await t.req('PUT', '/v1/staff/settings/rules', owner, body({ bookingMode: 'inapp' }))).statusCode).toBe(409);
+    // ST-12 / D-QA-04: card payments are always on.
+    expect((await t.req('PUT', '/v1/staff/settings/rules', owner, body({ paymentMethods: { ...boot.settings.paymentMethods, card: false } }))).statusCode).toBe(400);
     const res = (await t.req('PUT', '/v1/staff/settings/rules', owner, body({ freeChangeHours: 24 }))).json();
     expect(res.version).toBe(boot.version + 1);
     const after = (await t.req('GET', '/v1/settings')).json();
@@ -345,7 +372,7 @@ describe('front desk operations (STF-23–30)', () => {
     expect((await t.req('POST', `/v1/staff/inbox/${row.id}/replies`, desk, reply)).json().replies).toHaveLength(1);
     expect(t.dev.outbox.filter((m) => m.template === 'NTF-10.support_reply')).toHaveLength(1);
     const inbox = (await t.req('GET', '/v1/me/inbox', customer)).json();
-    expect(JSON.stringify(inbox)).toContain('The clinic replied');
+    expect(JSON.stringify(inbox)).toContain('New reply from Nano Beauty');
 
     t.clock.t += 1000;
     const send = t.dev.integrations.messages.send;
@@ -368,7 +395,11 @@ describe('push composer and reports (STF-35/37)', () => {
     expect((await t.req('POST', '/v1/staff/push', owner, msg)).statusCode).toBe(409);
     await t.req('POST', '/v1/me/consents', customer, { terms: true, transactional: true, marketing: true });
     expect((await t.req('GET', '/v1/staff/push', owner)).json().audience).toBe(1);
-    const p = (await t.req('POST', '/v1/staff/push', owner, msg)).json();
+    // ST-4: "Schedule" with no time or a past time is refused, never sent now.
+    expect((await t.req('POST', '/v1/staff/push', owner, { ...msg, scheduled: true, idempotencyKey: 'push-0002' })).statusCode).toBe(400);
+    const past = new Date(t.clock.t - 3600_000).toISOString();
+    expect((await t.req('POST', '/v1/staff/push', owner, { ...msg, scheduled: true, sendAt: past, idempotencyKey: 'push-0003' })).statusCode).toBe(400);
+    const p =(await t.req('POST', '/v1/staff/push', owner, msg)).json();
     expect(p).toMatchObject({ status: 'scheduled', audienceCount: 1 });
     expect((await t.req('POST', '/v1/staff/push', owner, msg)).json().id).toBe(p.id);
     expect((await t.req('POST', `/v1/staff/push/${p.id}/cancel`, owner, { version: p.version })).json().status).toBe('cancelled');

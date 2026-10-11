@@ -15,7 +15,7 @@ import {
 } from '@nano/contracts';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { authenticate } from '../auth/session';
+import { assertOnboarded, authenticate } from '../auth/session';
 import { HttpError } from '../errors';
 
 const iso = (d: Date | null) => (d ? d.toISOString() : null);
@@ -202,7 +202,9 @@ export function registerContentRoutes(app: FastifyInstance, { now }: { now: () =
     if (p.archived) return { ...result('invalid'), description: null, appliesLabel: null };
     if (p.starts_at && p.starts_at.getTime() > t) return result('notyet', { startsAt: iso(p.starts_at), ...hidden });
     if (p.total_limit !== null && p.used >= p.total_limit) return result('usedup');
-    if (appliesTo && !matchesTarget(p.applies_to, appliesTo)) return result('noteligible');
+    // FE-6: from an offer page (OFR-01) the app sends `offer:<campaign id>`; a code tied to another campaign doesn't apply.
+    const eligible = !appliesTo || (appliesTo.startsWith('offer:') ? !p.campaign_id || p.campaign_id === appliesTo.slice(6) : matchesTarget(p.applies_to, appliesTo));
+    if (!eligible) return result('noteligible');
     // "Already used" needs to know who is asking; anonymous checks skip it (the purchase re-checks, NANO-06).
     const ctx = request.headers.authorization ? await authenticate(db, request.headers.authorization, t).catch(() => null) : null;
     // A stale or invalid token just means an anonymous check, not a failure.
@@ -246,6 +248,7 @@ export function registerContentRoutes(app: FastifyInstance, { now }: { now: () =
   // SUP-04 → staff inbox (SUP 05). A signed-in customer, so the clinic knows who to reply to.
   app.post('/v1/support/questions', { config: { rateLimit: { max: 5, timeWindow: '1 minute' } } }, async (request) => {
     const ctx = await authenticate(db, request.headers.authorization, now());
+    await assertOnboarded(db, ctx.customerId);
     const body = supportQuestionRequestSchema.parse(request.body);
     const reference = `SUP-${randomBytes(3).toString('hex').toUpperCase()}`;
     await db.query(

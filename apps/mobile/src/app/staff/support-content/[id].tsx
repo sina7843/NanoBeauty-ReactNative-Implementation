@@ -2,6 +2,7 @@ import type { ArticleDraft } from '@nano/contracts';
 import { useLocalSearchParams } from 'expo-router';
 import { Switch, TextField } from '../../../components';
 import { t } from '../../../i18n';
+import { ListTextField, splitParagraphs } from '../../../staff/ListTextField';
 import { EntityEditScreen, PreviewCard } from '../../../staff/EntityEditScreen';
 import { useEntityEditor } from '../../../staff/useEntityEditor';
 
@@ -23,11 +24,14 @@ export default function ArticleEdit() {
       {f ? (
         <>
           <TextField label={t('art.question')} value={f.title} onChangeText={(v) => editor.setForm({ title: v })} maxLength={120} disabled={ro} />
-          <TextField
+          <ListTextField
+            key={`b${editor.service?.version}`}
             label={t('art.answer')}
             helper={t('art.answerHelp')}
-            value={f.body.join('\n\n')}
-            onChangeText={(v) => editor.setForm({ body: v.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean) })}
+            items={f.body}
+            onItems={(body) => editor.setForm({ body })}
+            split={splitParagraphs}
+            join={(i) => i.join('\n\n')}
             multiline
             disabled={ro}
           />

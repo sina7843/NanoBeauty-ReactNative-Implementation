@@ -7,7 +7,7 @@ import { CodeStep } from '../../account/CodeStep';
 import { ApiError } from '../../api/client';
 import { useAuth } from '../../auth/AuthProvider';
 import { SignInGate } from '../../auth/SignInGate';
-import { Banner, Button, Dialog, Screen, Text, TextField, useToast } from '../../components';
+import { Banner, Button, Dialog, Screen, Skeleton, Text, TextField, useToast } from '../../components';
 import { t } from '../../i18n';
 import { useDismissGuard } from '../../navigation/useDismissGuard';
 
@@ -27,23 +27,34 @@ export default function Profile() {
   );
 }
 
+/** WP-26: the fields start from the loaded account, so nothing counts as changed before `me` arrives. */
 function ProfileForm() {
+  const { me } = useAuth();
+  if (!me)
+    return (
+      <Screen topInset={false}>
+        <Skeleton lines={4} media={false} />
+      </Screen>
+    );
+  return <ProfileFields key={me.customer.id} c={me.customer} />;
+}
+
+function ProfileFields({ c }: { c: Me['customer'] }) {
   const router = useRouter();
   const toast = useToast();
-  const { me, session, refreshMe } = useAuth();
-  const c = me?.customer;
-  const [first, setFirst] = useState(c?.firstName ?? '');
-  const [last, setLast] = useState(c?.lastName ?? '');
-  const [email, setEmail] = useState(c?.email ?? '');
-  const [phone, setPhone] = useState(c ? formatPhone(c.phone) : '');
+  const { session, refreshMe } = useAuth();
+  const [first, setFirst] = useState(c.firstName ?? '');
+  const [last, setLast] = useState(c.lastName ?? '');
+  const [email, setEmail] = useState(c.email ?? '');
+  const [phone, setPhone] = useState(formatPhone(c.phone));
   const [errors, setErrors] = useState<{ first?: string; last?: string; email?: string; phone?: string }>({});
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [challenge, setChallenge] = useState<OtpStartResponse | null>(null);
 
   const newPhone = normalizePhone(phone);
-  const phoneChanged = !!c && phone.trim() !== formatPhone(c.phone) && newPhone !== c.phone;
-  const dirty = !!c && (first !== (c.firstName ?? '') || last !== (c.lastName ?? '') || email !== (c.email ?? '') || phoneChanged);
+  const phoneChanged = phone.trim() !== formatPhone(c.phone) && newPhone !== c.phone;
+  const dirty = first !== (c.firstName ?? '') || last !== (c.lastName ?? '') || email !== (c.email ?? '') || phoneChanged;
   const guard = useDismissGuard(dirty && !busy);
   const leave = () => (router.canGoBack() ? router.back() : router.replace('/account'));
 

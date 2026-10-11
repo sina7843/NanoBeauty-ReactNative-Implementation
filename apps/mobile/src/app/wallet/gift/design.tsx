@@ -1,70 +1,43 @@
-import { radius, space } from '@nano/design-tokens';
 import { Stack, useRouter } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { Badge, Button, Icon, type IconName, Screen, Skeleton, Text } from '../../../components';
-import { t, type StringKey } from '../../../i18n';
-import { giftDraft, useGiftDraft } from '../../../payments/giftDraft';
+import { BookingStepper, Button, GiftCard, GiftDesignPicker, Screen, Text } from '../../../components';
+import { t } from '../../../i18n';
+import { designName, GIFT_STEPS, giftDraft, useGiftDraft } from '../../../payments/giftDraft';
 import { useSettings } from '../../../settings/useSettings';
-import { useTheme } from '../../../theme/ThemeProvider';
 
-const ICONS: Record<string, IconName> = { thanks: 'star', birthday: 'gift', holiday: 'star', love: 'gift' };
-
-/** `/wallet/gift/design` — WAL-13 (WALT 13). Designs come from settings; guests may start a gift. */
+/** `/wallet/gift/design` — WAL-13 (selected, loading; WALT 13). Designs come from settings; guests may start a gift. */
 export default function GiftDesign() {
   const router = useRouter();
-  const { colors } = useTheme();
   const draft = useGiftDraft();
-  const designs = useSettings().data?.data.settings.gift.designs;
+  const gift = useSettings().data?.data.settings.gift;
+  const designs = (gift?.designs ?? []).map((key) => ({ key, name: designName(key) }));
+  // The preview shows the chosen face with the value picked so far, or the first preset until one is picked.
+  const previewCents = draft.amountCents ?? (gift?.presetsCAD[0] ?? 0) * 100;
   return (
     <>
-      <Stack.Screen options={{ title: t('gift.title') }} />
+      <Stack.Screen options={{ title: t('gift.designTitle'), headerBackTitle: t('wal.title') }} />
       <Screen
         topInset={false}
         footer={
-          <Button size="lg" fullWidth disabled={!draft.design} onPress={() => router.push('/wallet/gift/value')}>
+          <Button size="lg" fullWidth disabled={!draft.design || !gift} onPress={() => router.push('/wallet/gift/value')}>
             {t('pay.continue')}
           </Button>
         }
       >
-        <Text variant="displayMd" accessibilityRole="header">
+        <BookingStepper steps={GIFT_STEPS.map((step) => t(step))} current={0} />
+        <Text variant="titleMd" accessibilityRole="header">
           {t('gift.design')}
         </Text>
         <Text variant="body" tone="inkMuted">
           {t('gift.designBody')}
         </Text>
-        {designs ? (
-          <View style={styles.grid} accessibilityRole="radiogroup" accessibilityLabel={t('gift.design')}>
-            {designs.map((d) => {
-              const on = draft.design === d;
-              const key = `gift.design.${d}` as StringKey;
-              const label = t(key) === key ? d : t(key);
-              return (
-                <Pressable
-                  key={d}
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: on }}
-                  accessibilityLabel={label}
-                  onPress={() => giftDraft.set({ design: d })}
-                  style={[styles.tile, { backgroundColor: on ? colors.surfaceTint : colors.surface, borderColor: on ? colors.primary : colors.lineStrong, borderWidth: on ? 2 : 1 }]}
-                >
-                  <Icon name={ICONS[d] ?? 'gift'} size={32} tone={on ? 'primary' : 'inkMuted'} />
-                  <Text variant="body" strong>
-                    {label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        ) : (
-          <Skeleton lines={2} />
-        )}
-        <Badge tone="sample">{t('badge.sample')}</Badge>
+        <GiftDesignPicker
+          designs={gift ? designs : [{ key: 'a', name: '' }, { key: 'b', name: '' }, { key: 'c', name: '' }]}
+          selected={draft.design}
+          loading={!gift}
+          onSelect={(key) => giftDraft.set({ design: key })}
+        />
+        {draft.design && gift ? <GiftCard amount={previewCents / 100} design={draft.design} code={t('gift.preview')} sample /> : null}
       </Screen>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space['3'] },
-  tile: { flexBasis: '46%', flexGrow: 1, aspectRatio: 1.4, alignItems: 'center', justifyContent: 'center', gap: space['2'], borderRadius: radius.lg },
-});

@@ -37,6 +37,7 @@ function Choose({ list }: { list: Package[] }) {
   const [chosen, setChosen] = useState<string | null>(live[0]?.id ?? null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
   const [keys] = useState(() => new Map<string, string>());
   const pkg = list.find((p) => p.id === chosen);
 
@@ -113,8 +114,16 @@ function Choose({ list }: { list: Package[] }) {
       ) : null}
       <ListGroup>
         <ListRow icon="calendar-check" title={t('buy.howTitle')} subtitle={t('buy.howSub')} chevron={false} />
-        <ListRow icon="receipt" title={t('pkg.terms')} subtitle={pkg?.terms.join(' ') ?? t('buy.termsSub')} chevron={false} />
+        {/* WP-16: a link row; it opens the chosen package's own terms in place (D-N12-F3). */}
+        <ListRow icon="info" title={t('pkg.terms')} subtitle={t('buy.termsSub')} onPress={pkg?.terms.length ? () => setTermsOpen((o) => !o) : undefined} />
       </ListGroup>
+      {termsOpen && pkg?.terms.length ? (
+        <ListGroup header={t('pkg.terms')}>
+          {pkg.terms.map((line) => (
+            <ListRow key={line} title={line} chevron={false} />
+          ))}
+        </ListGroup>
+      ) : null}
       {failed ? (
         <Banner tone="danger" title={t('error.title')}>
           {t('error.body')}

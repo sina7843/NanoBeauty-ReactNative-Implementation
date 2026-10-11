@@ -10,7 +10,7 @@ import { basket } from '../../booking/basket';
 import { clearPendingHandoff } from '../../booking/pendingHandoff';
 import { hoursLabel } from '../../content/clinic';
 import { t } from '../../i18n';
-import { clinicDate, clinicTime } from '../../i18n/format';
+import { clinicDay, clinicTime } from '../../i18n/format';
 import { analytics } from '../../lib/analytics';
 import { OLD_LINK_HREF } from '../../navigation/routes';
 import { useSettings } from '../../settings/useSettings';
@@ -80,17 +80,13 @@ function Check({ id }: { id: string }) {
     clearPendingHandoff();
     router.dismissTo(to);
   };
-  const checkAgain = (
-    <Button variant="secondary" fullWidth loading={status.isFetching} onPress={() => status.refetch()}>
-      {t('ret.checkAgain')}
-    </Button>
-  );
   const support = (
     <SupportContext
       topic={t('ret.topic')}
       hours={hoursLabel(settings?.settings.clinicHours ?? null) ?? t('sup.hoursPending')}
       response={settings?.clinic.supportReplyTime ? t('sup.replies', { time: settings.clinic.supportReplyTime }) : undefined}
       phone={settings?.clinic.phone ?? null}
+      onAsk={() => router.push('/support/ask')}
     />
   );
 
@@ -98,8 +94,8 @@ function Check({ id }: { id: string }) {
     const v = status.data!.visit;
     const body = v
       ? v.professional
-        ? t('ret.confirmed.body', { date: clinicDate(v.startsAt, zone), time: clinicTime(v.startsAt, zone), pro: v.professional })
-        : t('ret.confirmed.bodyNoPro', { date: clinicDate(v.startsAt, zone), time: clinicTime(v.startsAt, zone) })
+        ? t('ret.confirmed.body', { date: clinicDay(v.startsAt, zone), time: clinicTime(v.startsAt, zone), pro: v.professional })
+        : t('ret.confirmed.bodyNoPro', { date: clinicDay(v.startsAt, zone), time: clinicTime(v.startsAt, zone) })
       : undefined;
     return (
       <AsyncStatus
@@ -119,9 +115,11 @@ function Check({ id }: { id: string }) {
   if (state === 'notvisible') {
     const at = status.data!.checkAgainAt;
     return (
+      // Fresha confirmed it (success), it just isn't readable yet (BKG-09 notvisible).
       <AsyncStatus
-        state="timeout"
+        state="success"
         title={t('ret.notvisible.title')}
+        reference={status.data!.visit?.ref ?? t('ret.freshaRef')}
         actions={
           <Button size="lg" fullWidth onPress={() => leave('/visits')}>
             {t('ret.goVisits')}
@@ -136,16 +134,23 @@ function Check({ id }: { id: string }) {
   if (state === 'notyet' || status.isError) {
     return (
       <>
+        {/* The only way out besides "Check again" (BKG-09 has one button): a header Close, as on the booking modal. */}
+        <Stack.Screen
+          options={{
+            headerLeft: () => (
+              <Button variant="tertiary" size="sm" onPress={() => leave('/home')}>
+                {t('common.close')}
+              </Button>
+            ),
+          }}
+        />
         <AsyncStatus
           state="timeout"
           title={t('ret.notyet.title')}
           actions={
-            <>
-              {checkAgain}
-              <Button variant="tertiary" fullWidth onPress={() => leave('/visits')}>
-                {t('ret.goVisits')}
-              </Button>
-            </>
+            <Button size="lg" fullWidth icon="arrow-clockwise" loading={status.isFetching} onPress={() => status.refetch()}>
+              {t('ret.checkAgain')}
+            </Button>
           }
         >
           {t('ret.notyet.body')}

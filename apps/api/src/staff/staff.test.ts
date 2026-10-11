@@ -4,6 +4,7 @@ import { buildApp } from '../app';
 import { openDb } from '../db';
 import { createDevIntegrations } from '../integrations';
 import { migrate } from '../migrate';
+import { onboard } from '../testOnboard';
 import { parseCsv, parsePrice } from './routes';
 
 let close: (() => Promise<unknown>) | undefined;
@@ -41,7 +42,9 @@ async function setup() {
       await db.query(`INSERT INTO staff_roles (customer_id, role) SELECT id, $2 FROM customers WHERE phone_e164 = $1 ON CONFLICT DO NOTHING`, [e164, role]);
     }
     const { challengeId } = (await req('POST', '/v1/auth/otp/start', undefined, { phone })).json();
-    return otpVerifyResponseSchema.parse((await req('POST', '/v1/auth/otp/verify', undefined, { challengeId, code: dev.otpSink.get(e164)! })).json()).accessToken;
+    const token = otpVerifyResponseSchema.parse((await req('POST', '/v1/auth/otp/verify', undefined, { challengeId, code: dev.otpSink.get(e164)! })).json()).accessToken;
+    await onboard(db, e164);
+    return token;
   }
   const service = async (token: string, id: string) => staffServiceSchema.parse((await req('GET', `/v1/staff/services/${id}`, token)).json());
   const catalog = async () => catalogSchema.parse((await req('GET', '/v1/catalog')).json());
@@ -108,7 +111,11 @@ describe('services: drafts, versions, publish (STF-02/03/09, D35)', () => {
     const v2 = staffServiceSchema.parse((await save(created.version, { price: { kind: 'fixed', amount: 160 } })).json());
     expect((await save(created.version, { price: { kind: 'fixed', amount: 999 } })).statusCode).toBe(409); // stale: no silent overwrite
     expect((await t.req('POST', `/v1/staff/services/${created.id}/publish`, editor, { version: v2.version })).statusCode).toBe(403); // an Editor never publishes
-    const submitted = staffServiceSchema.parse((await t.req('POST', `/v1/staff/services/${created.id}/submit`, editor, { version: v2.version })).json());
+    // ST-3: an incomplete draft can't be submitted (the Owner could never approve it).
+    const incomplete = staffServiceSchema.parse((await save(v2.version, { price: { kind: 'fixed', amount: 160 }, durationMin: null })).json());
+    expect((await t.req('POST', `/v1/staff/services/${created.id}/submit`, editor, { version: incomplete.version })).statusCode).toBe(409);
+    const v3 = staffServiceSchema.parse((await save(incomplete.version, { price: { kind: 'fixed', amount: 160 } })).json());
+    const submitted = staffServiceSchema.parse((await t.req('POST', `/v1/staff/services/${created.id}/submit`, editor, { version: v3.version })).json());
     expect(submitted.state).toBe('review');
 
     const approvals = (await t.req('GET', '/v1/staff/approvals', owner)).json();
@@ -212,6 +219,11 @@ describe('media library (STF-36)', () => {
     expect((await t.req('POST', '/v1/staff/services/svc_hifu/publish', owner, { version: withPhoto.version })).statusCode).toBe(409);
     const ready = (await t.req('PUT', `/v1/staff/media/${m.id}`, owner, { version: m.version, altText: 'Treatment room with a bed', rightsConfirmed: true })).json();
     expect(ready).toMatchObject({ status: 'active', inUse: 1 });
+    // ST-9: campaign and team photos count too.
+    await t.db.query(`UPDATE campaigns SET photo = $1 WHERE id = 'cmp_halloween'`, [`media:${m.id}`]);
+    await t.db.query(`UPDATE professionals SET photo = $1 WHERE id = (SELECT id FROM professionals LIMIT 1)`, [`media:${m.id}`]);
+    const listed = (await t.req('GET', '/v1/staff/media', owner)).json();
+    expect((Array.isArray(listed) ? listed : listed.items).find((x: { id: string }) => x.id === m.id).inUse).toBe(3);
     expect((await t.req('POST', '/v1/staff/services/svc_hifu/publish', owner, { version: withPhoto.version })).json().outcome).toBe('published');
     expect((await t.req('GET', `/v1/media/${m.id}`)).statusCode).toBe(200);
     expect((await t.req('POST', `/v1/staff/media/${m.id}/archive`, owner, { version: ready.version })).statusCode).toBe(409);

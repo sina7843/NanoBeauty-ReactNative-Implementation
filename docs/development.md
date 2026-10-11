@@ -46,9 +46,18 @@ Conventions:
 Test database strategy: API tests run against in-process **PGlite** (real Postgres SQL, no Docker). CI runs the same
 suite a second time against a real Postgres service via `TEST_DATABASE_URL`.
 
-Development integration adapters (`apps/api/src/integrations.ts`): OTP accepts only `000000`; email/push/SMS go to an
-in-memory outbox; payments are idempotent per key and **never** become `paid`; Fresha and the legacy app report
-`not_connected`. Nothing calls a real vendor.
+Development integration adapters (`apps/api/src/integrations.ts`): OTP codes are random 6-digit codes, never texted;
+with `DEV_OTP_SINK=true` read them from `GET /v1/dev/otp?phone=<10 digits>`. Email/push/SMS go to an in-memory outbox.
+The development payment provider is deterministic by token: `tok_visa` succeeds (the order becomes `paid` and value
+lands in the Wallet), `tok_decline`/`tok_insufficient` are declined, `tok_3ds` waits for a bank check, `tok_timeout`
+never answers (see "Payments, wallet and gift cards" below). Fresha and the legacy app report `not_connected` unless
+`DEV_SAMPLE_FRESHA`/`DEV_SAMPLE_LEGACY` turn on their sample data. `DEV_SAMPLE_CLINIC=true` fills a made-up clinic
+phone ((604) 555-0100), weekly opening hours (Sample) and a fake `https://fresha.invalid/…` booking link (D-QA-06).
+All `DEV_*` switches are refused outside `APP_ENV=development`. Nothing calls a real vendor.
+
+Error envelope additions (NANO-12): a 429 always carries `error.retryAfterSeconds` (and the `retry-after` header);
+customer writes before sign-up is finished answer 403 `onboarding_required` with `error.nextStep` (`consents` or
+`profile`); `POST /v1/orders` with a reused idempotency key for a different order answers 409 `idempotency_mismatch`.
 
 ## Mobile
 

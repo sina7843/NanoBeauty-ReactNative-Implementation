@@ -4,7 +4,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Modal, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Chip, EmptyState, Screen, SegmentedControl, ServiceCard, Sheet, Skeleton, Text } from '../../components';
-import { activeFilterCount, EMPTY_FILTERS, filterServices, type DurationFilter, type Filters, type PriceGroup } from '../../catalog/search';
+import { activeFilterCount, EMPTY_FILTERS, emptyCause, filterServices, type DurationFilter, type Filters, type PriceGroup } from '../../catalog/search';
 import { ContentGate } from '../../content/ContentGate';
 import { useCatalog } from '../../content/queries';
 import { t } from '../../i18n';
@@ -21,18 +21,22 @@ const DURATIONS: [DurationFilter, 'filters.any' | 'filters.under60' | 'filters.o
   ['over60', 'filters.over60'],
 ];
 
+const entryFilters = (concern: string | undefined): Filters => ({ ...EMPTY_FILTERS, concerns: concern ? [concern] : [] });
+
 /** TRT-02 list (loaded, loading, empty) with TRT-03 filters (DISC 05). */
 export default function TreatmentList() {
   const router = useRouter();
   const { category, concern } = useLocalSearchParams<{ category?: string; concern?: string }>();
   const catalog = useCatalog();
-  const [filters, setFilters] = useState<Filters>({ ...EMPTY_FILTERS });
+  // FE-5: the entry concern is an ordinary, removable concern filter (shown selected in TRT-03).
+  const [filters, setFilters] = useState<Filters>(() => entryFilters(concern));
   const [sheet, setSheet] = useState(false);
   const data = catalog.data?.data;
+  const shownConcern = filters.concerns.length === 1 ? filters.concerns[0] : undefined;
   const title = data
-    ? (data.categories.find((c) => c.id === category)?.name ?? data.concerns.find((c) => c.id === concern)?.name ?? t('tab.treatments'))
+    ? (data.categories.find((c) => c.id === category)?.name ?? data.concerns.find((c) => c.id === shownConcern)?.name ?? t('tab.treatments'))
     : '';
-  const base = useMemo(() => ({ ...filters, category, concern }), [filters, category, concern]);
+  const base = useMemo(() => ({ ...filters, category }), [filters, category]);
   const results = useMemo(() => (data ? filterServices(data.services, base) : []), [data, base]);
   const count = (n: number) => (n === 1 ? t('trt.count.one') : t('trt.count.many', { count: n }));
   const active = activeFilterCount(filters);
@@ -42,7 +46,7 @@ export default function TreatmentList() {
       <Stack.Screen options={{ title }} />
       <Screen
         topInset={false}
-        footer={
+        fab={
           <Button icon="calendar-plus" onPress={() => router.push('/book/service')}>
             {t('home.bookShort')}
           </Button>
@@ -58,7 +62,20 @@ export default function TreatmentList() {
         </View>
         <ContentGate query={catalog} skeleton={<><Skeleton lines={2} /><Skeleton lines={2} /></>}>
           {(c) =>
-            results.length === 0 ? (
+            results.length === 0 && emptyCause(c, category, filters) === 'scope' ? (
+              // FE-4: the list itself has nothing (e.g. a category with no services yet); clearing filters wouldn't help.
+              <EmptyState
+                icon="compass"
+                title={t('trt.emptyScope.title')}
+                actions={
+                  <Button variant="secondary" fullWidth onPress={() => router.replace('/treatments')}>
+                    {t('trt.seeAll')}
+                  </Button>
+                }
+              >
+                {t('trt.emptyScope.body')}
+              </EmptyState>
+            ) : results.length === 0 ? (
               <EmptyState
                 icon="sliders-horizontal"
                 title={t('trt.empty.title')}
@@ -80,7 +97,7 @@ export default function TreatmentList() {
                   price={s.price}
                   consultation={s.price.kind === 'consultation'}
                   photo={s.photo}
-                  photoRatio="16 / 9"
+                  photoRatio="5 / 2"
                   onPress={() => router.push({ pathname: '/treatments/[id]', params: { id: s.id } })}
                 />
               ))
@@ -93,7 +110,7 @@ export default function TreatmentList() {
           visible={sheet}
           catalog={data}
           value={filters}
-          base={{ category, concern }}
+          category={category}
           onApply={(next) => {
             setFilters(next);
             setSheet(false);
@@ -110,14 +127,14 @@ function FilterSheet({
   visible,
   catalog,
   value,
-  base,
+  category,
   onApply,
   onClose,
 }: {
   visible: boolean;
   catalog: Catalog;
   value: Filters;
-  base: { category?: string; concern?: string };
+  category?: string;
   onApply: (f: Filters) => void;
   onClose: () => void;
 }) {
@@ -125,7 +142,7 @@ function FilterSheet({
   const [draft, setDraft] = useState(value);
   const toggle = <K extends 'concerns' | 'prices' | 'professionals'>(key: K, item: Filters[K][number]) =>
     setDraft((d) => ({ ...d, [key]: (d[key] as string[]).includes(item) ? (d[key] as string[]).filter((x) => x !== item) : [...(d[key] as string[]), item] }));
-  const preview = filterServices(catalog.services, { ...draft, ...base }).length;
+  const preview = filterServices(catalog.services, { ...draft, category }).length;
   const usedPros = catalog.professionals.filter((p) => catalog.services.some((s) => s.professionals.includes(p.id)));
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose} onShow={() => setDraft(value)}>
@@ -137,7 +154,7 @@ function FilterSheet({
             actions={
               <>
                 <Button fullWidth onPress={() => onApply(draft)}>
-                  {t('filters.show', { count: preview })}
+                  {preview === 1 ? t('filters.showOne') : t('filters.show', { count: preview })}
                 </Button>
                 <Button variant="tertiary" fullWidth onPress={() => setDraft({ ...EMPTY_FILTERS })}>
                   {t('filters.clearAll')}
@@ -160,7 +177,9 @@ function FilterSheet({
               ))}
             </FilterGroup>
             <View style={styles.group}>
-              <Text variant="label">{t('filters.duration')}</Text>
+              <Text variant="overline" tone="inkMuted">
+                {t('filters.duration')}
+              </Text>
               <SegmentedControl
                 label={t('filters.duration')}
                 options={DURATIONS.map(([, label]) => t(label))}
@@ -187,7 +206,9 @@ function FilterSheet({
 function FilterGroup({ label, children }: { label: string; children: ReactNode }) {
   return (
     <View style={styles.group} accessibilityLabel={label}>
-      <Text variant="label">{label}</Text>
+      <Text variant="overline" tone="inkMuted">
+        {label}
+      </Text>
       <View style={styles.chips}>{children}</View>
     </View>
   );

@@ -1,12 +1,13 @@
 import { radius, space } from '@nano/design-tokens';
 import { useEffect, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Image, StyleSheet, View, type ImageSourcePropType } from 'react-native';
+import { ActivityIndicator, Image, Text as RNText, StyleSheet, View, type ImageSourcePropType } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { t } from '../i18n';
 import { money } from '../i18n/format';
 import { Text } from '../theme/Text';
 import { useTheme } from '../theme/ThemeProvider';
 import { Icon, type IconName } from './Icon';
+import { OPACITY_DISABLED } from './press';
 
 const SKELETON_DELAY_MS = 300;
 const SKELETON_WIDTHS = ['70%', '92%', '48%', '80%'] as const;
@@ -127,7 +128,8 @@ export interface PriceTagProps {
 /** Each price kind reads differently so "From" or "Consultation required" can't pass as a fixed price. */
 export function PriceTag({ kind = 'fixed', amount = 0, min = 0, max = 0, unit = 'unit', was, endsAt, size = 'md' }: PriceTagProps) {
   const variant = size === 'lg' ? 'amount' : 'headline';
-  const muted = { color: useTheme().colors.inkMuted };
+  // Secondary text inherits the headline size at the regular face (DS-17); never a fixed body size.
+  const muted = { color: useTheme().colors.inkMuted, fontFamily: 'Sora-Regular' };
   let main: ReactNode;
   let note: string | null = null;
   let label: string;
@@ -136,7 +138,7 @@ export function PriceTag({ kind = 'fixed', amount = 0, min = 0, max = 0, unit = 
       label = `${t('price.from')} ${money(amount)}`;
       main = (
         <>
-          <Text variant="body" style={muted}>{`${t('price.from')} `}</Text>
+          <RNText style={muted}>{`${t('price.from')} `}</RNText>
           {money(amount)}
         </>
       );
@@ -151,7 +153,7 @@ export function PriceTag({ kind = 'fixed', amount = 0, min = 0, max = 0, unit = 
       main = (
         <>
           {money(amount)}
-          <Text variant="body" style={muted}>{` / ${unit}`}</Text>
+          <RNText style={muted}>{` / ${unit}`}</RNText>
         </>
       );
       break;
@@ -176,7 +178,7 @@ export function PriceTag({ kind = 'fixed', amount = 0, min = 0, max = 0, unit = 
           <Text variant={variant} tone="primary">
             {money(amount)}
           </Text>
-          {was != null ? <Text variant="body" style={[muted, styles.struck]}>{` ${money(was)}`}</Text> : null}
+          {was != null ? <RNText style={[muted, styles.struck]}>{` ${money(was)}`}</RNText> : null}
         </>
       );
       note = endsAt ? t('price.offerEnds', { endsAt }) : null;
@@ -199,7 +201,7 @@ export function PriceTag({ kind = 'fixed', amount = 0, min = 0, max = 0, unit = 
   );
 }
 
-const RATIOS = { '4 / 3': 4 / 3, '16 / 10': 16 / 10, '16 / 9': 16 / 9, '1 / 1': 1 } as const;
+const RATIOS = { '4 / 3': 4 / 3, '16 / 10': 16 / 10, '16 / 9': 16 / 9, '16 / 11': 16 / 11, '16 / 5.6': 16 / 5.6, '5 / 2': 5 / 2, '1 / 1': 1 } as const;
 
 /** Fixed-ratio frame; a visible, labelled placeholder until licensed clinic photography arrives. */
 export function PhotoFrame({
@@ -207,16 +209,22 @@ export function PhotoFrame({
   alt,
   ratio = '4 / 3',
   label = t('photo.pending'),
+  rounded = true,
+  dimmed,
 }: {
   source?: ImageSourcePropType;
   /** Required with a real photo: the treatment context, not the person's looks. */
   alt?: string;
   ratio?: keyof typeof RATIOS;
   label?: string;
+  /** false inside a card: the card clips the corners (DS-8). */
+  rounded?: boolean;
+  /** Inactive imagery at `opacity-disabled` (expired or paused offers). */
+  dimmed?: boolean;
 }) {
   const { colors } = useTheme();
   return (
-    <View style={[styles.photo, { aspectRatio: RATIOS[ratio], backgroundColor: colors.surfaceMuted }]}>
+    <View style={[styles.photo, { aspectRatio: RATIOS[ratio], backgroundColor: colors.surfaceMuted }, !rounded && { borderRadius: 0 }, dimmed && { opacity: OPACITY_DISABLED }]}>
       {source ? (
         <Image source={source} accessible accessibilityLabel={alt} style={styles.photoImage} resizeMode="cover" />
       ) : (

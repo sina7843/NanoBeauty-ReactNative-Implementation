@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "description": "Nano Beauty design tokens (copied verbatim from the handover export/nano-tokens.ts).",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./src/entry.ts",
+  "types": "./src/entry.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/entry.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

@@ -6,7 +6,7 @@ import { t } from '../i18n';
 import { otpInputProps } from '../platform/otp';
 import { Text } from '../theme/Text';
 import { useTheme } from '../theme/ThemeProvider';
-import { SampleBadge } from './Badge';
+import { Badge } from './Badge';
 import { Banner } from './Banner';
 import { Button } from './Button';
 import { ListGroup, ListRow } from './Card';
@@ -57,7 +57,7 @@ export function OTPInput({ value, onChange, onComplete, error, sentTo, resendIn,
               },
             ]}
           >
-            <Text variant="headline" style={styles.tabular}>
+            <Text variant="amount" style={styles.tabular}>
               {digit}
             </Text>
           </View>
@@ -145,9 +145,11 @@ export function ConsentRow({ label, required, checked, onChange, detail, linkLab
         <View style={styles.flex}>
           <Text variant="body">
             {label}{' '}
-            <Text variant="caption" tone={required ? 'onTint' : 'inkMuted'}>
-              {tag}
-            </Text>
+            <Text
+              variant="caption"
+              tone={required ? 'onTint' : 'inkMuted'}
+              style={[styles.tag, { backgroundColor: required ? colors.surfaceTint : colors.surfaceMuted }]}
+            >{` ${tag} `}</Text>
           </Text>
           {detail ? (
             <Text variant="caption" tone="inkMuted">
@@ -205,7 +207,7 @@ export function AccountMatch({ result, busy = null, onPrimary, onSecondary }: Ac
   if (result.state === 'matched') {
     return (
       <View style={styles.match}>
-        {result.sample ? <SampleBadge /> : null}
+        {result.sample ? <Badge tone="sample">{t('aut.match.sample')}</Badge> : null}
         <View style={[styles.matchIcon, { backgroundColor: colors.successSoft }]}>
           <Icon name="seal-check" size={28} tone="success" />
         </View>
@@ -252,7 +254,8 @@ const styles = StyleSheet.create({
   consent: { paddingVertical: space['3'], gap: space['1'] },
   consentMain: { flexDirection: 'row', gap: space['3'], alignItems: 'flex-start', minHeight: sizes.touchMin },
   consentLink: { paddingLeft: 24 + space['3'] },
-  box: { width: 24, height: 24, borderRadius: radius.xs, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  tag: { borderRadius: radius.xs, overflow: 'hidden' },
+  box: { width: 24, height: 24, borderRadius: radius.xs, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   match: { gap: space['3'] },
   matchIcon: { width: 64, height: 64, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   actions: { gap: space['2'], marginTop: space['2'] },

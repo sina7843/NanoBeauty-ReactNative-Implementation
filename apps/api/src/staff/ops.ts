@@ -90,6 +90,8 @@ export function registerOpsRoutes(app: FastifyInstance, { now }: { now: () => nu
     const body = rulesUpdateSchema.parse(request.body);
     // D33: there's no Fresha booking API, so in-app booking can't be switched on (NANO-09 owns the gate).
     if (body.settings.bookingMode === 'inapp' && !integrations.booking.selected()) throw new HttpError(409, 'conflict', 'In-app booking needs a booking connection that doesn’t exist yet. It stays on hand-off to Fresha.');
+    // D-QA-04: card payments are always on.
+    if (!body.settings.paymentMethods.card) throw new HttpError(400, 'validation_failed', 'Card payments are always on.');
     if (body.settings.slotHoldWarningMinutes >= body.settings.slotHoldMinutes) throw new HttpError(400, 'validation_failed', 'The hold warning must come before the hold ends.');
     return db.transaction(async (tx) => {
       const before = await lockSettings(tx, body.version);
@@ -435,6 +437,8 @@ export function registerOpsRoutes(app: FastifyInstance, { now }: { now: () => nu
     const body = pushCreateSchema.parse(request.body);
     const t = now();
     const sendAt = body.sendAt ? Date.parse(body.sendAt) : t;
+    // ST-4: a scheduled message with no time, or a time already gone, is a typo, never "send now".
+    if (body.scheduled && (!body.sendAt || sendAt <= t)) throw new HttpError(400, 'validation_failed', 'Choose a send time in the future.');
     if (sendAt < t - 60_000 || sendAt > t + 90 * DAY) throw new HttpError(400, 'validation_failed', 'Choose a send time within the next 90 days.');
     return db.transaction(async (tx) => {
       const [dup] = await tx.query<PushRow>('SELECT * FROM push_messages WHERE idempotency_key = $1', [body.idempotencyKey]);

@@ -5,7 +5,8 @@ import { SignInGate } from '../../../auth/SignInGate';
 import { useInbox } from '../../../account/queries';
 import { Banner, Button, EmptyState, ListGroup, ListRow, Screen, Skeleton } from '../../../components';
 import { t } from '../../../i18n';
-import { clinicDateTime } from '../../../i18n/format';
+import { clinicDate } from '../../../i18n/format';
+import { inboxIcon, inboxSummary } from '../../../account/inbox';
 import { useSettings } from '../../../settings/useSettings';
 
 /** `/account/inbox` — ACC-04 (list, empty). Messages stay here after a push is dismissed (NOTIF 05). */
@@ -40,7 +41,7 @@ function List() {
   const { items } = inbox.data;
   if (!items.length) {
     return (
-      <EmptyState icon="chat-circle-text" title={t('inbox.empty.title')}>
+      <EmptyState icon="envelope-simple" title={t('inbox.empty.title')}>
         {t('inbox.empty.body')}
       </EmptyState>
     );
@@ -48,9 +49,9 @@ function List() {
   const row = (m: InboxItem) => (
     <ListRow
       key={m.id}
-      icon={m.read ? 'check-circle' : 'bell'}
+      icon={inboxIcon(m.href)}
       title={m.title}
-      subtitle={clinicDateTime(m.createdAt, zone)}
+      subtitle={`${inboxSummary(m)} · ${clinicDate(m.createdAt, zone)}`}
       onPress={() => router.push(`/account/inbox/${m.id}` as Href)}
     />
   );

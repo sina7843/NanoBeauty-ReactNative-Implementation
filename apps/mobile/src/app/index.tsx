@@ -2,7 +2,10 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { loadPendingHandoff } from '../booking/pendingHandoff';
-import { loadPendingPayment } from '../payments/pendingPayment';
+import { attemptSchema } from '@nano/contracts';
+import { ApiError } from '../api/client';
+import { useAuth } from '../auth/AuthProvider';
+import { resumablePayment } from '../payments/pendingPayment';
 import { Button, EmptyState, Logo } from '../components';
 import { EntryLayout } from '../entry/GateScreens';
 import { markPrimerSeen, useEntry } from '../entry/useEntry';
@@ -25,9 +28,20 @@ export default function Entry() {
  */
 function Resume() {
   const router = useRouter();
+  const { status, session } = useAuth();
   useEffect(() => {
+    if (status === 'loading') return;
     let active = true;
-    Promise.all([loadPendingHandoff(), loadPendingPayment()]).then(([handoff, payment]) => {
+    // WP-1: only an attempt the server still reports as processing comes back; anything else is dropped.
+    const attemptStatus = async (id: string) => {
+      try {
+        return attemptSchema.parse((await session.authed(`/v1/payments/attempts/${encodeURIComponent(id)}`)).body).status;
+      } catch (e) {
+        if (e instanceof ApiError && e.code === 'not_found') return null;
+        throw e;
+      }
+    };
+    Promise.all([loadPendingHandoff(), resumablePayment(attemptStatus)]).then(([handoff, payment]) => {
       if (!active) return;
       router.replace('/home');
       // An interrupted payment is checked with the provider first (PAY-03 promise), then an interrupted hand-off.
@@ -37,7 +51,7 @@ function Resume() {
     return () => {
       active = false;
     };
-  }, [router]);
+  }, [router, status, session]);
   return <Splash />;
 }
 

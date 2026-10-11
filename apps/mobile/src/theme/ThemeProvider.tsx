@@ -11,7 +11,7 @@ export interface Theme {
   colors: Colors;
   type: (name: TypographyName) => TextStyle;
   strong: TextStyle;
-  /** Brand font faces that actually loaded (the rest use system fallbacks). */
+  /** Brand font faces loaded before the app rendered (all six; see fonts.ts). */
   fonts: ReadonlySet<string>;
   elevation: { card: object; overlay: object };
 }
@@ -25,10 +25,10 @@ export function makeTheme(scheme: Scheme, fonts: ReadonlySet<string>): Theme {
     colors: themes[scheme],
     type: (name) => {
       let style = cache.get(name);
-      if (!style) cache.set(name, (style = resolveTypography(name, fonts)));
+      if (!style) cache.set(name, (style = resolveTypography(name)));
       return style;
     },
-    strong: strongFace(fonts),
+    strong: strongFace(),
     fonts,
     elevation: { card: elevation.card[scheme], overlay: elevation.overlay[scheme] },
   };

@@ -2,6 +2,14 @@ import type { Channel, InboxItem, NtfId } from '@nano/contracts';
 
 // NANO-09 notification templates (spec 3). One registry: inbox wording, push/text/email copy and channels.
 
+/** House date style "Thu 16 Oct, 2:30 pm" in the clinic's time zone (same as the app). */
+export function formatWhen(date: Date, timeZone: string): string {
+  const p = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true }).formatToParts(date).map((x) => [x.type, x.value]),
+  );
+  return `${p.weekday} ${p.day} ${p.month}, ${p.hour}:${p.minute} ${String(p.dayPeriod).toLowerCase()}`;
+}
+
 /** Inbox wording per customer notification template (ACC-04/05). Unknown templates are not shown. */
 export const INBOX: Record<string, (d: Record<string, string>) => Omit<InboxItem, 'id' | 'createdAt' | 'read'>> = {
   visit_request_submitted: (d) => ({
@@ -30,22 +38,22 @@ export const INBOX: Record<string, (d: Record<string, string>) => Omit<InboxItem
   }),
   payment_receipt: (d) => ({
     title: 'Payment received',
-    body: `Reference ${d.reference}. Your receipt is in your Wallet.`,
+    body: `Receipt: ${d.amount ? `${d.amount} ` : ''}${d.item ? `for ${d.item}. ` : ''}Reference ${d.reference}.`,
     href: d.orderId ? `/pay/receipt/${d.orderId}` : null,
     hrefLabel: d.orderId ? 'View receipt' : null,
   }),
   refund_status: (d) => ({
-    title: d.status === 'succeeded' ? 'Refund sent' : 'Refund didn’t go through',
+    title: d.status === 'succeeded' ? 'Refund on its way' : 'Refund didn’t go through',
     body:
       d.status === 'succeeded'
-        ? `Reference ${d.reference}. It can take up to 5 business days to show on your statement.`
+        ? `Your ${d.amount ?? ''} refund is on its way. It can take 5 to 10 business days to show.`.replace('Your  refund', 'Your refund')
         : `Reference ${d.reference}. The clinic will contact you; nothing has been lost.`,
-    href: d.orderId ? `/pay/receipt/${d.orderId}` : null,
-    hrefLabel: d.orderId ? 'View receipt' : null,
+    href: '/wallet/history',
+    hrefLabel: 'See history',
   }),
   gift_scheduled: (d) => ({
-    title: `Gift card for ${d.name}`,
-    body: 'Paid. We’ll text it at the time you chose.',
+    title: 'Gift scheduled',
+    body: `Your gift for ${d.name} is scheduled for ${d.when}. We’ll tell you when it’s delivered.`,
     href: d.instrumentId ? `/wallet/gift-cards/${d.instrumentId}` : null,
     hrefLabel: 'See the gift',
   }),
@@ -62,22 +70,22 @@ export const INBOX: Record<string, (d: Record<string, string>) => Omit<InboxItem
     hrefLabel: 'See the gift',
   }),
   'NTF-09.package_session_used': (d) => ({
-    title: 'Package session used',
-    body: `${d.label}${d.reference ? ` · ${d.reference}` : ''}.`,
+    title: 'Session used',
+    body: `${d.label}: ${d.sessions || 1} session${(d.sessions || '1') === '1' ? '' : 's'} used today.${d.left ? ` ${d.left} of ${d.total} left${d.until ? `, valid until ${d.until}` : ''}.` : ''}`,
     href: d.instrumentId ? `/wallet/packages/${d.instrumentId}` : null,
     hrefLabel: 'See your package',
   }),
   value_used: (d) => ({
     title: 'Balance used at your visit',
-    body: `${d.label}${d.reference ? ` · ${d.reference}` : ''}.`,
+    body: `${d.amount ? `${d.amount} used from ` : ''}${d.label}${d.reference ? ` · ${d.reference}` : ''}.`,
     href: '/wallet',
     hrefLabel: 'Open Wallet',
   }),
   'NTF-10.support_reply': (d) => ({
-    title: 'The clinic replied',
+    title: 'New reply from Nano Beauty',
     body: `Reference ${d.reference}. ${d.message}`,
-    href: '/support',
-    hrefLabel: 'Ask another question',
+    href: d.id ? `/account/inbox/${d.id}` : '/account/inbox',
+    hrefLabel: 'Read the reply',
   }),
   gift_voided: () => ({
     title: 'A gift card was cancelled',
@@ -96,8 +104,8 @@ export const INBOX: Record<string, (d: Record<string, string>) => Omit<InboxItem
 /** Copy for the NANO-09 triggers (visit seen/changed/cancelled in the Fresha read-back, app reminders). */
 Object.assign(INBOX, {
   'NTF-01.booking_confirmed': (d: Record<string, string>) => ({
-    title: 'Booking confirmed',
-    body: `${d.service}, ${d.when}. See you then.`,
+    title: 'You’re booked',
+    body: `You’re booked: ${d.service}, ${d.when}. See details and prep in the app.`,
     href: d.visitId ? `/visits/${d.visitId}` : null,
     hrefLabel: 'See your visit',
   }),
@@ -108,8 +116,8 @@ Object.assign(INBOX, {
     hrefLabel: 'See your visit',
   }),
   'NTF-03.visit_changed': (d: Record<string, string>) => ({
-    title: 'Your visit changed',
-    body: `${d.service} is now ${d.when}.`,
+    title: 'Your visit moved',
+    body: `Your visit moved to ${d.when}. ${d.service}.`,
     href: d.visitId ? `/visits/${d.visitId}` : null,
     hrefLabel: 'See your visit',
   }),
@@ -123,8 +131,12 @@ Object.assign(INBOX, {
 
 /** Staff push copy (NTF-11, NTF-12 and the staff alerts). Opens the screen that needs them. */
 export const STAFF_COPY: Record<string, (d: Record<string, string>) => { title: string; body: string; href: string }> = {
-  'NTF-11.request_needs_you': (d) => ({ title: 'A request needs you', body: `Reference ${d.reference ?? ''}`.trim(), href: d.requestId ? `/staff/requests/${d.requestId}` : '/staff/today' }),
-  'NTF-12.approval_needed': (d) => ({ title: 'Approval needed', body: d.item ?? '', href: '/staff/approvals' }),
+  'NTF-11.request_needs_you': (d) => ({
+    title: 'New request',
+    body: d.what ? `New request: ${d.who || 'A client'} wants to ${d.what}${d.when ? ` ${d.when}` : ''}. Reference ${d.reference ?? ''}`.trim() : `Reference ${d.reference ?? ''}`.trim(),
+    href: d.requestId ? `/staff/requests/${d.requestId}` : '/staff/today',
+  }),
+  'NTF-12.approval_needed': (d) => ({ title: 'Approval needed', body: `${d.who ? `${d.who} submitted` : 'Submitted:'} ${d.item ?? ''}. Review before it goes live.`, href: '/staff/approvals' }),
   approval_approved: (d) => ({ title: 'Published', body: d.item ?? '', href: '/staff' }),
   approval_sent_back: (d) => ({ title: 'Sent back to you', body: `${d.item ?? ''}${d.reason ? `: ${d.reason}` : ''}`, href: '/staff' }),
   approval_withdrawn: (d) => ({ title: 'Approval withdrawn', body: d.item ?? '', href: '/staff/approvals' }),

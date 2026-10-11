@@ -19,7 +19,7 @@
 - Do not invent Fresha APIs or live provider credentials.
 - Do not read or create real secret files. Use `.env.example`; the user creates local `.env` via `06-CREATE-LOCAL-ENV.cmd` when needed.
 - Treat `Requirements.md`, `IMPLEMENTATION_DECISIONS.md`, `CLAUDE.md`, `.claude/`, `tools/`, `prompts/`, and `reference/` as protected source material unless a prompt explicitly says to update project status/traceability documents.
-- Font binaries are owner-supplied local assets and are not included in this starter; never download or commit substitute proprietary font files automatically.
+- Brand fonts (D-QA-02): the six owner-supplied TTFs in `apps/mobile/assets/fonts/` (OFL) are committed and required in every build; no system-font fallback. Never download or substitute other font files.
 - Keep iOS and Android behavior correct: safe areas, keyboard, native back, predictive back, accessibility, text scaling, reduced motion and deep links.
 - Prefer Expo-compatible modules. Introduce custom native code only when a required capability cannot be met otherwise and document the reason.
 - Run checks relevant to changed scope; never claim a test/build passed unless it actually ran.

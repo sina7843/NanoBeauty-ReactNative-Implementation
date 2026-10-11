@@ -5,9 +5,11 @@ import {
   orderSchema,
   receiptSchema,
   walletSchema,
+  type HistoryItem,
 } from '@nano/contracts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
+import { Platform } from 'react-native';
 import type { z } from 'zod';
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
@@ -45,8 +47,19 @@ export function useWallet() {
   });
 }
 
+/** WP-10: WAL-06 "Show" filter. The server ids are `order:…` (payments), `refund:…` and `ledger:…` (wallet moves). */
+export type HistoryFilter = 'all' | 'payments' | 'refunds';
+export function historyKind(h: Pick<HistoryItem, 'id'>): 'payment' | 'refund' | 'move' {
+  return h.id.startsWith('order:') ? 'payment' : h.id.startsWith('refund:') ? 'refund' : 'move';
+}
+export function filterHistory<T extends Pick<HistoryItem, 'id'>>(items: T[], filter: HistoryFilter): T[] {
+  if (filter === 'all') return items;
+  const kind = filter === 'payments' ? 'payment' : 'refund';
+  return items.filter((h) => historyKind(h) === kind);
+}
+
 export const useInstrument = (id: string | undefined) => useAuthed(['wallet', 'instrument', id], `/v1/wallet/instruments/${encodeURIComponent(id ?? '')}`, instrumentDetailSchema, !!id);
 export const useHistory = () => useAuthed(['wallet', 'history'], '/v1/wallet/history', historyResponseSchema);
 export const useOrder = (id: string | undefined) => useAuthed(['order', id], `/v1/orders/${encodeURIComponent(id ?? '')}`, orderSchema, !!id);
-export const useMethods = (orderId: string | undefined) => useAuthed(['methods', orderId], `/v1/orders/${encodeURIComponent(orderId ?? '')}/methods`, methodsResponseSchema, !!orderId);
+export const useMethods = (orderId: string | undefined) => useAuthed(['methods', orderId], `/v1/orders/${encodeURIComponent(orderId ?? '')}/methods?platform=${Platform.OS === 'ios' ? 'ios' : 'android'}`, methodsResponseSchema, !!orderId);
 export const useReceipt = (orderId: string | undefined) => useAuthed(['receipt', orderId], `/v1/receipts/${encodeURIComponent(orderId ?? '')}`, receiptSchema, !!orderId);

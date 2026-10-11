@@ -54,6 +54,12 @@ import { CaretUpIcon } from 'phosphor-react-native/src/icons/CaretUp';
 import { CalendarXIcon } from 'phosphor-react-native/src/icons/CalendarX';
 import { CheckSquareIcon } from 'phosphor-react-native/src/icons/CheckSquare';
 import { SquareIcon } from 'phosphor-react-native/src/icons/Square';
+import { AppleLogoIcon } from 'phosphor-react-native/src/icons/AppleLogo';
+import { GoogleLogoIcon } from 'phosphor-react-native/src/icons/GoogleLogo';
+import { SparkleIcon } from 'phosphor-react-native/src/icons/Sparkle';
+import { EnvelopeSimpleIcon } from 'phosphor-react-native/src/icons/EnvelopeSimple';
+import { ShieldCheckIcon } from 'phosphor-react-native/src/icons/ShieldCheck';
+import { SignOutIcon } from 'phosphor-react-native/src/icons/SignOut';
 import { useTheme } from '../theme/ThemeProvider';
 
 // Names follow Phosphor (and the handover boards). Add an import + entry when a screen needs a new one.
@@ -110,6 +116,12 @@ const ICONS = {
   'calendar-x': CalendarXIcon,
   'check-square': CheckSquareIcon,
   square: SquareIcon,
+  'apple-logo': AppleLogoIcon,
+  'google-logo': GoogleLogoIcon,
+  sparkle: SparkleIcon,
+  'envelope-simple': EnvelopeSimpleIcon,
+  'shield-check': ShieldCheckIcon,
+  'sign-out': SignOutIcon,
 } satisfies Record<string, PhosphorIcon>;
 
 export type IconName = keyof typeof ICONS;

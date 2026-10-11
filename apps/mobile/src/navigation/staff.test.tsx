@@ -137,7 +137,7 @@ describe('staff access (D34, STF-01, STF-14)', () => {
 describe('service editing (STF-03, STF-09, D35)', () => {
   it('saves with the version it was based on; a stale save shows the conflict state and overwrites nothing', async () => {
     me = { roles: ['Editor'], permissions: EDITOR_PERMS };
-    scriptApi({ 'PUT /v1/staff/services/svc_hifu/draft': () => ({ status: 409, body: envelope('conflict') }) });
+    scriptApi({ 'PUT /v1/staff/services/svc_hifu/draft': () => ({ status: 409, body: envelope('conflict', { message: 'Someone else changed this. Load the latest version to continue.' }) }) });
     renderRouter(APP_DIR, { initialUrl: '/staff/services/svc_hifu' });
     fireEvent.changeText(await screen.findByLabelText('Price (CAD)'), '320');
     expect(screen.queryByRole('button', { name: 'Publish' })).toBeNull(); // an Editor never sees Publish
@@ -225,9 +225,9 @@ describe('import (STF-41/42)', () => {
     expect(calls.find((c) => c.key === 'POST /v1/staff/imports')!.body).toMatchObject({ filename: 'fresha-services-sep.csv', csv: expect.stringContaining('HydraFacial') });
     fireEvent.press(screen.getByRole('button', { name: 'Review 3 services' }));
     await waitFor(() => expect(router.getPathname()).toBe('/staff/import/review'));
-    expect(await screen.findByText('Resolve 1 duplicates')).toBeTruthy();
+    expect(await screen.findByText('Resolve duplicates first')).toBeTruthy();
     fireEvent.press(screen.getByRole('togglebutton', { name: 'Skip' }));
-    await waitFor(() => expect(screen.queryByText('Resolve 1 duplicates')).toBeNull());
+    await waitFor(() => expect(screen.queryByText('Resolve duplicates first')).toBeNull());
     fireEvent.press(screen.getByRole('button', { name: 'Publish 2' }));
     expect(await screen.findByText('Catalogue published')).toBeTruthy();
   });
@@ -262,7 +262,10 @@ describe('team and audit (STF-12/13)', () => {
       }),
     });
     renderRouter(APP_DIR, { initialUrl: '/staff/audit' });
-    expect(await screen.findByText('Naz Staff · service:svc_hifu')).toBeTruthy();
-    expect(screen.getByText(/price: \$250 → \$320 · published/)).toBeTruthy();
+    // ST-24: readable item names, not raw keys.
+    expect(await screen.findByText('Naz Staff Treatment · Hifu')).toBeTruthy();
+    expect(screen.queryByText(/service:svc_hifu/)).toBeNull();
+    expect(screen.getByText('Price: $250 → $320')).toBeTruthy();
+    expect(screen.getByText('Reason: “published”')).toBeTruthy();
   });
 });

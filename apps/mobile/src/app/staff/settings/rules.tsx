@@ -2,9 +2,10 @@ import type { Features, Settings } from '@nano/contracts';
 import { space } from '@nano/design-tokens';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Banner, Button, SegmentedControl, Skeleton, Switch, Text, TextField } from '../../../components';
+import { Banner, Button, Card, SegmentedControl, Skeleton, Switch, Text, TextField } from '../../../components';
 import { t } from '../../../i18n';
 import { useIsOnline } from '../../../lib/network';
+import { centsOf, typeMoney } from '../../../staff/money';
 import { SettingsBanners } from '../../../staff/SettingsChrome';
 import { StaffScreen } from '../../../staff/StaffScreen';
 import { useSettingsSave } from '../../../staff/useSettingsSave';
@@ -19,9 +20,10 @@ const METHODS = [
   ['affirm', 'Affirm'],
 ] as const;
 const num = (v: string, fallback = 0) => {
-  const n = Number(v.replace(/[$,\s]/g, ''));
-  return Number.isFinite(n) ? n : fallback;
+  const c = centsOf(v);
+  return c === null ? fallback : c / 100;
 };
+const hoursOf = (v: string) => v.split(',').map((x) => Number.parseInt(x.trim(), 10)).filter((n) => n > 0 && n <= 168).slice(0, 3);
 
 /**
  * `/staff/settings/rules` — STF-32. Booking rules (A1–A8), payment switches, second approver and feature flags. Saved
@@ -33,15 +35,69 @@ export default function Rules() {
   const [form, setForm] = useState<{ settings: Settings; features: Features } | null>(null);
   const f = form ?? (s.settings ? { settings: s.settings.settings, features: s.settings.features } : null);
   const ro = online === false;
-  const set = (patch: Partial<Settings>) => f && setForm({ ...f, settings: { ...f.settings, ...patch } });
+  // Text while typing (ST-1, ST-13): money keeps "25." and "49.9"; the reminder list keeps commas and spaces. Parsed on save.
+  const [raw, setRaw] = useState<Record<string, string>>({});
+  const set = (patch: Partial<Settings>) => {
+    s.pin();
+    if (f) setForm({ ...f, settings: { ...f.settings, ...patch } });
+  };
+  const money = (key: string, label: string, value: number, apply: (n: number) => void) => (
+    <TextField
+      label={label}
+      value={raw[key] ?? String(value)}
+      onChangeText={(v) => {
+        const text = typeMoney(v);
+        setRaw({ ...raw, [key]: text });
+        apply(num(text));
+      }}
+      keyboardType="decimal-pad"
+      disabled={ro}
+    />
+  );
   const outcome = (label: string, key: 'lateCancelOutcome' | 'lateChangeOutcome' | 'noShowOutcome') =>
     f ? (
       <SegmentedControl label={label} options={OUTCOMES.map((o) => t(`rules.outcome.${o}`))} value={t(`rules.outcome.${f.settings[key]}`)} onChange={(v) => !ro && set({ [key]: OUTCOMES.find((o) => t(`rules.outcome.${o}`) === v)! })} />
     ) : null;
 
+  const saveButton = f ? (
+      <Button
+        loading={s.busy}
+        disabled={ro}
+        onPress={async () => {
+          const { bookingMode, deposit, freeChangeHours, lateCancelOutcome, lateChangeOutcome, noShowOutcome, slotHoldMinutes, slotHoldWarningMinutes, paymentMethods, financingLine, consultation, secondApprover, ratingLine, deletionGraceDays, reminderSender, reminderHours, quietHours } = f.settings;
+          const ok = await s.save({
+            settings: { bookingMode, deposit, freeChangeHours, lateCancelOutcome, lateChangeOutcome, noShowOutcome, slotHoldMinutes, slotHoldWarningMinutes, paymentMethods: { ...paymentMethods, card: true }, financingLine, consultation, secondApprover, ratingLine, deletionGraceDays, reminderSender, reminderHours, quietHours },
+            features: f.features,
+          });
+          if (ok) {
+            setForm(null);
+            setRaw({});
+          }
+        }}
+      >
+        {t('stf.save')}
+      </Button>
+  ) : null;
+  const aside = f ? (
+    <>
+      <Card>
+        <Text variant="overline" tone="inkMuted">
+          {t('rules.summary')}
+        </Text>
+        <Text variant="body">{f.settings.deposit ? t('rules.sumDeposit', { amount: f.settings.deposit.amountCAD, over: f.settings.deposit.overCAD }) : t('rules.sumNoDeposit')}</Text>
+        <Text variant="body">{t('rules.sumFree', { hours: f.settings.freeChangeHours })}</Text>
+        <Text variant="body">{t('rules.sumHold', { minutes: f.settings.slotHoldMinutes })}</Text>
+        <Text variant="caption" tone="inkMuted">
+          {t('rules.sumNote')}
+        </Text>
+      </Card>
+      {saveButton}
+    </>
+  ) : null;
+
   return (
-    <StaffScreen title={t('stf.rules')}>
-      <SettingsBanners problem={ro ? 'offline' : s.problem} notice={s.notice} reload={() => (setForm(null), s.reload())} />
+    <StaffScreen title={t('stf.rules')} aside={aside}>
+      <SettingsBanners problem={ro ? 'offline' : s.problem} message={s.message} notice={s.notice} reload={() => (setForm(null), setRaw({}), s.reload())} />
       {f ? (
         <>
           <Text variant="headline">{t('rules.booking')}</Text>
@@ -50,10 +106,10 @@ export default function Rules() {
           {f.settings.deposit ? (
             <View style={styles.row}>
               <View style={styles.flex}>
-                <TextField label={t('rules.depositAmount')} value={String(f.settings.deposit.amountCAD)} onChangeText={(v) => set({ deposit: { ...f.settings.deposit!, amountCAD: num(v) } })} keyboardType="decimal-pad" disabled={ro} />
+                {money('depositAmount', t('rules.depositAmount'), f.settings.deposit.amountCAD, (n) => set({ deposit: { ...f.settings.deposit!, amountCAD: n } }))}
               </View>
               <View style={styles.flex}>
-                <TextField label={t('rules.depositOver')} value={String(f.settings.deposit.overCAD)} onChangeText={(v) => set({ deposit: { ...f.settings.deposit!, overCAD: num(v) } })} keyboardType="decimal-pad" disabled={ro} />
+                {money('depositOver', t('rules.depositOver'), f.settings.deposit.overCAD, (n) => set({ deposit: { ...f.settings.deposit!, overCAD: n } }))}
               </View>
             </View>
           ) : null}
@@ -69,7 +125,7 @@ export default function Rules() {
               <TextField label={t('rules.holdWarning')} value={String(f.settings.slotHoldWarningMinutes)} onChangeText={(v) => set({ slotHoldWarningMinutes: Math.trunc(num(v)) })} keyboardType="number-pad" disabled={ro} />
             </View>
           </View>
-          <TextField label={t('rules.consultation')} value={String(f.settings.consultation.priceCAD)} onChangeText={(v) => set({ consultation: { ...f.settings.consultation, priceCAD: num(v) } })} keyboardType="decimal-pad" disabled={ro} />
+          {money('consultation', t('rules.consultation'), f.settings.consultation.priceCAD, (n) => set({ consultation: { ...f.settings.consultation, priceCAD: n } }))}
           <Switch label={t('rules.consultationCredited')} value={f.settings.consultation.credited} disabled={ro} onValueChange={(v) => set({ consultation: { ...f.settings.consultation, credited: v } })} />
 
           <Text variant="headline">{t('rules.reminders')}</Text>
@@ -85,11 +141,13 @@ export default function Rules() {
           {f.settings.reminderSender === 'app' ? (
             <TextField
               label={t('rules.reminderHours')}
-              value={f.settings.reminderHours.join(', ')}
+              value={raw.reminderHours ?? f.settings.reminderHours.join(', ')}
               onChangeText={(v) => {
-                const hours = v.split(',').map((x) => Number.parseInt(x.trim(), 10)).filter((n) => n > 0 && n <= 168).slice(0, 3);
+                setRaw({ ...raw, reminderHours: v });
+                const hours = hoursOf(v);
                 if (hours.length) set({ reminderHours: hours });
               }}
+              onBlur={() => setRaw(({ reminderHours: _drop, ...rest }) => rest)}
               keyboardType="numbers-and-punctuation"
               disabled={ro}
             />
@@ -104,37 +162,28 @@ export default function Rules() {
           </View>
 
           <Text variant="headline">{t('rules.payments')}</Text>
-          {METHODS.map(([key, label]) => (
-            <Switch key={key} label={label} value={f.settings.paymentMethods[key]} disabled={ro} onValueChange={(v) => set({ paymentMethods: { ...f.settings.paymentMethods, [key]: v } })} />
-          ))}
+          {METHODS.map(([key, label]) =>
+            key === 'card' ? (
+              // D-QA-04: card payments are always on; the row is locked.
+              <Switch key={key} label={label} value locked onValueChange={() => undefined} />
+            ) : (
+              <Switch key={key} label={label} value={f.settings.paymentMethods[key]} disabled={ro} onValueChange={(v) => set({ paymentMethods: { ...f.settings.paymentMethods, [key]: v } })} />
+            ),
+          )}
           <Switch label={t('rules.financing')} value={f.settings.financingLine.on} disabled={ro} onValueChange={(v) => set({ financingLine: { ...f.settings.financingLine, on: v } })} />
-          {f.settings.financingLine.on ? (
-            <TextField label={t('rules.financingMin')} value={String(f.settings.financingLine.minCAD)} onChangeText={(v) => set({ financingLine: { ...f.settings.financingLine, minCAD: num(v) } })} keyboardType="decimal-pad" disabled={ro} />
-          ) : null}
+          {f.settings.financingLine.on
+            ? money('financingMin', t('rules.financingMin'), f.settings.financingLine.minCAD, (n) => set({ financingLine: { ...f.settings.financingLine, minCAD: n } }))
+            : null}
 
           <Text variant="headline">{t('rules.approvals')}</Text>
           <Switch label={t('rules.secondApprover')} detail={t('rules.secondApproverSub')} value={f.settings.secondApprover.on} disabled={ro} onValueChange={(v) => set({ secondApprover: { ...f.settings.secondApprover, on: v } })} />
 
           <Text variant="headline">{t('rules.features')}</Text>
-          <Switch label={t('rules.membership')} detail={t('rules.membershipSub')} value={f.features.legacyMembership} disabled={ro} onValueChange={(v) => setForm({ ...f, features: { ...f.features, legacyMembership: v } })} />
+          <Switch label={t('rules.membership')} detail={t('rules.membershipSub')} value={f.features.legacyMembership} disabled={ro} onValueChange={(v) => (s.pin(), setForm({ ...f, features: { ...f.features, legacyMembership: v } }))} />
           <Switch label={t('rules.rating')} value={f.settings.ratingLine.on} disabled={ro} onValueChange={(v) => set({ ratingLine: { ...f.settings.ratingLine, on: v } })} />
           <TextField label={t('rules.graceDays')} value={String(f.settings.deletionGraceDays)} onChangeText={(v) => set({ deletionGraceDays: Math.trunc(num(v)) })} keyboardType="number-pad" disabled={ro} />
           {f.settings.sample ? <Banner tone="info" title={t('home.sampleRules')} /> : null}
 
-          <Button
-            loading={s.busy}
-            disabled={ro}
-            onPress={async () => {
-              const { bookingMode, deposit, freeChangeHours, lateCancelOutcome, lateChangeOutcome, noShowOutcome, slotHoldMinutes, slotHoldWarningMinutes, paymentMethods, financingLine, consultation, secondApprover, ratingLine, deletionGraceDays, reminderSender, reminderHours, quietHours } = f.settings;
-              const ok = await s.save({
-                settings: { bookingMode, deposit, freeChangeHours, lateCancelOutcome, lateChangeOutcome, noShowOutcome, slotHoldMinutes, slotHoldWarningMinutes, paymentMethods, financingLine, consultation, secondApprover, ratingLine, deletionGraceDays, reminderSender, reminderHours, quietHours },
-                features: f.features,
-              });
-              if (ok) setForm(null);
-            }}
-          >
-            {t('stf.save')}
-          </Button>
         </>
       ) : (
         <Skeleton lines={8} media={false} />

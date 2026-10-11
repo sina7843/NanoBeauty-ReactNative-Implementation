@@ -1,54 +1,40 @@
 import { fontFamily, typography } from '@nano/design-tokens';
 import * as Font from 'expo-font';
-import { Platform, type TextStyle } from 'react-native';
+import type { TextStyle } from 'react-native';
 
-// Brand fonts are owner-supplied (assets/fonts/README.md). The app must run without them, so files are
-// discovered at bundle time and loaded at runtime; anything missing keeps a system fallback.
+// D-QA-02: the six brand fonts are committed (assets/fonts) and always used. No system-font fallback.
+// Static require() so Metro bundles them; app.config.ts also embeds them natively through the expo-font plugin.
 export const BRAND_FONTS: readonly string[] = [...Object.values(fontFamily.serif), ...Object.values(fontFamily.sans)];
 
-declare const require: {
-  context?: (dir: string, recursive: boolean, filter: RegExp) => { keys(): string[]; (key: string): number };
+const FONT_FILES: Record<string, number> = {
+  'Fraunces-Light': require('../../assets/fonts/Fraunces-Light.ttf'),
+  'Fraunces-Regular': require('../../assets/fonts/Fraunces-Regular.ttf'),
+  'Fraunces-Italic': require('../../assets/fonts/Fraunces-Italic.ttf'),
+  'Sora-Regular': require('../../assets/fonts/Sora-Regular.ttf'),
+  'Sora-Medium': require('../../assets/fonts/Sora-Medium.ttf'),
+  'Sora-SemiBold': require('../../assets/fonts/Sora-SemiBold.ttf'),
 };
 
-function discoverFontFiles(): Record<string, number> {
-  const found: Record<string, number> = {};
-  if (typeof require.context !== 'function') return found; // Jest and other non-Metro runtimes
-  const ctx = require.context('../../assets/fonts', false, /\.ttf$/);
-  for (const key of ctx.keys()) {
-    const name = key.replace(/^\.\//, '').replace(/\.ttf$/, '');
-    if (BRAND_FONTS.includes(name)) found[name] = ctx(key);
-  }
-  return found;
-}
+const ALL_FONTS: ReadonlySet<string> = new Set(BRAND_FONTS);
 
-/** Loads whichever brand fonts are present. Never throws: a broken file just means fallback. */
+/** Loads all six faces. Rejects (red box in development) when any is missing or fails: never a silent fallback. */
 export async function loadBrandFonts(): Promise<ReadonlySet<string>> {
-  const files = discoverFontFiles();
-  if (Object.keys(files).length > 0) {
-    await Font.loadAsync(files).catch(() => undefined);
-  }
-  return new Set(BRAND_FONTS.filter((name) => Font.isLoaded(name)));
+  const missing = BRAND_FONTS.filter((name) => FONT_FILES[name] == null);
+  if (missing.length > 0) throw new Error(`Brand font files missing from fonts.ts: ${missing.join(', ')}`);
+  await Font.loadAsync(FONT_FILES);
+  const notLoaded = BRAND_FONTS.filter((name) => !Font.isLoaded(name));
+  if (notLoaded.length > 0) throw new Error(`Brand fonts failed to load: ${notLoaded.join(', ')}`);
+  return ALL_FONTS;
 }
 
 export type TypographyName = keyof typeof typography;
 
-const SERIF_FALLBACK = Platform.select({ ios: 'Georgia', android: 'serif', default: undefined });
-const FALLBACK: Record<string, Pick<TextStyle, 'fontFamily' | 'fontWeight' | 'fontStyle'>> = {
-  'Fraunces-Light': { fontFamily: SERIF_FALLBACK, fontWeight: '300' },
-  'Fraunces-Regular': { fontFamily: SERIF_FALLBACK, fontWeight: '400' },
-  'Fraunces-Italic': { fontFamily: SERIF_FALLBACK, fontWeight: '400', fontStyle: 'italic' },
-  'Sora-Regular': { fontWeight: '400' },
-  'Sora-Medium': { fontWeight: '500' },
-  'Sora-SemiBold': { fontWeight: '600' },
-};
-
-/** Token style with the brand family when loaded, otherwise the documented system fallback. */
-export function resolveTypography(name: TypographyName, loaded: ReadonlySet<string>): TextStyle {
-  const { fontFamily: family, ...rest } = typography[name] as TextStyle & { fontFamily: string };
-  return loaded.has(family) ? { ...rest, fontFamily: family } : { ...rest, ...FALLBACK[family] };
+/** Token style: always the brand family (no system fallback). */
+export function resolveTypography(name: TypographyName): TextStyle {
+  return { ...typography[name] } as TextStyle;
 }
 
 /** Semibold face for emphasis inside a sans style, without a raw fontWeight on a custom family. */
-export function strongFace(loaded: ReadonlySet<string>): TextStyle {
-  return loaded.has('Sora-SemiBold') ? { fontFamily: 'Sora-SemiBold', fontWeight: undefined } : { fontWeight: '600' };
+export function strongFace(): TextStyle {
+  return { fontFamily: 'Sora-SemiBold', fontWeight: undefined };
 }

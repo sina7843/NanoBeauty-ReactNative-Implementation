@@ -7,7 +7,7 @@ import { useTheme } from '../theme/ThemeProvider';
 import { IconButton } from './Button';
 import { Icon, type IconName } from './Icon';
 
-export type BannerTone = 'info' | 'success' | 'warning' | 'danger' | 'offline';
+export type BannerTone = 'info' | 'success' | 'warning' | 'danger' | 'offline' | 'neutral';
 
 const ICON: Record<BannerTone, IconName> = {
   info: 'info',
@@ -15,6 +15,7 @@ const ICON: Record<BannerTone, IconName> = {
   warning: 'warning',
   danger: 'warning-circle',
   offline: 'wifi-slash',
+  neutral: 'info',
 };
 
 export interface BannerProps {
@@ -32,8 +33,9 @@ export interface BannerProps {
 export function Banner({ tone = 'info', title, children, action, onDismiss }: BannerProps) {
   const { colors } = useTheme();
   const key = tone === 'offline' ? 'info' : tone;
-  const soft = { info: colors.infoSoft, success: colors.successSoft, warning: colors.warningSoft, danger: colors.dangerSoft }[key];
-  const strong = colors[key];
+  // `neutral` (an ended state that is nobody's fault, WAL-03): muted surface, muted icon.
+  const soft = key === 'neutral' ? colors.surfaceMuted : { info: colors.infoSoft, success: colors.successSoft, warning: colors.warningSoft, danger: colors.dangerSoft }[key];
+  const strong = key === 'neutral' ? colors.inkMuted : colors[key];
   return (
     <View
       // One announced element unless it holds controls, which must stay individually reachable.
@@ -54,7 +56,7 @@ export function Banner({ tone = 'info', title, children, action, onDismiss }: Ba
         {typeof children === 'string' ? <Text variant="body">{children}</Text> : children}
         {action ? <View style={styles.action}>{action}</View> : null}
       </View>
-      {onDismiss ? <IconButton icon="x" label={t('common.dismiss')} onPress={onDismiss} /> : null}
+      {onDismiss ? <IconButton size="sm" icon="x" label={t('common.dismiss')} onPress={onDismiss} /> : null}
     </View>
   );
 }

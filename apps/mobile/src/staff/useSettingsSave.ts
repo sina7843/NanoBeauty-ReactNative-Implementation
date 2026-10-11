@@ -1,6 +1,6 @@
 import { settingsResultSchema } from '@nano/contracts';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { settingsQueryKey, useSettings } from '../settings/useSettings';
 import { problemOf, type SaveProblem } from './api';
@@ -16,6 +16,10 @@ export function useSettingsSave(path: string) {
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<SaveProblem | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  /** ST-10: the version the form was built from, pinned at the first edit so a background refetch can't win without a 409. */
+  const pinned = useRef<number | null>(null);
+  const current = settings.data?.data.version;
   const { refetch } = settings;
   useEffect(() => {
     refetch();
@@ -25,7 +29,13 @@ export function useSettingsSave(path: string) {
     busy,
     problem,
     notice,
+    message,
+    /** Call from every edit handler. */
+    pin: () => {
+      if (pinned.current === null && current !== undefined) pinned.current = current;
+    },
     reload: async () => {
+      pinned.current = null;
       setProblem(null);
       await refetch();
     },
@@ -34,13 +44,17 @@ export function useSettingsSave(path: string) {
       setBusy(true);
       setNotice(null);
       try {
-        const res = await session.authed(path, { method: 'PUT', body: { version: settings.data.data.version, ...body } });
+        const res = await session.authed(path, { method: 'PUT', body: { version: pinned.current ?? settings.data.data.version, ...body } });
         setNotice(settingsResultSchema.parse(res.body).notice);
         setProblem(null);
+        setMessage(null);
+        pinned.current = null;
         await queryClient.invalidateQueries({ queryKey: settingsQueryKey });
         return true;
       } catch (e) {
-        setProblem(problemOf(e).kind);
+        const p = problemOf(e);
+        setProblem(p.kind);
+        setMessage(p.message);
         return false;
       } finally {
         setBusy(false);

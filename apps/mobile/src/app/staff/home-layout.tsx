@@ -21,6 +21,7 @@ export default function HomeLayout() {
   const [edit, setEdit] = useState<{ offers: string[]; ratingLine: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<SaveProblem | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const v = view.data;
   const f = edit ?? (v ? { offers: v.offers, ratingLine: v.ratingLine } : null);
   const title = (id: string) => v?.candidates.find((c) => c.id === id)?.title ?? id;
@@ -36,7 +37,9 @@ export default function HomeLayout() {
       setProblem(null);
       toast({ tone: 'success', message: t('stf.saved') });
     } catch (e) {
-      setProblem(problemOf(e).kind);
+      const p = problemOf(e);
+      setProblem(p.kind);
+      setMessage(p.message);
     } finally {
       setBusy(false);
     }
@@ -44,7 +47,7 @@ export default function HomeLayout() {
 
   return (
     <StaffScreen title={t('stf.homeLayout')}>
-      <SettingsBanners problem={problem} notice={null} reload={() => (setEdit(null), setProblem(null), view.refetch())} />
+      <SettingsBanners problem={problem} message={message} notice={null} reload={() => (setEdit(null), setProblem(null), view.refetch())} />
       {f && v ? (
         <>
           <ListGroup header={t('home.offers')} footer={t('home.max')}>
@@ -91,7 +94,7 @@ export default function HomeLayout() {
             </Button>
           ) : (
             <Text variant="caption" tone="inkMuted">
-              {t('stf.editorSubmit')}
+              {t('home.readOnly')}
             </Text>
           )}
         </>

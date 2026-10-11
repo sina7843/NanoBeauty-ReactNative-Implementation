@@ -9,7 +9,7 @@ import { Badge, Banner, Button, Dialog, ListGroup, ListRow, Skeleton, Text, Text
 import { t } from '../../../i18n';
 import { clinicDate, clinicTime } from '../../../i18n/format';
 import { useSettings } from '../../../settings/useSettings';
-import { problemOf, useStaffQuery } from '../../../staff/api';
+import { useStaffQuery, problemText } from '../../../staff/api';
 import { StaffScreen } from '../../../staff/StaffScreen';
 
 type To = 'in_progress' | 'approved' | 'declined' | 'call_needed' | 'done';
@@ -29,6 +29,7 @@ export default function RequestDetail() {
   const detail = useStaffQuery(['request', id], `/v1/staff/requests/${id}`, requestDetailSchema, !!id);
   const [busy, setBusy] = useState<To | null>(null);
   const [declining, setDeclining] = useState(false);
+  const [calling, setCalling] = useState(false);
   const [reason, setReason] = useState('');
   const r = detail.data;
   const open = r && !['declined', 'done'].includes(r.status);
@@ -40,16 +41,16 @@ export default function RequestDetail() {
       await detail.refetch();
       queryClient.invalidateQueries({ queryKey: ['staff', 'today'] });
       setDeclining(false);
+      setCalling(false);
     } catch (e) {
-      const p = problemOf(e);
-      toast({ tone: 'warning', message: p.kind === 'conflict' ? t('stf.conflict') : t('error.body') });
+      toast({ tone: 'danger', message: problemText(e) });
     } finally {
       setBusy(null);
     }
   }
 
   return (
-    <StaffScreen title={t('req.detail')} back={{ to: '/staff/today', label: t('stf.today') }}>
+    <StaffScreen title={t('req.title')} back={{ to: '/staff/today', label: t('stf.today') }}>
       {r ? (
         <>
           <View style={styles.row}>
@@ -66,7 +67,8 @@ export default function RequestDetail() {
           </ListGroup>
           {open ? (
             <View style={styles.actions}>
-              {r.status !== 'approved' ? (
+              {/* ST-6: in hand-off mode nothing can be moved from here, so the customer must not be told "approved" first. */}
+              {!handoff && r.status !== 'approved' ? (
                 <Button loading={busy === 'approved'} onPress={() => move('approved')}>
                   {t('req.approve')}
                 </Button>
@@ -81,7 +83,7 @@ export default function RequestDetail() {
               </Button>
               {r.status !== 'approved' ? (
                 <>
-                  <Button variant="tertiary" loading={busy === 'call_needed'} onPress={() => move('call_needed')}>
+                  <Button variant="tertiary" disabled={r.status === 'call_needed'} onPress={() => setCalling(true)}>
                     {t('req.callNeeded')}
                   </Button>
                   <Button variant="tertiary" onPress={() => setDeclining(true)}>
@@ -99,6 +101,19 @@ export default function RequestDetail() {
       ) : (
         <Skeleton lines={5} media={false} />
       )}
+      <Dialog
+        visible={calling}
+        title={t('req.callTitle')}
+        confirmLabel={t('req.callNeeded')}
+        cancelLabel={t('common.cancel')}
+        loading={busy === 'call_needed'}
+        onConfirm={() => move('call_needed')}
+        onCancel={() => setCalling(false)}
+      >
+        <Text variant="body" tone="inkMuted">
+          {t('req.callBody', { name: r?.customer.name ?? '', phone: r?.customer.phone ?? '' })}
+        </Text>
+      </Dialog>
       <Dialog
         visible={declining}
         title={t('req.decline')}

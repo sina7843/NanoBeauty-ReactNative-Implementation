@@ -6,7 +6,8 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/AuthProvider';
 import { goToNext } from '../../auth/flow';
-import { Banner, Button, Text, TextField } from '../../components';
+import { useLeaveSignUp } from '../../auth/OnboardingGate';
+import { Banner, Button, Dialog, Text, TextField } from '../../components';
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -22,6 +23,7 @@ export default function ProfileScreen() {
   const [emailError, setEmailError] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const leave = useLeaveSignUp();
   if (status === 'guest') return <Redirect href="/auth/phone" />;
 
   const checkEmail = () => {
@@ -86,6 +88,17 @@ export default function ProfileScreen() {
           </Button>
         </View>
       </KeyboardAvoidingView>
+      <Dialog
+        visible={leave.asking}
+        title={t('aut.leave.title')}
+        confirmLabel={t('aut.leave.confirm')}
+        cancelLabel={t('aut.leave.stay')}
+        destructive
+        onConfirm={leave.leave}
+        onCancel={leave.stay}
+      >
+        {t('aut.leave.body')}
+      </Dialog>
     </SafeAreaView>
   );
 }

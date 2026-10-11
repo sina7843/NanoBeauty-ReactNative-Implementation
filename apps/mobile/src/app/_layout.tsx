@@ -11,7 +11,8 @@ import { t } from '../i18n';
 import { wireQueryToDevice } from '../lib/network';
 import { loadBrandFonts } from '../theme/fonts';
 import { ThemeProvider, useTheme } from '../theme/ThemeProvider';
-import { AuthProvider } from '../auth/AuthProvider';
+import { AuthProvider, useAuth } from '../auth/AuthProvider';
+import { OnboardingGate } from '../auth/OnboardingGate';
 import { getEnv } from '../config/env';
 import { Maintenance, UpdateRequired } from '../entry/GateScreens';
 import { useHardGate } from '../entry/useEntry';
@@ -64,6 +65,9 @@ function Navigator() {
   }, [colors.bg]);
   const devTools = getEnv().appVariant !== 'production';
   const gate = useHardGate();
+  const { status, me } = useAuth();
+  // FE-1: while sign-up is unfinished the sign-in modal can't be swiped away.
+  const onboarding = status === 'signedIn' && !!me && me.next !== 'done';
   if (gate) {
     return (
       <>
@@ -89,7 +93,7 @@ function Navigator() {
         {/* Modal stacks for booking and payment (phase-7 route map). */}
         <Stack.Screen name="book" options={{ headerShown: false, presentation: 'modal' }} />
         <Stack.Screen name="pay" options={{ headerShown: false, presentation: 'modal' }} />
-        <Stack.Screen name="auth" options={{ headerShown: false, presentation: 'modal' }} />
+        <Stack.Screen name="auth" options={{ headerShown: false, presentation: 'modal', gestureEnabled: !onboarding }} />
         {/* Staff workspace: its own StaffBar header (ADMIN 01/07). */}
         <Stack.Screen name="staff" options={{ headerShown: false }} />
         <Stack.Screen name="account/index" options={{ title: t('nav.account') }} />
@@ -118,13 +122,16 @@ export default function RootLayout() {
       }),
   );
 
+  const [fontError, setFontError] = useState<Error | null>(null);
   useEffect(() => {
-    loadBrandFonts().then(setFonts);
+    loadBrandFonts().then(setFonts, (e: unknown) => setFontError(e instanceof Error ? e : new Error(String(e))));
   }, []);
   useEffect(() => {
-    if (fonts) SplashScreen.hideAsync().catch(() => undefined);
-  }, [fonts]);
+    // Also on failure, so the development error screen isn't hidden behind the splash.
+    if (fonts || fontError) SplashScreen.hideAsync().catch(() => undefined);
+  }, [fonts, fontError]);
 
+  if (fontError) throw fontError; // D-QA-02: brand fonts are required; never fall back to system fonts silently
   if (!fonts) return null; // native splash is still covering the screen
   return (
     <SafeAreaProvider>
@@ -134,6 +141,7 @@ export default function RootLayout() {
             <AuthProvider>
               <NotificationBridge />
               <Navigator />
+              <OnboardingGate />
             </AuthProvider>
           </ToastProvider>
         </ThemeProvider>

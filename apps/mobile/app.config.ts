@@ -99,6 +99,20 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     plugins: [
       'expo-router',
       'expo-status-bar',
+      // D-QA-02: brand fonts embedded natively in development and release builds (names match fontFamily in @nano/design-tokens).
+      [
+        'expo-font',
+        {
+          fonts: [
+            './assets/fonts/Fraunces-Light.ttf',
+            './assets/fonts/Fraunces-Regular.ttf',
+            './assets/fonts/Fraunces-Italic.ttf',
+            './assets/fonts/Sora-Regular.ttf',
+            './assets/fonts/Sora-Medium.ttf',
+            './assets/fonts/Sora-SemiBold.ttf',
+          ],
+        },
+      ],
       // Sessions only; no biometric unlock, so no Face ID usage string.
       ['expo-secure-store', { faceIDPermission: false }],
       // Store builds use the production push environment.

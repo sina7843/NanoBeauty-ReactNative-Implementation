@@ -13,7 +13,7 @@ export class ApiError extends Error {
     readonly code: ApiErrorCode,
     readonly status: number | null,
     readonly requestId: string | null,
-    readonly info: Pick<ErrorEnvelope['error'], 'retryAfterSeconds' | 'attemptsLeft' | 'missingPermission'> = {},
+    readonly info: Pick<ErrorEnvelope['error'], 'retryAfterSeconds' | 'attemptsLeft' | 'missingPermission' | 'nextStep'> & { /** The server's own sentence (staff screens show it in a Banner; customer screens map `code` to copy). */ serverMessage?: string } = {},
   ) {
     super(`API ${code}${status ? ` (${status})` : ''}`);
     this.name = 'ApiError';
@@ -70,8 +70,8 @@ export async function apiRequest(
   if (!res.ok) {
     const envelope = errorEnvelopeSchema.safeParse(body);
     if (!envelope.success) throw new ApiError('invalid_response', res.status, requestId);
-    const { code, retryAfterSeconds, attemptsLeft, missingPermission } = envelope.data.error;
-    throw new ApiError(code, res.status, requestId, { retryAfterSeconds, attemptsLeft, missingPermission });
+    const { code, retryAfterSeconds, attemptsLeft, missingPermission, nextStep, message } = envelope.data.error;
+    throw new ApiError(code, res.status, requestId, { retryAfterSeconds, attemptsLeft, missingPermission, nextStep, serverMessage: message });
   }
   return { status: res.status, headers: res.headers, body };
 }

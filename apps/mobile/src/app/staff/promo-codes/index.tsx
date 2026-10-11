@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { useAuth } from '../../../auth/AuthProvider';
 import { Dialog, TextField, useToast } from '../../../components';
 import { t } from '../../../i18n';
-import { problemOf } from '../../../staff/api';
+import { ApiError } from '../../../api/client';
+import { problemText } from '../../../staff/api';
+import { PROMO_FILTERS } from '../../../staff/filters';
 import { EntityList } from '../../../staff/EntityList';
 import { StaffScreen } from '../../../staff/StaffScreen';
 
@@ -27,18 +29,18 @@ export default function PromoCodes() {
       setAsking(false);
       router.push(`/staff/promo-codes/${created.id}` as Href);
     } catch (e) {
-      const p = problemOf(e);
-      if (p.kind === 'conflict') setTaken(true);
-      else toast({ tone: 'warning', message: t('error.body') });
+      // A taken code is a 409 with the server's own sentence, not a version conflict (ST-18).
+      if (e instanceof ApiError && e.code === 'conflict') setTaken(true);
+      else toast({ tone: 'danger', message: problemText(e) });
     } finally {
       setCreating(false);
     }
   }
   return (
     <StaffScreen title={t('stf.promoCodes')}>
-      <EntityList plural="promo-codes" publishPermission="selling.publish" onCreate={() => setAsking(true)} newLabel={t('promo.new')} />
+      <EntityList plural="promo-codes" filters={PROMO_FILTERS} publishPermission="selling.publish" onCreate={() => setAsking(true)} newLabel={t('promo.new')} />
       <Dialog visible={asking} title={t('promo.new')} confirmLabel={t('promo.new')} cancelLabel={t('common.cancel')} loading={creating} onConfirm={() => (clean.length >= 3 ? create() : undefined)} onCancel={() => setAsking(false)}>
-        <TextField label={t('promo.code')} helper={t('promo.codeHelp')} value={clean} onChangeText={setCode} autoCapitalize="characters" maxLength={20} error={taken ? t('stf.conflict') : undefined} />
+        <TextField label={t('promo.code')} helper={t('promo.codeHelp')} value={clean} onChangeText={(v) => (setCode(v), setTaken(false))} autoCapitalize="characters" maxLength={20} error={taken ? t('promo.taken') : undefined} />
       </Dialog>
     </StaffScreen>
   );

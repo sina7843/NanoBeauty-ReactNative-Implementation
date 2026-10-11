@@ -87,6 +87,7 @@ const home: HomeContent = {
 };
 
 let offline = false;
+let promoBodies: Record<string, unknown>[] = [];
 function scriptApi() {
   global.fetch = jest.fn(async (url: string, init: { method?: string; body?: string }) => {
     if (offline) throw new TypeError('Network request failed');
@@ -100,6 +101,7 @@ function scriptApi() {
       return json(200, { id: 'booking', title: 'Booking policy', version: '1.0', updatedOn: '2026-09-25', sections: [{ heading: 'Deposits', body: 'Sample deposit text.' }], sample: true });
     if (path === '/v1/promo/validate') {
       const { code } = JSON.parse(init.body ?? '{}') as { code: string };
+      promoBodies.push(JSON.parse(init.body ?? '{}'));
       const valid = code.trim().toUpperCase() === 'GLOW25';
       return json(200, {
         state: valid ? 'valid' : 'invalid',
@@ -118,6 +120,7 @@ function scriptApi() {
 
 beforeEach(async () => {
   offline = false;
+  promoBodies = [];
   await AsyncStorage.clear();
   scriptApi();
 });
@@ -165,7 +168,7 @@ describe('guest discovery on the real screens (NANO-03)', () => {
     expect(await screen.findByText('Showing results for Anti-wrinkle injections')).toBeTruthy();
     fireEvent.changeText(input, 'botoxx');
     expect(await screen.findByText('No match for “botoxx”')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Did you mean Botox?' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Did you mean Botox?' })).toBeTruthy();
   });
 
   it('offer page: absolute end time, eligible items, terms one tap away', async () => {
@@ -187,6 +190,40 @@ describe('guest discovery on the real screens (NANO-03)', () => {
     fireEvent.press(screen.getByRole('button', { name: 'Apply code' }));
     expect(await screen.findByText('GLOW25 applied')).toBeTruthy();
     expect(await screen.findByRole('button', { name: 'Choose a package' })).toBeTruthy();
+  });
+
+  it('FE-6: from an offer, the promo check says which offer it is for', async () => {
+    renderRouter(APP_DIR, { initialUrl: '/promo?offer=cmp_autumn_laser' });
+    fireEvent.changeText(await screen.findByLabelText('Promo code'), 'glow25');
+    fireEvent.press(screen.getByRole('button', { name: 'Apply code' }));
+    expect(await screen.findByText('GLOW25 applied')).toBeTruthy();
+    expect(promoBodies).toEqual([{ code: 'glow25', appliesTo: 'offer:cmp_autumn_laser' }]);
+  });
+
+  it('FE-4/FE-5: an empty category offers all treatments; the entry concern is a removable filter', async () => {
+    const empty = renderRouter(APP_DIR, { initialUrl: '/treatments/list?category=laser' });
+    expect(await screen.findByText('No treatments here yet')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'See all treatments' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Clear filters' })).toBeNull();
+    empty.unmount();
+
+    renderRouter(APP_DIR, { initialUrl: '/treatments/list?concern=loose-skin' });
+    expect(await screen.findByText('1 treatment')).toBeTruthy();
+    fireEvent.press(screen.getByRole('button', { name: /^Filters/ }));
+    expect(await screen.findByRole('button', { name: 'Show 1 treatment' })).toBeTruthy();
+    // Unticking the entry concern widens the list.
+    const chip = screen.getByRole('togglebutton', { name: 'Loose skin' });
+    expect(chip.props.accessibilityState).toMatchObject({ checked: true });
+    fireEvent.press(chip);
+    fireEvent.press(await screen.findByRole('button', { name: 'Show 3 treatments' }));
+    expect(await screen.findByText('3 treatments')).toBeTruthy();
+  });
+
+  it('FE-14: typing suggests a matching category as a link to its list', async () => {
+    renderRouter(APP_DIR, { initialUrl: '/treatments/search' });
+    fireEvent.changeText(await screen.findByLabelText('Search treatments or concerns'), 'inject');
+    expect(await screen.findByText('Injectables and medical')).toBeTruthy();
+    expect(screen.getByText('2 results')).toBeTruthy();
   });
 
   it('support hub and Ask us: guests are asked to sign in before anything is sent', async () => {

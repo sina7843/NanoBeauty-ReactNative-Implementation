@@ -1,3 +1,4 @@
+import * as SecureStore from 'expo-secure-store';
 import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
 import { join } from 'node:path';
 
@@ -106,7 +107,7 @@ describe('sign-in flow on the real screens (AUT-01 → AUT-05)', () => {
 
     // AUT-05: sample records are labelled; "Looks right" goes Home.
     expect(await screen.findByText('We found your account')).toBeTruthy();
-    expect(screen.getByText('Sample')).toBeTruthy();
+    expect(screen.getByText('Sample records')).toBeTruthy();
     fireEvent.press(screen.getByRole('button', { name: 'Looks right' }));
     await waitFor(() => expect(router.getPathname()).toBe('/home'));
     expect(await screen.findByRole('button', { name: 'Account' })).toBeTruthy();
@@ -140,5 +141,34 @@ describe('sign-in flow on the real screens (AUT-01 → AUT-05)', () => {
     renderRouter(APP_DIR, { initialUrl: '/auth/code?reason=expired' });
     expect(await screen.findByText('Please sign in again')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeTruthy();
+  });
+
+  it('429 without a wait shows the pause, never "try again in 0 seconds"', async () => {
+    scriptApi({ 'POST /v1/auth/otp/start': () => ({ status: 429, body: envelope('rate_limited') }) });
+    renderRouter(APP_DIR, { initialUrl: '/auth/phone' });
+    fireEvent.changeText(await screen.findByLabelText('Mobile number'), '6045550123');
+    fireEvent.press(screen.getByRole('button', { name: 'Send code' }));
+    expect(await screen.findByText('Too many code attempts')).toBeTruthy();
+  });
+});
+
+describe('unfinished sign-up is resumed (FE-1)', () => {
+  const saveSession = () => SecureStore.setItemAsync('nano.session.v2', JSON.stringify(tokens));
+  afterEach(() => SecureStore.deleteItemAsync('nano.session.v2'));
+
+  it('leaving at consents and relaunching opens consents again, with no way back into the app', async () => {
+    await saveSession();
+    scriptApi({ 'GET /v1/me': () => ({ status: 200, body: me('consents') }) });
+    const router = renderRouter(APP_DIR, { initialUrl: '/home' });
+    expect(await screen.findByText('Welcome to Nano Beauty')).toBeTruthy();
+    await waitFor(() => expect(router.getPathname()).toBe('/auth/consents'));
+  });
+
+  it('a deep link while the profile step is pending goes to the profile step', async () => {
+    await saveSession();
+    scriptApi({ 'GET /v1/me': () => ({ status: 200, body: { ...me('profile'), customer: { ...me('profile').customer, firstName: null, lastName: null } } }) });
+    const router = renderRouter(APP_DIR, { initialUrl: '/treatments' });
+    await waitFor(() => expect(router.getPathname()).toBe('/auth/profile'));
+    expect(await screen.findByText('About you')).toBeTruthy();
   });
 });

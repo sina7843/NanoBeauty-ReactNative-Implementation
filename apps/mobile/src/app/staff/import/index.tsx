@@ -7,7 +7,7 @@ import { StyleSheet, View } from 'react-native';
 import { useAuth } from '../../../auth/AuthProvider';
 import { Banner, Button, Chip, ListGroup, ListRow, Text } from '../../../components';
 import { t } from '../../../i18n';
-import { problemOf } from '../../../staff/api';
+import { problemOf, problemText } from '../../../staff/api';
 import { StaffScreen } from '../../../staff/StaffScreen';
 
 const FIELDS: ImportField[] = ['name', 'category', 'price', 'duration', 'description'];
@@ -47,8 +47,7 @@ export default function ImportFile() {
       const res = await session.authed(`/v1/staff/imports/${job.id}/mapping`, { method: 'PUT', body: { mapping: { ...job.mapping, [field]: column } } });
       setJob(importSchema.parse(res.body));
     } catch (e) {
-      problemOf(e);
-      setError(t('error.body'));
+      setError(problemText(e));
     }
   }
 

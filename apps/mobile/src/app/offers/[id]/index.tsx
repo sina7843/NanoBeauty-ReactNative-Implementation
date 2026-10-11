@@ -38,6 +38,10 @@ function Live({ offer, state }: { offer: Offer; state: Offer['state'] }) {
   const zone = settings?.clinic.timezone ?? 'America/Vancouver';
   const mode = settings?.settings.bookingMode;
   const live = state === 'live';
+  const openCta = () => {
+    analytics.track('offer_tapped', { offer_id: offer.id, cta: 'primary' });
+    router.push(resolveLink(offer.cta.href, mode) as Href);
+  };
   useEffect(() => {
     analytics.track('offer_viewed', { offer_id: offer.id, placement: 'offer_page' });
   }, [offer.id]);
@@ -47,10 +51,7 @@ function Live({ offer, state }: { offer: Offer; state: Offer['state'] }) {
       footer={
         <View style={styles.footer}>
           {live ? (
-            <Button size="lg" fullWidth onPress={() => {
-              analytics.track('offer_tapped', { offer_id: offer.id, cta: 'primary' });
-              router.push(resolveLink(offer.cta.href, mode) as Href);
-            }}>
+            <Button size="lg" fullWidth onPress={openCta}>
               {offer.cta.label}
             </Button>
           ) : (
@@ -67,10 +68,12 @@ function Live({ offer, state }: { offer: Offer; state: Offer['state'] }) {
       <PhotoFrame source={imageFor(offer.photo)} alt={offer.title} ratio="16 / 9" />
       <View style={styles.heading}>
         <View style={styles.row}>
-          <Text variant="overline">{offer.eyebrow}</Text>
+          <Text variant="overline" tone="primary">
+            {offer.eyebrow}
+          </Text>
           {offer.sample ? <Badge tone="sample">{t('badge.sample')}</Badge> : null}
         </View>
-        <Text variant="displayMd" accessibilityRole="header">
+        <Text variant="titleLg" accessibilityRole="header">
           {offer.title}
         </Text>
         <View style={styles.row}>
@@ -94,12 +97,23 @@ function Live({ offer, state }: { offer: Offer; state: Offer['state'] }) {
             {t('offer.returning')}
           </Badge>
         ) : null}
-        {offer.body ? <Text variant="bodyLg">{offer.body}</Text> : null}
+        {offer.body ? (
+          <Text variant="body" tone="inkMuted">
+            {offer.body}
+          </Text>
+        ) : null}
       </View>
       {state !== 'paused' && offer.eligible.length ? (
         <ListGroup header={t('offer.eligible')}>
           {offer.eligible.map((e) => (
-            <ListRow key={e.title} title={e.title} value={t('offer.wasNow', { was: money(e.was), now: money(e.now) })} chevron={false} />
+            // FE-7: each eligible item opens the offer's own destination (e.g. WAL-07 packages) while it's live.
+            <ListRow
+              key={e.title}
+              title={e.title}
+              value={t('offer.wasNow', { was: money(e.was), now: money(e.now) })}
+              chevron={live}
+              onPress={live ? openCta : undefined}
+            />
           ))}
         </ListGroup>
       ) : null}

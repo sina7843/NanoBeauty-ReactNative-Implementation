@@ -1,7 +1,7 @@
 import { inboxThreadSchema, type InboxThread } from '@nano/contracts';
 import { space } from '@nano/design-tokens';
 import { useQueryClient } from '@tanstack/react-query';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useAuth } from '../../../auth/AuthProvider';
@@ -9,7 +9,7 @@ import { newIdempotencyKey } from '../../../booking/visits';
 import { Badge, Banner, Button, Card, SegmentedControl, Skeleton, Text, TextField, useToast } from '../../../components';
 import { t } from '../../../i18n';
 import { calendarDate } from '../../../i18n/format';
-import { problemOf, useStaffQuery } from '../../../staff/api';
+import { problemText, useStaffQuery } from '../../../staff/api';
 import { StaffScreen } from '../../../staff/StaffScreen';
 
 const CHANNELS = ['text', 'email', 'app'] as const;
@@ -19,7 +19,7 @@ export default function InboxThreadScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const toast = useToast();
   const queryClient = useQueryClient();
-  const { session } = useAuth();
+  const { session, me } = useAuth();
   const thread = useStaffQuery(['inbox-thread', id], `/v1/staff/inbox/${id}`, inboxThreadSchema, !!id);
   const [message, setMessage] = useState('');
   const [channel, setChannel] = useState<(typeof CHANNELS)[number] | null>(null);
@@ -36,8 +36,7 @@ export default function InboxThreadScreen() {
       queryClient.invalidateQueries({ queryKey: ['staff', 'inbox'] });
       return next;
     } catch (e) {
-      problemOf(e);
-      toast({ tone: 'warning', message: t('error.body') });
+      toast({ tone: 'danger', message: problemText(e) });
       return null;
     } finally {
       setBusy(false);
@@ -45,7 +44,7 @@ export default function InboxThreadScreen() {
   }
 
   return (
-    <StaffScreen title={t('stf.inbox')} back={{ to: '/staff/inbox', label: t('stf.inbox') }}>
+    <StaffScreen title={t('inbox.thread')} back={{ to: '/staff/inbox', label: t('stf.inbox') }}>
       {m ? (
         <>
           <View style={styles.row}>
@@ -55,6 +54,11 @@ export default function InboxThreadScreen() {
             </Text>
           </View>
           <Text variant="headline">{`${m.customer} · ${m.topic}`}</Text>
+          {me?.permissions.includes('customers.view') ? (
+            <Button variant="tertiary" size="sm" onPress={() => router.push(`/staff/customers/${m.customerId}` as Href)}>
+              {t('inbox.openProfile')}
+            </Button>
+          ) : null}
           <Card>
             <Text variant="body">{m.message}</Text>
           </Card>

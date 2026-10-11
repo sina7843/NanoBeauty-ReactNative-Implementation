@@ -6,7 +6,8 @@ import { StyleSheet, View } from 'react-native';
 import { useAuth } from '../../../../auth/AuthProvider';
 import { Banner, Button, Card, ListGroup, ListRow, Skeleton, Text, TextField, useToast } from '../../../../components';
 import { t } from '../../../../i18n';
-import { problemOf, useStaffQuery } from '../../../../staff/api';
+import { problemText, useStaffQuery } from '../../../../staff/api';
+import { humanize } from '../../../../staff/readable';
 import { StaffScreen } from '../../../../staff/StaffScreen';
 
 /** `/staff/customers/[id]/match` — STF-28: compare with the old app's record and record the decision. Nothing moves here. */
@@ -26,15 +27,14 @@ export default function MatchReview() {
       await session.authed(`/v1/staff/match-cases/${caseId}/resolve`, { method: 'POST', body: { outcome, reason } });
       await detail.refetch();
     } catch (e) {
-      const p = problemOf(e);
-      toast({ tone: 'warning', message: p.kind === 'conflict' ? t('stf.conflict') : t('error.body') });
+      toast({ tone: 'danger', message: problemText(e) });
     } finally {
       setBusy(null);
     }
   }
 
   return (
-    <StaffScreen title={t('match.title')} back={{ to: `/staff/customers/${id}` as Href, label: t('stf.customers') }}>
+    <StaffScreen title={t('match.titleShort')} back={{ to: `/staff/customers/${id}` as Href, label: t('cust.title') }}>
       {m ? (
         <>
           <Text variant="caption" tone="inkMuted">
@@ -74,7 +74,7 @@ export default function MatchReview() {
               </View>
             </>
           ) : (
-            <Text variant="body">{m.status}</Text>
+            <Text variant="body">{t('match.state', { status: humanize(m.status) })}</Text>
           )}
         </>
       ) : detail.isError ? (

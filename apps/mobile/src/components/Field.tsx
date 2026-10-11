@@ -62,7 +62,7 @@ export function TextField({ label, placeholder, helper, error, optional, disable
             setFocused(false);
             input.onBlur?.(e);
           }}
-          style={[type('bodyLg'), styles.input, input.multiline && styles.multiline, { color: disabled ? colors.inkDisabled : colors.ink }]}
+          style={[type('body'), styles.input, { fontSize: 16, lineHeight: 22 }, input.multiline && styles.multiline, { color: disabled ? colors.inkDisabled : colors.ink }]}
         />
       </View>
       {error ? (

@@ -3,6 +3,9 @@
 #   api   - Fastify API, bundled with tsup; migrates DATABASE_URL then serves on :4000
 #   metro - Expo/Metro bundler for apps/mobile on :8081 (open on a phone/emulator)
 
+# Time zones: Node's Intl uses the ICU tz data bundled in the Node binary (process.versions.tz), not the OS tzdata
+# package, so installing tzdata changes nothing. node:22.23 ships tz 2026c, where British Columbia is on permanent
+# UTC-7 from Nov 2026; older Node builds (tz 2025c) still give PST. See docs/docker.md (D-N12-C9).
 FROM node:22-bookworm-slim AS base
 WORKDIR /repo
 ENV npm_config_update_notifier=false npm_config_fund=false npm_config_audit=false

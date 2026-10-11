@@ -52,4 +52,21 @@ describe('web surfaces (WEB-01–04)', () => {
     const css = await app.inject('/web/app.css');
     expect(css.body).toContain('--primary:');
   });
+
+  it('NANO-12 (WEB-1…4): valid button font, error and retry paths, and the designed content', async () => {
+    const app = await setup();
+    const css = (await app.inject('/web/app.css')).body;
+    expect(css).not.toMatch(/font:[^;}]*\sinherit/); // a shorthand with `inherit` is dropped by browsers (WEB-1)
+    expect(css).toContain('font-family:inherit');
+    const gift = (await app.inject('/gift/ABCD-EFGH-JK23')).body;
+    expect(gift).toContain('id="trouble"'); // rate limits and outages aren't "not found" (WEB-2)
+    expect(gift).toContain('id="newcode"'); // a way to get a new code (WEB-3)
+    expect(gift).toContain('Gift card claimed'); // WEB-02 title (WEB-4)
+    const del = (await app.inject('/delete')).body;
+    expect(del).toContain('We delete');
+    expect(del).toContain('class="danger"');
+    expect(del).toContain('id="del-newcode"');
+    const js = (await app.inject('/web/app.js')).body;
+    expect(js).toContain('.catch(function () { return { ok: false, status: 0'); // a network failure never leaves the page stuck (WEB-3)
+  });
 });

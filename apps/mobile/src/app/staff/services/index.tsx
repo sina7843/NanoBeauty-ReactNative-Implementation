@@ -6,10 +6,11 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 import { useAuth } from '../../../auth/AuthProvider';
-import { Badge, Banner, Button, ConfirmDialog, ListGroup, ListRow, SearchField, SegmentedControl, Skeleton, Text, useToast } from '../../../components';
+import { Banner, Button, ConfirmDialog, ListGroup, ListRow, SearchField, SegmentedControl, Skeleton, Text, useToast } from '../../../components';
 import { priceLabel } from '../../../booking/summary';
 import { t } from '../../../i18n';
-import { problemOf, useStaffQuery } from '../../../staff/api';
+import { problemText, useStaffQuery } from '../../../staff/api';
+import { PublishState } from '../../../staff/Governance';
 import { StaffScreen } from '../../../staff/StaffScreen';
 
 const FILTERS = ['all', 'live', 'draft', 'archived'] as const;
@@ -37,8 +38,7 @@ export default function StaffServices() {
       await session.authed(`/v1/staff/services/${confirm.row.id}/${confirm.kind}`, { method: 'POST', body: { version: confirm.row.version } });
       await queryClient.invalidateQueries({ queryKey: ['staff', 'services'] });
     } catch (e) {
-      const p = problemOf(e);
-      toast({ tone: 'warning', message: p.kind === 'conflict' ? t('stf.conflict') : t('error.body') });
+      toast({ tone: 'danger', message: problemText(e) });
     } finally {
       setBusy(false);
       setConfirm(null);
@@ -74,16 +74,11 @@ export default function StaffServices() {
       const created = staffServiceSchema.parse(res.body);
       router.push(`/staff/services/${created.id}` as Href);
     } catch (e) {
-      problemOf(e);
-      toast({ tone: 'warning', message: t('error.body') });
+      toast({ tone: 'danger', message: problemText(e) });
     } finally {
       setCreating(false);
     }
   }
-
-  const stateBadge = (r: StaffServiceRow) => (
-    <Badge tone={r.state === 'live' ? 'success' : r.state === 'review' ? 'warning' : r.state === 'archived' ? 'neutral' : 'info'}>{t(`stf.state.${r.state}`)}</Badge>
-  );
 
   return (
     <StaffScreen title={t('stf.services')}>
@@ -112,7 +107,7 @@ export default function StaffServices() {
                 onPress={() => router.push(`/staff/services/${r.id}` as Href)}
               />
               <View style={styles.rowActions}>
-                {stateBadge(r)}
+                <PublishState state={r.state} />
                 {r.state === 'archived' && canPublish ? (
                   <Button variant="tertiary" size="sm" onPress={() => setConfirm({ kind: 'restore', row: r })}>
                     {t('stf.restore')}
@@ -137,7 +132,7 @@ export default function StaffServices() {
       ) : (
         <Skeleton lines={5} media={false} />
       )}
-      <ConfirmDialog visible={!!confirm} kind={confirm?.kind ?? 'archive'} item={confirm?.row.name ?? ''} loading={busy} onConfirm={act} onCancel={() => setConfirm(null)} affects={[t('confirm.audit')]} />
+      <ConfirmDialog visible={!!confirm} kind={confirm?.kind ?? 'archive'} item={confirm?.row.name ?? ''} loading={busy} onConfirm={act} onCancel={() => setConfirm(null)} />
     </StaffScreen>
   );
 }

@@ -13,6 +13,7 @@ import { buildApp, redactUrl } from '../app';
 import { openDb } from '../db';
 import { createDevIntegrations } from '../integrations';
 import { migrate } from '../migrate';
+import { onboard } from '../testOnboard';
 import { DELETION_PLAN, runDueDeletions } from './routes';
 
 let close: (() => Promise<unknown>) | undefined;
@@ -35,10 +36,12 @@ async function setup() {
     app.inject({ method, url, ...(payload ? { payload } : {}), headers: token ? { authorization: `Bearer ${token}` } : {} });
   /** Code for the last challenge sent to a number (dev sink). */
   const codeFor = (e164: string) => dev.otpSink.get(e164)!;
-  async function signIn(phone: string, e164: string) {
+  async function signIn(phone: string, e164: string, finished = true) {
     clock.t += 31_000; // past the resend timer for this number
     const { challengeId } = (await req('POST', '/v1/auth/otp/start', undefined, { phone })).json();
-    return otpVerifyResponseSchema.parse((await req('POST', '/v1/auth/otp/verify', undefined, { challengeId, code: codeFor(e164) })).json()).accessToken;
+    const token = otpVerifyResponseSchema.parse((await req('POST', '/v1/auth/otp/verify', undefined, { challengeId, code: codeFor(e164) })).json()).accessToken;
+    if (finished) await onboard(db, e164);
+    return token;
   }
   const me = async (token: string) => meSchema.parse((await req('GET', '/v1/me', token)).json());
   return { app, db, dev, clock, req, codeFor, signIn, me };
@@ -101,9 +104,9 @@ describe('inbox (ACC-04/05, NOTIF 05)', () => {
     const visit = (await t.req('GET', '/v1/visits', token)).json().upcoming[0];
     await t.req('POST', `/v1/visits/${visit.id}/requests`, token, { type: 'change', message: 'Move to Tuesday?', idempotencyKey: 'req-key-0001' });
     const inbox = inboxResponseSchema.parse((await t.req('GET', '/v1/me/inbox', token)).json());
-    // Two "Booking confirmed" messages from the Fresha read-back (NTF-01) plus the request.
+    // Two "You’re booked" messages from the Fresha read-back (NTF-01) plus the request.
     expect(inbox.unread).toBe(3);
-    expect(inbox.items.filter((i) => i.title === 'Booking confirmed')).toHaveLength(2);
+    expect(inbox.items.filter((i) => i.title === 'You’re booked')).toHaveLength(2);
     expect(inbox.items[0]).toMatchObject({ title: 'Request sent to the clinic', href: `/visits/${visit.id}`, read: false });
     expect((await t.req('GET', `/v1/me/inbox/${inbox.items[0]!.id}`, token)).json()).toMatchObject({ read: true });
     expect(inboxResponseSchema.parse((await t.req('GET', '/v1/me/inbox', token)).json()).unread).toBe(2);
@@ -197,7 +200,7 @@ describe('account deletion (ACC-08–10, AUTH 06, PRIV 04)', () => {
 
     // Status by token after sign-out (ACC-10 completed); the number can start fresh.
     expect((await t.req('GET', `/v1/privacy/deletion/${pending.token}`)).json()).toMatchObject({ status: 'completed' });
-    const fresh = await t.signIn(...MARIA);
+    const fresh = await t.signIn(...MARIA, false);
     expect((await t.me(fresh)).customer.firstName).toBeNull();
   });
 

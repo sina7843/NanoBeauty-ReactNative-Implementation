@@ -14,6 +14,7 @@ import { buildApp } from '../app';
 import { openDb } from '../db';
 import { createDevIntegrations } from '../integrations';
 import { migrate } from '../migrate';
+import { onboard } from '../testOnboard';
 import { reconcile } from '../reconcile';
 import { dueGiftIds } from './routes';
 
@@ -46,6 +47,7 @@ async function setup(methods: Record<string, boolean> = { card: true, applePay: 
     clock.t += 31_000;
     const { challengeId } = (await req('POST', '/v1/auth/otp/start', undefined, { phone })).json();
     const token = otpVerifyResponseSchema.parse((await req('POST', '/v1/auth/otp/verify', undefined, { challengeId, code: dev.otpSink.get(e164)! })).json()).accessToken;
+    await onboard(db, e164);
     if (role) await db.query(`INSERT INTO staff_roles (customer_id, role) SELECT id, $2 FROM customers WHERE phone_e164 = $1 ON CONFLICT DO NOTHING`, [e164, role]);
     return token;
   }
@@ -298,7 +300,7 @@ describe('gift cards (WALT 01–04, 13, 14)', () => {
       state: 'valid',
       amountCents: 10000,
       recipientName: 'Sara',
-      fromName: null,
+      fromName: 'Client', // the buyer's first name (sign-up is finished before buying, API-14)
       message: 'Happy birthday!',
     });
     const sara = await t.signIn(...SARA);
@@ -406,5 +408,129 @@ describe('reconciliation (NFR 03, LEG 03)', () => {
     // A hand-made entry that pushes a balance below zero is caught.
     await t.db.query(`INSERT INTO ledger_entries (instrument_id, kind, sessions, label, idempotency_key, created_at) VALUES ($1, 'adjust', -10, 'bad', 'bad-1', now())`, [pkg.id]);
     expect((await reconcile(t.db)).map((d) => d.check)).toEqual(['negative_balance']);
+  });
+});
+
+describe('NANO-12 QA fixes', () => {
+  it('API-14: customer writes wait for sign-up to finish (onboarding_required + nextStep)', async () => {
+    const t = await setup();
+    t.clock.t += 31_000;
+    const { challengeId } = (await t.req('POST', '/v1/auth/otp/start', undefined, { phone: SARA[0] })).json();
+    const token = otpVerifyResponseSchema.parse((await t.req('POST', '/v1/auth/otp/verify', undefined, { challengeId, code: t.dev.otpSink.get(SARA[1])! })).json()).accessToken;
+    const early = () => t.req('POST', '/v1/orders', token, { ...PACKAGE, idempotencyKey: 'early-order' });
+    const refused = await early();
+    expect(refused.statusCode).toBe(403);
+    expect(refused.json().error).toMatchObject({ code: 'onboarding_required', nextStep: 'consents' });
+    expect((await t.req('POST', '/v1/gifts/claim', token, { code: 'ABCDEFGHJKLM' })).json().error.code).toBe('onboarding_required');
+    await t.req('POST', '/v1/me/consents', token, { terms: true, transactional: true, marketing: false });
+    expect((await early()).json().error).toMatchObject({ code: 'onboarding_required', nextStep: 'profile' });
+    await t.app.inject({ method: 'PUT', url: '/v1/me/profile', payload: { firstName: 'Sara', lastName: 'Kim', email: null }, headers: { authorization: `Bearer ${token}` } });
+    expect((await early()).statusCode).toBe(200);
+  });
+
+  it('API-12: the same key for a different order is a mismatch, not the first order', async () => {
+    const t = await setup();
+    const maria = await t.signIn(...MARIA);
+    await t.order(maria, PACKAGE, 'order-key-x');
+    const other = await t.req('POST', '/v1/orders', maria, { kind: 'package', packageId: 'pkg_rf_3', idempotencyKey: 'order-key-x' });
+    expect(other.statusCode).toBe(409);
+    expect(other.json().error.code).toBe('idempotency_mismatch');
+    expect((await t.req('POST', '/v1/orders', maria, { ...gift(), idempotencyKey: 'order-key-x' })).json().error.code).toBe('idempotency_mismatch');
+  });
+
+  it('WP-18 / WP-21: wallet buttons follow the platform; the receipt carries the order reference', async () => {
+    const t = await setup({ card: true, applePay: true, googlePay: true, klarna: false, affirm: false });
+    const maria = await t.signIn(...MARIA);
+    const o = await t.order(maria, PACKAGE);
+    const on = async (q: string) => methodsResponseSchema.parse((await t.req('GET', `/v1/orders/${o.id}/methods${q}`, maria)).json()).methods.map((m) => m.method);
+    expect(await on('?platform=ios')).toEqual(['apple_pay', 'card']);
+    expect(await on('?platform=android')).toEqual(['google_pay', 'card']);
+    expect(await on('')).toEqual(['apple_pay', 'google_pay', 'card']);
+    await t.confirm(maria, (await t.attempt(maria, o.id)).id, 'tok_visa');
+    const receipt = receiptSchema.parse((await t.req('GET', `/v1/receipts/${o.id}`, maria)).json());
+    expect(receipt.orderReference).toBe(o.reference);
+  });
+
+  it('API-7 / API-18: package totals add up after a refund; redemption names the treatment', async () => {
+    const t = await setup();
+    const maria = await t.signIn(...MARIA);
+    const o = await t.order(maria, PACKAGE);
+    const paid = await t.confirm(maria, (await t.attempt(maria, o.id)).id, 'tok_visa');
+    const pkg = (await t.wallet(maria)).instruments[0]!;
+    const desk = await t.signIn(...DESK, 'Front desk');
+    const redeemed = (await t.req('POST', '/v1/staff/redemptions', desk, { instrumentId: pkg.id, sessions: 1, idempotencyKey: 'redeem-key-api7' })).json();
+    expect(redeemed.serviceId).toBeTruthy();
+    expect(redeemed.serviceId).toBe(pkg.serviceId);
+    const owner = await t.signIn(...OWNER, 'Owner');
+    await t.req('POST', `/v1/staff/payments/${paid.id}/refunds`, owner, { amountCents: 30000, reason: 'One session back', idempotencyKey: 'refund-key-api7' });
+    expect((await t.wallet(maria)).instruments[0]!.sessions).toEqual({ total: 3, used: 1, remaining: 2 });
+    // WP-24: the deletion preview names the package once, with what's left.
+    const preview = (await t.req('GET', '/v1/me/deletion/preview', maria)).json();
+    expect(preview.balances).toEqual([{ label: 'SQT Bio-Microneedling (2 sessions)', amountCAD: 0 }]);
+  });
+
+  it('ST-23: whoever may redeem may look value up', async () => {
+    const t = await setup();
+    const desk = await t.signIn(...DESK, 'Front desk');
+    await t.db.query(`DELETE FROM role_permissions WHERE role = 'Front desk' AND permission = 'value.lookup'`);
+    try {
+      expect((await t.req('GET', `/v1/staff/lookup?phone=${MARIA[0]}`, desk)).statusCode).toBe(200);
+    } finally {
+      await t.db.query(`INSERT INTO role_permissions (role, permission) VALUES ('Front desk', 'value.lookup') ON CONFLICT DO NOTHING`);
+    }
+  });
+
+  it('API-1 / API-13: an unknown customer or instrument is a 404, never a 500 or 409', async () => {
+    const t = await setup();
+    const owner = await t.signIn(...OWNER, 'Owner');
+    const ghost = '00000000-0000-4000-8000-000000000000';
+    const issue = await t.req('POST', '/v1/staff/adjustments', owner, { customerId: ghost, amountCents: 1000, reason: 'Goodwill credit', idempotencyKey: 'adjust-ghost-1' });
+    expect(issue.statusCode).toBe(404);
+    expect(issue.json().error.code).toBe('not_found');
+    expect((await t.req('POST', '/v1/staff/adjustments', owner, { instrumentId: ghost, amountCents: 1000, reason: 'Goodwill credit', idempotencyKey: 'adjust-ghost-2' })).statusCode).toBe(404);
+  });
+
+  it('WP-4 / API-2 / API-3 / API-4: send-now gifts get no "scheduled" notice; a voided gift stays visible and refuses changes', async () => {
+    const t = await setup();
+    const maria = await t.signIn(...MARIA);
+    const o = await t.order(maria, gift());
+    await t.confirm(maria, (await t.attempt(maria, o.id)).id, 'tok_visa');
+    expect(await t.db.query(`SELECT 1 FROM notifications WHERE template = 'gift_scheduled'`)).toHaveLength(0);
+    const later = await t.order(maria, gift({ sendAt: '2026-12-24T17:00:00.000Z' }), 'order-key-later');
+    await t.confirm(maria, (await t.attempt(maria, later.id, 'card', 'attempt-key-later')).id, 'tok_visa');
+    const [scheduled] = await t.db.query<{ data: { when: string } }>(`SELECT data FROM notifications WHERE template = 'gift_scheduled'`);
+    expect(scheduled!.data.when).toBe('Thu 24 Dec, 9:00 am'); // WP-28 house style, clinic time
+
+    const id = (await t.wallet(maria)).instruments.find((i) => i.gift?.delivery === 'sent')!.id;
+    const owner = await t.signIn(...OWNER, 'Owner');
+    expect((await t.req('POST', `/v1/staff/gifts/${id}/void`, owner, { idempotencyKey: 'void-key-qa1', reason: 'Bought by mistake' })).statusCode).toBe(200);
+    expect((await t.wallet(maria)).instruments.find((i) => i.id === id)).toMatchObject({ status: 'voided', role: 'sender' });
+    const resend = await t.req('POST', `/v1/wallet/gifts/${id}/resend`, maria);
+    expect(resend.statusCode).toBe(409);
+    expect(resend.json().error.message).toBe('This gift was cancelled.');
+    expect((await t.req('POST', `/v1/wallet/gifts/${id}/send-time`, maria, { sendAt: null })).json().error.message).toBe('This gift was cancelled.');
+    expect((await t.req('POST', '/v1/staff/adjustments', owner, { instrumentId: id, amountCents: 500, reason: 'Goodwill top-up', idempotencyKey: 'adjust-voided-1' })).statusCode).toBe(409);
+  });
+
+  it('API-5: an unclaimed gift can be used at the desk by its code; never by its own buyer', async () => {
+    const t = await setup();
+    const maria = await t.signIn(...MARIA);
+    const o = await t.order(maria, gift());
+    await t.confirm(maria, (await t.attempt(maria, o.id)).id, 'tok_visa');
+    const code = t.dev.outbox.find((m) => m.template === 'NTF-07.gift_received')!.data.code!;
+    const desk = await t.signIn(...DESK, 'Front desk');
+    const found = (await t.req('GET', `/v1/staff/lookup?code=${code}`, desk)).json().instruments[0];
+    expect(found).toMatchObject({ kind: 'gift_card', balanceCents: 10000 });
+    expect((await t.req('POST', '/v1/staff/redemptions', desk, { instrumentId: found.id, amountCents: 2500, idempotencyKey: 'redeem-unclaimed-1' })).json()).toMatchObject({ balanceCents: 7500 });
+    // The recipient can still claim what's left.
+    const sara = await t.signIn(...SARA);
+    expect((await t.req('POST', '/v1/gifts/claim', sara, { code })).json().state).toBe('claimed');
+    expect((await t.wallet(sara)).instruments[0]).toMatchObject({ balanceCents: 7500 });
+    // A buyer who is also staff can't use their own unclaimed gift.
+    await t.db.query(`INSERT INTO staff_roles (customer_id, role) SELECT id, 'Front desk' FROM customers WHERE phone_e164 = $1`, [MARIA[1]]);
+    const o2 = await t.order(maria, gift(), 'order-key-own');
+    await t.confirm(maria, (await t.attempt(maria, o2.id, 'card', 'attempt-key-own')).id, 'tok_visa');
+    const own = (await t.wallet(maria)).instruments.find((i) => i.role === 'sender' && i.id !== found.id)!;
+    expect((await t.req('POST', '/v1/staff/redemptions', maria, { instrumentId: own.id, amountCents: 100, idempotencyKey: 'redeem-own-1' })).statusCode).toBe(403);
   });
 });

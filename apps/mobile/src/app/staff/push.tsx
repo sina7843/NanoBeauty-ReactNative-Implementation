@@ -3,11 +3,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useAuth } from '../../auth/AuthProvider';
 import { newIdempotencyKey } from '../../booking/visits';
-import { Banner, Button, ListGroup, ListRow, Skeleton, TextField, useToast } from '../../components';
+import { Banner, Button, Card, ListGroup, ListRow, Skeleton, Text, TextField, useToast } from '../../components';
 import { t } from '../../i18n';
 import { clinicDateTime } from '../../i18n/format';
 import { useSettings } from '../../settings/useSettings';
-import { problemOf, useStaffQuery } from '../../staff/api';
+import { problemText, useStaffQuery } from '../../staff/api';
+import { DEFAULT_PUSH_OPENS, validPushOpens } from '../../staff/pushLink';
 import { StaffScreen } from '../../staff/StaffScreen';
 import { WallTimeField } from '../../staff/WallTimeField';
 import { analytics, sizeBand } from '../../lib/analytics';
@@ -21,7 +22,11 @@ export default function Push() {
   const tz = settings.data?.data.clinic.timezone ?? 'America/Vancouver';
   const list = useStaffQuery(['push'], '/v1/staff/push', pushListSchema);
   const [text, setText] = useState('');
-  const [opens, setOpens] = useState('/offers');
+  const [opens, setOpens] = useState(DEFAULT_PUSH_OPENS);
+  const [dateOk, setDateOk] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const mode = settings.data?.data.settings.bookingMode;
+  const opensOk = validPushOpens(opens, mode);
   const [sendAt, setSendAt] = useState<string | null>(null);
   const [key, setKey] = useState(newIdempotencyKey);
   const [busy, setBusy] = useState(false);
@@ -29,8 +34,9 @@ export default function Push() {
 
   async function schedule() {
     setBusy(true);
+    setError(null);
     try {
-      const p = pushMessageSchema.parse((await session.authed('/v1/staff/push', { method: 'POST', body: { text: text.trim(), opens: opens.trim(), sendAt, idempotencyKey: key } })).body);
+      const p = pushMessageSchema.parse((await session.authed('/v1/staff/push', { method: 'POST', body: { text: text.trim(), opens: opens.trim(), sendAt, scheduled: sendAt !== null, idempotencyKey: key } })).body);
       toast({ tone: 'success', message: t('push.scheduled', { count: p.audienceCount }) });
       const offer = /^\/offers\/([^/?]+)/.exec(p.opens)?.[1];
       analytics.track('push_sent', { audience_size_band: sizeBand(p.audienceCount), ...(offer ? { offer_id: offer } : {}) });
@@ -38,8 +44,7 @@ export default function Push() {
       setKey(newIdempotencyKey());
       queryClient.invalidateQueries({ queryKey: ['staff', 'push'] });
     } catch (e) {
-      problemOf(e);
-      toast({ tone: 'warning', message: t('error.body') });
+      setError(problemText(e));
     } finally {
       setBusy(false);
     }
@@ -50,24 +55,46 @@ export default function Push() {
       await session.authed(`/v1/staff/push/${id}/cancel`, { method: 'POST', body: { version } });
       queryClient.invalidateQueries({ queryKey: ['staff', 'push'] });
     } catch (e) {
-      problemOf(e);
-      toast({ tone: 'warning', message: t('error.body') });
+      toast({ tone: 'danger', message: problemText(e) });
     }
   }
 
   return (
-    <StaffScreen title={t('stf.push')}>
+    <StaffScreen
+      title={t('push.title')}
+      aside={
+        list.data ? (
+          <>
+            <Card>
+              <Text variant="overline" tone="inkMuted">
+                {t('push.preview')}
+              </Text>
+              <Text variant="label">{t('push.previewFrom')}</Text>
+              <Text variant="body">{text.trim() || t('push.previewEmpty')}</Text>
+              <Text variant="caption" tone="inkMuted">
+                {t('push.previewOpens', { path: opens.trim() || '—' })}
+              </Text>
+            </Card>
+            <Button loading={busy} disabled={!audience || text.trim().length < 5 || !opensOk || !dateOk} onPress={schedule}>
+              {t('push.schedule')}
+            </Button>
+          </>
+        ) : null
+      }
+    >
       {list.data ? (
         <>
           <Banner tone={audience ? 'info' : 'warning'} title={audience ? t('push.audience', { count: audience }) : t('push.audienceNone')}>
             {t('push.delivery')}
           </Banner>
           <TextField label={t('push.text')} value={text} onChangeText={setText} maxLength={110} helper={`${text.length}/110`} />
-          <TextField label={t('push.opens')} value={opens} onChangeText={setOpens} autoCapitalize="none" />
-          <WallTimeField label={t('push.when')} iso={sendAt} tz={tz} onChange={setSendAt} />
-          <Button loading={busy} disabled={!audience || text.trim().length < 5 || !opens.startsWith('/')} onPress={schedule}>
-            {t('push.schedule')}
-          </Button>
+          <TextField label={t('push.opens')} value={opens} onChangeText={setOpens} autoCapitalize="none" error={opensOk ? undefined : t('push.opensInvalid')} />
+          <WallTimeField label={t('push.when')} iso={sendAt} tz={tz} onChange={setSendAt} onValidity={setDateOk} />
+          {error ? (
+            <Banner tone="danger" title={t('push.notScheduled')}>
+              {error}
+            </Banner>
+          ) : null}
           <ListGroup>
             {list.data.messages.map((m) => (
               <ListRow

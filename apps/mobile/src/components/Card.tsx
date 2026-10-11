@@ -1,10 +1,10 @@
 import { radius, space } from '@nano/design-tokens';
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import { Text } from '../theme/Text';
 import { Icon, type IconName } from './Icon';
-import { OPACITY_DISABLED, pressFeedback } from './press';
+import { OPACITY_DISABLED, OPACITY_PRESSED_OVERLAY, pressFeedback } from './press';
 
 export interface CardProps {
   /** `surface` for anything people must trust (price, booking, wallet, consent); `tint` for clinic value
@@ -15,9 +15,11 @@ export interface CardProps {
   /** Makes the whole card one button; pass `accessibilityLabel` as the summary to announce. */
   onPress?: () => void;
   accessibilityLabel?: string;
+  /** Photo card: pressed state is an ink overlay at `opacity-pressed-overlay` over the photo (iOS; Android ripple). */
+  photo?: boolean;
 }
 
-export function Card({ tone = 'surface', padded = true, children, onPress, accessibilityLabel }: CardProps) {
+export function Card({ tone = 'surface', padded = true, children, onPress, accessibilityLabel, photo }: CardProps) {
   const { colors } = useTheme();
   const base = [
     styles.card,
@@ -32,6 +34,24 @@ export function Card({ tone = 'surface', padded = true, children, onPress, acces
       <View style={base} accessible={!!accessibilityLabel} accessibilityLabel={accessibilityLabel}>
         {children}
       </View>
+    );
+  }
+  if (photo) {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        onPress={onPress}
+        android_ripple={{ color: colors.surfacePressed, foreground: true }}
+        style={base}
+      >
+        {({ pressed }) => (
+          <>
+            {children}
+            {pressed && Platform.OS !== 'android' ? <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.ink, opacity: OPACITY_PRESSED_OVERLAY }]} /> : null}
+          </>
+        )}
+      </Pressable>
     );
   }
   return (
@@ -64,8 +84,8 @@ export function ListRow({ icon, title, subtitle, value, chevron = true, destruct
   const content = (
     <>
       {icon ? (
-        <View style={[styles.rowIcon, { backgroundColor: colors.surfaceTint }]}>
-          <Icon name={icon} size={20} color={destructive ? colors.danger : colors.onTint} />
+        <View style={[styles.rowIcon, { backgroundColor: colors.surfaceMuted }]}>
+          <Icon name={icon} size={20} color={destructive ? colors.danger : colors.ink} />
         </View>
       ) : null}
       <View style={styles.rowText}>
@@ -79,11 +99,11 @@ export function ListRow({ icon, title, subtitle, value, chevron = true, destruct
         ) : null}
       </View>
       {value ? (
-        <Text variant="body" style={styles.value}>
+        <Text variant="body" tone="inkMuted" style={styles.value}>
           {value}
         </Text>
       ) : null}
-      {onPress && chevron ? <Icon name="caret-right" size={20} tone="inkMuted" /> : null}
+      {onPress && chevron ? <Icon name="caret-right" size={18} tone="inkMuted" /> : null}
     </>
   );
   const base = [styles.row, disabled && { opacity: OPACITY_DISABLED }];

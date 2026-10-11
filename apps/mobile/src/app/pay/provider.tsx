@@ -5,6 +5,7 @@ import { useAuth } from '../../auth/AuthProvider';
 import { SignInGate } from '../../auth/SignInGate';
 import { Banner, Button, Card, Screen, Text } from '../../components';
 import { t } from '../../i18n';
+import { clearPendingPayment, savePendingPayment } from '../../payments/pendingPayment';
 import { openAndWaitForReturn } from '../../platform/browser';
 import { cents, useOrder } from '../../payments/queries';
 
@@ -35,6 +36,8 @@ function Leave({ attempt, order: orderId, name }: { attempt: string; order: stri
     setFailed(false);
     try {
       const a = attemptSchema.parse((await session.authed(`/v1/payments/attempts/${attempt}`)).body);
+      // WP-1: opening the provider's page submits the payment, so a relaunch checks it from here on.
+      await savePendingPayment({ attemptId: attempt, orderId, startedAt: Date.now() });
       if (a.redirectUrl) await openAndWaitForReturn(a.redirectUrl);
       router.replace(status);
     } catch {
@@ -46,6 +49,7 @@ function Leave({ attempt, order: orderId, name }: { attempt: string; order: stri
 
   async function other() {
     await session.authed(`/v1/payments/attempts/${attempt}/cancel`, { method: 'POST', body: {} }).catch(() => undefined);
+    await clearPendingPayment();
     router.back();
   }
 

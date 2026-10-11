@@ -13,6 +13,7 @@ import { buildApp } from '../app';
 import { openDb } from '../db';
 import { createDevIntegrations } from '../integrations';
 import { migrate } from '../migrate';
+import { onboard } from '../testOnboard';
 import { matchesTarget, offerState } from './routes';
 
 let close: (() => Promise<unknown>) | undefined;
@@ -39,7 +40,9 @@ async function setup(at = '2026-10-06T17:00:00Z') {
     app.inject({ method: 'POST', url, payload, headers: token ? { authorization: `Bearer ${token}` } : {} });
   async function signIn() {
     const { challengeId } = (await post('/v1/auth/otp/start', { phone: '6045550123' })).json();
-    return otpVerifyResponseSchema.parse((await post('/v1/auth/otp/verify', { challengeId, code: dev.otpSink.get('+16045550123')! })).json());
+    const session = otpVerifyResponseSchema.parse((await post('/v1/auth/otp/verify', { challengeId, code: dev.otpSink.get('+16045550123')! })).json());
+    await onboard(db, '+16045550123');
+    return session;
   }
   return { app, db, clock, get, post, signIn };
 }
@@ -124,6 +127,9 @@ describe('promo codes (PROMO 06)', () => {
     // Not-yet and ended codes don't leak what they are.
     expect(await check(t, 'BFRIDAY')).toMatchObject({ state: 'notyet', startsAt: '2026-11-27T08:00:00.000Z', description: null, appliesLabel: null });
     expect((await check(t, 'GLOW25', 'category:facials')).state).toBe('noteligible');
+    // FE-6: checked from an offer page, a code for another campaign doesn't apply; its own campaign's code does.
+    expect((await check(t, 'GLOW25', 'offer:cmp_halloween')).state).toBe('noteligible');
+    expect((await check(t, 'GLOW25', 'offer:cmp_autumn_laser')).state).toBe('valid');
 
     t.clock.t = Date.parse('2026-10-21T17:00:00Z');
     await t.db.query("UPDATE promo_codes SET used = total_limit WHERE code = 'HALLO26'");

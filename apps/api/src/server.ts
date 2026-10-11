@@ -3,6 +3,7 @@ import { buildApp } from './app';
 import { dueGiftIds, pendingRefundIds, staleAttemptIds } from './wallet/routes';
 import { loadConfig } from './config';
 import { openDb } from './db';
+import { applyDevSampleClinic, SAMPLE_FRESHA_URL } from './devSample';
 import { createDevIntegrations, withReviewAccount } from './integrations';
 import { migrate } from './migrate';
 import { deliverPushMessages, dispatchDue, queueReminders } from './notifications/dispatch';
@@ -13,9 +14,10 @@ const config = loadConfig();
 const db = await openDb(config.DATABASE_URL);
 // In-memory PGlite starts empty every run; a real Postgres is migrated by the `migrate` deploy step.
 if (!config.DATABASE_URL) await migrate(db);
+if (config.DEV_SAMPLE_CLINIC) await applyDevSampleClinic(db);
 
 const { integrations, otpSink } = createDevIntegrations({
-  freshaBookingUrl: config.FRESHA_BOOKING_URL,
+  freshaBookingUrl: config.FRESHA_BOOKING_URL ?? (config.DEV_SAMPLE_CLINIC ? SAMPLE_FRESHA_URL : undefined),
   sampleLegacy: config.DEV_SAMPLE_LEGACY,
   sampleFresha: config.DEV_SAMPLE_FRESHA,
 });

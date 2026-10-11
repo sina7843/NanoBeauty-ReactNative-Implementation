@@ -1,6 +1,6 @@
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Banner, Screen, SupportContext } from '../../components';
+import { Screen, SupportContext } from '../../components';
 import { hoursLabel, isOpenNow } from '../../content/clinic';
 import { t } from '../../i18n';
 import { useSettings } from '../../settings/useSettings';
@@ -10,6 +10,7 @@ import { useSettings } from '../../settings/useSettings';
  * explain from scratch. Open/closed is only claimed when the clinic has published its hours.
  */
 export default function SupportContact() {
+  const router = useRouter();
   const params = useLocalSearchParams<{ reference?: string; topic?: string }>();
   // Display only; accept reference-shaped values so a link can't inject arbitrary text.
   const reference = /^[A-Z0-9-]{4,24}$/.test(params.reference ?? '') ? params.reference : undefined;
@@ -29,17 +30,9 @@ export default function SupportContact() {
           hours={hoursLabel(hours) ?? t('sup.hoursPending')}
           response={reply ? t('sup.replies', { time: reply }) : undefined}
           phone={settings?.clinic.phone ?? null}
+          open={open}
+          onAsk={() => router.push('/support/ask')}
         />
-        {open === false ? (
-          <Banner tone="info" title={t('support.closed.title')}>
-            {t('support.closed.body')}
-          </Banner>
-        ) : null}
-        {open === true ? (
-          <Banner tone="success" title={t('support.open.title')}>
-            {t('support.open.body')}
-          </Banner>
-        ) : null}
       </Screen>
     </>
   );

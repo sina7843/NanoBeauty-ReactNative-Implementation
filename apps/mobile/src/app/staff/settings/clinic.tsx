@@ -28,7 +28,10 @@ export default function ClinicInfo() {
   const online = useIsOnline();
   const [form, setForm] = useState<Form | null>(null);
   const f = form ?? (s.settings ? toForm(s.settings) : null);
-  const set = (patch: Partial<Form>) => f && setForm({ ...f, ...patch });
+  const set = (patch: Partial<Form>) => {
+    s.pin();
+    if (f) setForm({ ...f, ...patch });
+  };
   const ro = online === false;
   const setDay = (day: number, on: boolean) => {
     if (!f?.hours) return;
@@ -39,7 +42,7 @@ export default function ClinicInfo() {
 
   return (
     <StaffScreen title={t('stf.clinicInfo')}>
-      <SettingsBanners problem={ro ? 'offline' : s.problem} notice={s.notice} reload={() => (setForm(null), s.reload())} />
+      <SettingsBanners problem={ro ? 'offline' : s.problem} message={s.message} notice={s.notice} reload={() => (setForm(null), s.reload())} />
       {f ? (
         <>
           <TextField label={t('clinic.address')} value={f.address} onChangeText={(v) => set({ address: v })} maxLength={200} disabled={ro} />

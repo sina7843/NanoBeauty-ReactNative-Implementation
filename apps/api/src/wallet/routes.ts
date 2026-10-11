@@ -33,7 +33,8 @@ import { authenticate, type AuthContext } from '../auth/session';
 import type { Db, Queryable } from '../db';
 import { HttpError } from '../errors';
 import type { Integrations, PaymentMethodId, ProviderPayment } from '../integrations';
-import { notify } from '../visits/routes';
+import { formatWhen } from '../notifications/templates';
+import { clinicTz, notify } from '../visits/routes';
 
 const iso = (ms: number) => new Date(ms).toISOString();
 const DAY = 24 * 3600_000;
@@ -56,6 +57,7 @@ const SETTING_KEY: Record<PaymentMethod, 'card' | 'applePay' | 'googlePay' | 'kl
   affirm: 'affirm',
 };
 
+const money = (cents: number) => `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`;
 const ref = (prefix: string) => `${prefix}-${randomBytes(3).toString('hex').toUpperCase()}`;
 const hashCode = (code: string) => createHash('sha256').update(code.replace(/[\s-]/g, '').toUpperCase()).digest('hex');
 const newGiftCode = () => Array.from({ length: 12 }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join('');
@@ -111,7 +113,7 @@ type InstrumentRow = {
   /** Package instruments: the treatment it is for (BOOK 14 next booking action). */
   service_id?: string | null;
 };
-type Sums = { amount: number; sessions: number; bought: number; used: number };
+type Sums = { amount: number; sessions: number; bought: number; used: number; refunded: number };
 
 const methodLabel = (a: Pick<AttemptRow, 'method' | 'card_brand' | 'card_last4'>) =>
   a.card_last4 ? `${a.card_brand ?? 'Card'} •••• ${a.card_last4}` : a.method === 'card' ? null : METHOD_NAMES[a.method];
@@ -132,18 +134,19 @@ const orderTitle = (o: OrderRow, packageName: string | null) => (o.kind === 'pac
 /** Ledger sums per instrument. The ONLY source of balances (WALT 11). */
 export async function ledgerSums(db: Queryable, ids: string[]): Promise<Map<string, Sums>> {
   if (!ids.length) return new Map();
-  const rows = await db.query<{ instrument_id: string; amount: string | null; sessions: string | null; bought: string | null; used: string | null }>(
+  const rows = await db.query<{ instrument_id: string; amount: string | null; sessions: string | null; bought: string | null; used: string | null; refunded: string | null }>(
     `SELECT instrument_id, SUM(amount_cents)::text AS amount, SUM(sessions)::text AS sessions,
             SUM(CASE WHEN kind IN ('purchase', 'import', 'issue') AND sessions > 0 THEN sessions ELSE 0 END)::text AS bought,
-            SUM(CASE WHEN kind = 'redeem' THEN -sessions ELSE 0 END)::text AS used
+            SUM(CASE WHEN kind = 'redeem' THEN -sessions ELSE 0 END)::text AS used,
+            SUM(CASE WHEN kind IN ('refund', 'reverse') THEN COALESCE(sessions, 0) ELSE 0 END)::text AS refunded
        FROM ledger_entries WHERE instrument_id = ANY($1) GROUP BY instrument_id`,
     [ids],
   );
-  return new Map(rows.map((r) => [r.instrument_id, { amount: Number(r.amount ?? 0), sessions: Number(r.sessions ?? 0), bought: Number(r.bought ?? 0), used: Number(r.used ?? 0) }]));
+  return new Map(rows.map((r) => [r.instrument_id, { amount: Number(r.amount ?? 0), sessions: Number(r.sessions ?? 0), bought: Number(r.bought ?? 0), used: Number(r.used ?? 0), refunded: Number(r.refunded ?? 0) }]));
 }
 
 export function toInstrument(row: InstrumentRow, sums: Sums | undefined, viewerId: string | null, now: number): Instrument {
-  const s = sums ?? { amount: 0, sessions: 0, bought: 0, used: 0 };
+  const s = sums ?? { amount: 0, sessions: 0, bought: 0, used: 0, refunded: 0 };
   const expired = !!row.expires_at && row.expires_at.getTime() <= now;
   const reconciling = row.status === 'reconciling';
   const usedUp = row.kind === 'package' ? s.sessions <= 0 : false;
@@ -156,7 +159,7 @@ export function toInstrument(row: InstrumentRow, sums: Sums | undefined, viewerI
     status: row.status === 'voided' ? 'voided' : reconciling ? 'reconciling' : expired || usedUp ? 'ended' : 'active',
     // Values stay hidden until the ledger is confirmed (WAL-01 reconciling); a sender never sees how a claimed gift is spent.
     balanceCents: reconciling || row.kind === 'package' || row.kind === 'membership' || (sender && !!row.claimed_at) ? null : s.amount,
-    sessions: row.kind === 'package' && !reconciling ? { total: s.bought, used: s.used, remaining: Math.max(0, s.sessions) } : null,
+    sessions: row.kind === 'package' && !reconciling ? { total: s.bought + s.refunded, used: s.used, remaining: Math.max(0, s.sessions) } : null,
     expiresAt: row.expires_at?.toISOString() ?? null,
     serviceId: row.service_id ?? null,
     last4: row.code_last4,
@@ -172,6 +175,7 @@ export function toInstrument(row: InstrumentRow, sums: Sums | undefined, viewerI
             sendAt: row.send_at?.toISOString() ?? null,
             sentAt: row.sent_at?.toISOString() ?? null,
             claimedAt: row.claimed_at?.toISOString() ?? null,
+            orderId: sender ? row.order_id : null,
           }
         : null,
   };
@@ -180,7 +184,7 @@ export function toInstrument(row: InstrumentRow, sums: Sums | undefined, viewerI
 /** Everything in a customer's Wallet, plus gifts they sent that someone else holds. */
 export async function walletFor(db: Queryable, customerId: string, now: number): Promise<Instrument[]> {
   const rows = await db.query<InstrumentRow>(
-    `SELECT *, (SELECT service_id FROM packages p WHERE p.id = wallet_instruments.package_id) AS service_id FROM wallet_instruments WHERE (customer_id = $1 OR buyer_id = $1) AND status <> 'voided' ORDER BY created_at DESC`,
+    `SELECT *, (SELECT service_id FROM packages p WHERE p.id = wallet_instruments.package_id) AS service_id FROM wallet_instruments WHERE (customer_id = $1 AND status <> 'voided') OR buyer_id = $1 ORDER BY created_at DESC`,
     [customerId],
   );
   const sums = await ledgerSums(db, rows.map((r) => r.id));
@@ -203,10 +207,10 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
   const signedIn = { preHandler: kit.requireAuth };
   const throttled = { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } };
   const staffOnly =
-    (permission: AuthContext['permissions'][number]) =>
+    (...allowed: AuthContext['permissions']) =>
     async (request: FastifyRequest) => {
       request.auth = await authenticate(db, request.headers.authorization, now());
-      if (!request.auth.permissions.includes(permission)) throw new HttpError(403, 'forbidden', 'Your role can’t do this.', { missingPermission: permission });
+      if (!allowed.some((p) => request.auth!.permissions.includes(p))) throw new HttpError(403, 'forbidden', 'Your role can’t do this.', { missingPermission: allowed[0] });
     };
   const audit = (tx: Queryable, request: FastifyRequest, item: string, field: string, oldValue: string | null, newValue: string, reason: string) => {
     const ctx = auth(request);
@@ -228,6 +232,10 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
       status: o.status,
       createdAt: o.created_at.toISOString(),
     };
+  }
+  async function itemName(tx: Queryable, o: OrderRow): Promise<string> {
+    const [p] = o.package_id ? await tx.query<{ name: string }>('SELECT name FROM packages WHERE id = $1', [o.package_id]) : [];
+    return orderTitle(o, p?.name ?? null);
   }
   async function ownOrder(customerId: string, id: string): Promise<OrderRow> {
     const [o] = await db.query<OrderRow>('SELECT * FROM orders WHERE id = $1 AND customer_id = $2', [id, customerId]);
@@ -268,7 +276,8 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
     );
     if (!i) return { deliverGift: null };
     await ledger(tx, i.id, 'purchase', { amount: g.amountCents }, 'Gift card bought', o.reference, o.id, null, `order:${o.id}`, t);
-    await notify(tx, { audience: 'customer', customerId: o.customer_id, template: 'gift_scheduled', data: { name: g.recipientName, sendAt, instrumentId: i.id }, now: t });
+    // Only a gift waiting for its time gets the "scheduled" notice; a send-now gift gets just the sent one (WP-4).
+    if (Date.parse(sendAt) > t) await notify(tx, { audience: 'customer', customerId: o.customer_id, template: 'gift_scheduled', data: { name: g.recipientName, sendAt, when: formatWhen(new Date(sendAt), await clinicTz(tx)), instrumentId: i.id }, now: t });
     return { deliverGift: Date.parse(sendAt) <= t ? i.id : null };
   }
 
@@ -299,7 +308,7 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
       }
       await tx.query(`UPDATE orders SET status = 'paid', paid_attempt_id = $2, paid_at = $3 WHERE id = $1`, [o!.id, attemptId, iso(t)]);
       out.deliverGift = (await fulfil(tx, o!, t)).deliverGift;
-      await notify(tx, { audience: 'customer', customerId: o!.customer_id, template: 'payment_receipt', data: { orderId: o!.id, reference: updated!.reference }, now: t });
+      await notify(tx, { audience: 'customer', customerId: o!.customer_id, template: 'payment_receipt', data: { orderId: o!.id, reference: updated!.reference, amount: money(o!.amount_cents), item: await itemName(tx, o!) }, now: t });
       return out;
     });
     // After the commit: the payment is recorded whatever happens next, so these never turn a paid order into an error.
@@ -420,7 +429,7 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
         ];
         await tx.query('UPDATE orders SET status = $2 WHERE id = $1', [o!.id, Number(total) >= a!.amount_cents ? 'refunded' : 'partially_refunded']);
       }
-      await notify(tx, { audience: 'customer', customerId: o!.customer_id, template: 'refund_status', data: { reference: r.reference, status, orderId: o!.id }, now: t });
+      await notify(tx, { audience: 'customer', customerId: o!.customer_id, template: 'refund_status', data: { reference: r.reference, status, orderId: o!.id, amount: money(r.amount_cents) }, now: t });
     });
   }
 
@@ -537,7 +546,7 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
     }));
   });
 
-  app.post('/v1/orders', { ...signedIn, ...throttled }, async (request) => {
+  app.post('/v1/orders', { preHandler: kit.requireOnboarded, ...throttled }, async (request) => {
     const body = orderCreateSchema.parse(request.body);
     const customerId = auth(request).customerId;
     const t = now();
@@ -570,6 +579,15 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
       [ref('NB-O'), customerId, body.kind, packageId, gift ? JSON.stringify(gift) : null, amount, body.idempotencyKey, iso(t)],
     );
     const [o] = await db.query<OrderRow>('SELECT * FROM orders WHERE customer_id = $1 AND idempotency_key = $2', [customerId, body.idempotencyKey]);
+    // The same key must mean the same order: another package, amount or recipient is a mistake, not a retry.
+    const g = o!.gift;
+    const same =
+      o!.kind === body.kind &&
+      o!.package_id === packageId &&
+      o!.amount_cents === amount &&
+      (!gift ||
+        (g?.design === gift.design && g.recipientName === gift.recipientName && g.recipientPhone === gift.recipientPhone && (g.message ?? null) === (gift.message ?? null) && (g.sendAt ?? null) === (gift.sendAt ?? null)));
+    if (!same) throw new HttpError(409, 'idempotency_mismatch', 'That request key was already used for a different order. Start again.');
     return toOrder(o!);
   });
 
@@ -581,6 +599,7 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
   // PAY-01 (PAY 12–14): switched on in settings AND supported by the provider; financing never implies approval.
   app.get('/v1/orders/:id/methods', signedIn, async (request) => {
     const { id } = z.object({ id: z.uuid() }).parse(request.params);
+    const { platform } = z.object({ platform: z.enum(['ios', 'android']).optional() }).parse(request.query);
     const o = await ownOrder(auth(request).customerId, id);
     const { settings } = await settingsOf(db);
     const supported = pay.capabilities();
@@ -588,6 +607,8 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
     const order: PaymentMethod[] = ['apple_pay', 'google_pay', 'card', 'klarna', 'affirm'];
     const methods: MethodOption[] = order
       .filter((m) => settings.paymentMethods[SETTING_KEY[m]] && supported.includes(m as PaymentMethodId))
+      // Apple Pay only on iOS, Google Pay only on Android; no platform given = everything (WP-18).
+      .filter((m) => !platform || (m === 'apple_pay' ? platform === 'ios' : m === 'google_pay' ? platform === 'android' : true))
       .map((m) => {
         if (m !== 'klarna' && m !== 'affirm') return { method: m, available: true, note: null };
         const offered = pay.financingOffered(m, o.amount_cents);
@@ -705,6 +726,7 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
     return {
       orderId: o.id,
       reference: a!.reference,
+      orderReference: o.reference,
       status: o.status as Receipt['status'],
       lines: [{ label: view.title, amountCents: o.amount_cents }],
       taxIncludedCents: taxIncluded(o.amount_cents),
@@ -826,6 +848,7 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
   async function sentGift(customerId: string, id: string): Promise<InstrumentRow> {
     const [row] = await db.query<InstrumentRow>(`SELECT * FROM wallet_instruments WHERE id = $1 AND buyer_id = $2 AND kind = 'gift_card'`, [id, customerId]);
     if (!row) throw new HttpError(404, 'not_found', 'Gift not found.');
+    if (row.status === 'voided') throw new HttpError(409, 'conflict', 'This gift was cancelled.');
     if (row.claimed_at) throw new HttpError(409, 'conflict', 'This gift card has been claimed.');
     return row;
   }
@@ -850,17 +873,17 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
 
   // WAL-11 / WEB-01 lookup (no sign-in needed to see what was sent; claiming needs the recipient's number).
   app.post('/v1/gifts/lookup', throttled, async (request) => (await lookupGift(giftCodeSchema.parse(request.body).code)).view);
-  app.post('/v1/gifts/claim', { ...signedIn, ...throttled }, async (request) => claimGift(giftCodeSchema.parse(request.body).code, auth(request).customerId));
+  app.post('/v1/gifts/claim', { preHandler: kit.requireOnboarded, ...throttled }, async (request) => claimGift(giftCodeSchema.parse(request.body).code, auth(request).customerId));
   // WEB-01 contract: claim without the app, after a code to the recipient's own number.
   app.post('/v1/gifts/claim/start', throttled, async (request) => {
     const body = webGiftClaimStartSchema.parse(request.body);
     const found = await lookupGift(body.code);
     if (found.view.state !== 'valid') return { state: found.view.state, challenge: null };
-    return { state: 'valid', challenge: await kit.startCode(body.phone) };
+    return { state: 'valid', challenge: await kit.startCode(body.phone, 'gift_claim') };
   });
   app.post('/v1/gifts/claim/confirm', throttled, async (request) => {
     const body = webGiftClaimConfirmSchema.parse(request.body);
-    const phone = await kit.checkCode(body.challengeId, body.otp);
+    const phone = await kit.checkCode(body.challengeId, body.otp, 'gift_claim');
     const [c] = await db.query<{ id: string }>(
       `INSERT INTO customers (phone_e164) VALUES ($1) ON CONFLICT (phone_e164) DO UPDATE SET updated_at = customers.updated_at RETURNING id`,
       [phone],
@@ -870,7 +893,8 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
 
   // ---------- Staff: lookup, counter redemption, adjustments, refunds (STF-11, STF-25, WALT 15) ----------
 
-  app.get('/v1/staff/lookup', { preHandler: staffOnly('value.lookup') }, async (request) => {
+  // Whoever may redeem must be able to find the value first, so either permission opens lookup (ST-23).
+  app.get('/v1/staff/lookup', { preHandler: staffOnly('value.lookup', 'value.redeem') }, async (request) => {
     const q = z.object({ code: z.string().optional(), phone: z.string().optional() }).parse(request.query);
     const t = now();
     if (q.code) {
@@ -896,9 +920,13 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
     const ctx = auth(request);
     const t = now();
     const result = await db.transaction(async (tx) => {
-      const [row] = await tx.query<InstrumentRow>('SELECT * FROM wallet_instruments WHERE id = $1 FOR UPDATE', [body.instrumentId]);
-      if (!row || !row.customer_id) throw new HttpError(404, 'not_found', 'Not found. An unclaimed gift card must be claimed first.');
-      if (row.customer_id === ctx.customerId) throw new HttpError(403, 'forbidden', 'Another staff member must redeem your own value.');
+      const [row] = await tx.query<InstrumentRow>(
+        'SELECT *, (SELECT service_id FROM packages p WHERE p.id = wallet_instruments.package_id) AS service_id FROM wallet_instruments WHERE id = $1 FOR UPDATE',
+        [body.instrumentId],
+      );
+      // An unclaimed gift card (sent, code not yet added to a Wallet) can be used at the desk by its code (API-5).
+      if (!row || (!row.customer_id && !(row.kind === 'gift_card' && row.code_last4))) throw new HttpError(404, 'not_found', 'Not found.');
+      if (row.customer_id === ctx.customerId || (!row.customer_id && row.buyer_id === ctx.customerId)) throw new HttpError(403, 'forbidden', 'Another staff member must redeem your own value.');
       const key = `redeem:${body.idempotencyKey}`;
       const [done] = await tx.query('SELECT 1 FROM ledger_entries WHERE instrument_id = $1 AND idempotency_key = $2', [row.id, key]);
       if (!done) {
@@ -911,13 +939,25 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
           if (!body.amountCents || body.amountCents > (view.balanceCents ?? 0)) throw new HttpError(409, 'conflict', 'Not enough balance.');
           await ledger(tx, row.id, 'redeem', { amount: -body.amountCents }, 'Used at your visit', body.reference ?? null, null, ctx.customerId, key, t);
         }
-        await notify(tx, {
-          audience: 'customer',
-          customerId: row.customer_id,
-          template: row.kind === 'package' ? 'NTF-09.package_session_used' : 'value_used',
-          data: { instrumentId: row.id, label: row.label, reference: body.reference ?? '' },
-          now: t,
-        });
+        const after = toInstrument(row, (await ledgerSums(tx, [row.id])).get(row.id), row.customer_id, t);
+        if (row.customer_id) {
+          await notify(tx, {
+            audience: 'customer',
+            customerId: row.customer_id,
+            template: row.kind === 'package' ? 'NTF-09.package_session_used' : 'value_used',
+            data: {
+              instrumentId: row.id,
+              label: row.label,
+              reference: body.reference ?? '',
+              amount: body.amountCents ? money(body.amountCents) : '',
+              sessions: String(body.sessions ?? ''),
+              left: String(after.sessions?.remaining ?? ''),
+              total: String(after.sessions?.total ?? ''),
+              until: row.expires_at ? new Intl.DateTimeFormat('en-US', { timeZone: await clinicTz(tx), month: 'short', year: 'numeric' }).format(row.expires_at) : '',
+            },
+            now: t,
+          });
+        }
       }
       return toInstrument(row, (await ledgerSums(tx, [row.id])).get(row.id), row.customer_id, t);
     });
@@ -933,6 +973,8 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
       if (!instrumentId) {
         if (!body.customerId) throw new HttpError(400, 'validation_failed', 'Give an instrument or a customer.');
         if (body.customerId === ctx.customerId) throw new HttpError(403, 'forbidden', 'Another staff member must adjust your own value.');
+        const [who] = await tx.query('SELECT 1 FROM customers WHERE id::text = $1 AND deleted_at IS NULL', [body.customerId]);
+        if (!who) throw new HttpError(404, 'not_found', 'Customer not found.');
         await tx.query(
           `INSERT INTO wallet_instruments (customer_id, kind, label, source, status, created_at) VALUES ($1, 'credit', 'Clinic credit', 'clinic', 'active', $2)
            ON CONFLICT (customer_id) WHERE kind = 'credit' DO NOTHING`,
@@ -942,7 +984,9 @@ export function registerWalletRoutes(app: FastifyInstance, { now, kit }: { now: 
         instrumentId = credit!.id;
       }
       const [row] = await tx.query<InstrumentRow>('SELECT * FROM wallet_instruments WHERE id = $1 FOR UPDATE', [instrumentId]);
-      if (!row || row.kind === 'package') throw new HttpError(409, 'conflict', 'Only credit or gift-card balances can be adjusted.');
+      if (!row) throw new HttpError(404, 'not_found', 'Not found.');
+      if (row.kind === 'package' || row.kind === 'membership') throw new HttpError(409, 'conflict', 'Only credit or gift-card balances can be adjusted.');
+      if (row.status === 'voided' || (row.expires_at && row.expires_at.getTime() <= t)) throw new HttpError(409, 'conflict', 'This balance is cancelled or expired and can’t be changed.');
       if (row.customer_id === ctx.customerId) throw new HttpError(403, 'forbidden', 'Another staff member must adjust your own value.');
       const key = `adjust:${body.idempotencyKey}`;
       // A replayed confirm returns the result it already had (no second entry, no second audit row).

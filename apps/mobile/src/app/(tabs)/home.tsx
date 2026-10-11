@@ -1,16 +1,16 @@
 import type { Href } from 'expo-router';
-import { space } from '@nano/design-tokens';
+import { radius, space } from '@nano/design-tokens';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useAuth } from '../../auth/AuthProvider';
 import { NotSynced } from '../../booking/NotSynced';
-import { useVisits } from '../../booking/visits';
-import { AppointmentPass, Banner, Button, Chip, IconButton, Logo, OfferCard, PhotoFrame, RatingSummary, Screen, Skeleton, Text } from '../../components';
+import { addVisitToCalendar, useVisits } from '../../booking/visits';
+import { AppointmentPass, Banner, Button, Chip, IconButton, Logo, OfferCard, PhotoFrame, RatingSummary, Screen, Skeleton, Text, useToast } from '../../components';
 import { imageFor } from '../../content/images';
 import { effectiveState, useServerNow } from '../../content/offerClock';
 import { useCatalog, useHomeContent } from '../../content/queries';
 import { t } from '../../i18n';
-import { clinicDate, clinicTime } from '../../i18n/format';
+import { clinicDay, clinicTime } from '../../i18n/format';
 import { useIsOnline } from '../../lib/network';
 import { useSettings } from '../../settings/useSettings';
 
@@ -29,6 +29,7 @@ export default function Home() {
   const settings = useSettings().data?.data;
   const zone = settings?.clinic.timezone ?? 'America/Vancouver';
   const signedIn = status === 'signedIn';
+  const visitsSavedAt = useVisits().data?.savedAt;
 
   // Server state, moved toward "expired" by the server clock while Home stays open (PROMO 09).
   const serverNow = useServerNow(home.data?.data.serverTime, home.data?.savedAt);
@@ -40,7 +41,7 @@ export default function Home() {
   return (
     <Screen
       tabbed
-      footer={
+      fab={
         signedIn ? (
           <Button icon="calendar-plus" onPress={() => router.push('/book/service')}>
             {t('home.bookShort')}
@@ -62,7 +63,7 @@ export default function Home() {
 
       {online === false ? (
         <Banner tone="offline" title={t('offline.title')}>
-          {t('home.offlineBody')}
+          {signedIn ? signedInOffline(visitsSavedAt, zone) : t('home.offlineBody')}
         </Banner>
       ) : null}
       {notice === 'oldlink' ? (
@@ -78,17 +79,25 @@ export default function Home() {
               {t('home.welcomeBack', { name: me.customer.firstName })}
             </Text>
           ) : null}
-          <NextVisit zone={zone} />
+          <NextVisit zone={zone} compact={online === false} eyebrow={settings?.settings.bookingMode === 'inapp' ? t('pass.next') : t('pass.fresha')} />
         </>
       ) : (
         <View style={styles.hero}>
           {home.data ? (
             <>
-              <PhotoFrame source={imageFor(home.data.data.hero.photo)} alt={home.data.data.hero.alt} ratio={settings?.settings.ratingLine.on ? '16 / 9' : '4 / 3'} />
+              {/* Main board: 28 px corners; a shallow crop while a banner (offline, old link) takes the room. */}
+              <View style={styles.heroPhoto}>
+                <PhotoFrame
+                  rounded={false}
+                  source={imageFor(home.data.data.hero.photo)}
+                  alt={home.data.data.hero.alt}
+                  ratio={online === false || notice === 'oldlink' ? '16 / 5.6' : settings?.settings.ratingLine.on ? '16 / 9' : '16 / 11'}
+                />
+              </View>
               <Text variant="displayLg" accessibilityRole="header">
                 {home.data.data.hero.title}
               </Text>
-              <Text variant="bodyLg" tone="inkMuted">
+              <Text variant="accentItalic" tone="inkMuted">
                 {home.data.data.hero.subtitle}
               </Text>
               <RatingSummary rating={home.data.data.rating} enabled={!!settings?.settings.ratingLine.on} />
@@ -108,7 +117,8 @@ export default function Home() {
           ) : (
             <Skeleton lines={3} />
           )}
-          {/* Booking and browsing never wait on campaign content. */}
+          {/* Booking and browsing never wait on a failed campaign load; while loading, the skeleton stands in (Main loading). */}
+          {home.data || home.isError ? (
           <View style={styles.actions}>
             <Button size="lg" fullWidth onPress={() => router.push('/book/service')}>
               {t('home.book')}
@@ -117,6 +127,7 @@ export default function Home() {
               {t('home.explore')}
             </Button>
           </View>
+          ) : null}
         </View>
       )}
 
@@ -135,13 +146,13 @@ export default function Home() {
           <Text variant="titleMd" accessibilityRole="header">
             {t('home.workOn')}
           </Text>
-          <View style={styles.chips}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsBleed} contentContainerStyle={styles.chips}>
             {concerns.map((c) => (
               <Chip key={c.id} onPress={() => router.push(`/treatments/list?concern=${c.id}` as Href)}>
                 {c.name}
               </Chip>
             ))}
-          </View>
+          </ScrollView>
         </View>
       ) : null}
     </Screen>
@@ -150,18 +161,31 @@ export default function Home() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: space['2'] },
-  hero: { gap: space['3'] },
-  actions: { gap: space['2'], marginTop: space['2'] },
+  hero: { gap: space['4'] },
+  heroPhoto: { borderRadius: radius.xl, overflow: 'hidden' },
+  actions: { gap: space['2'] },
   section: { gap: space['3'], marginTop: space['4'] },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space['2'] },
+  // One scrolling row that runs to the screen edges (Main board).
+  chipsBleed: { marginHorizontal: -space['5'] },
+  chips: { flexDirection: 'row', gap: space['2'], paddingHorizontal: space['5'] },
 });
+
+/** HOM-02 offline: when the visits shown were last loaded ("Last updated today, 9:41 am."). */
+function signedInOffline(savedAt: string | undefined, zone: string, now = new Date()): string {
+  if (!savedAt) return t('home.offlineChanges');
+  const day = clinicDay(savedAt, zone) === clinicDay(now.toISOString(), zone) ? t('home.today') : clinicDay(savedAt, zone);
+  return t('home.offlineSignedIn', { day, time: clinicTime(savedAt, zone) });
+}
 
 /**
  * HOM-02: the next visit when Fresha shares bookings; otherwise "Your bookings are in Fresha" (open-items E2).
- * Nothing is shown until the visits answer arrives, so Home never implies there is no booking.
+ * Nothing is shown until the visits answer arrives, so Home never implies there is no booking. Offline, the pass is
+ * the compact one (HOM-02 offline).
  */
-function NextVisit({ zone }: { zone: string }) {
+function NextVisit({ zone, compact, eyebrow }: { zone: string; compact: boolean; eyebrow: string }) {
   const router = useRouter();
+  const toast = useToast();
+  const address = useSettings().data?.data.clinic.address ?? t('pass.location');
   const visits = useVisits().data?.data;
   if (!visits) return null;
   if (visits.sync === 'not_connected') return <NotSynced freshaUrl={visits.freshaUrl} />;
@@ -170,10 +194,16 @@ function NextVisit({ zone }: { zone: string }) {
   return (
     <AppointmentPass
       service={next.serviceName}
-      date={clinicDate(next.startsAt, zone)}
+      date={clinicDay(next.startsAt, zone)}
       time={clinicTime(next.startsAt, zone)}
       provider={next.professional}
       status={next.status}
+      eyebrow={eyebrow}
+      compact={compact}
+      onAddToCalendar={async () => {
+        const result = await addVisitToCalendar(next, address);
+        if (result !== 'opened') toast({ tone: 'warning', message: t(result === 'denied' ? 'cal.denied' : 'cal.unavailable') });
+      }}
       onManage={() => router.push(`/visits/${next.id}` as Href)}
     />
   );

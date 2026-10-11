@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from './app';
 import { loadConfig } from './config';
 import { openDb, type Db } from './db';
+import { applyDevSampleClinic } from './devSample';
 import { createDevIntegrations } from './integrations';
 import { migrate } from './migrate';
 
@@ -133,6 +134,12 @@ describe('config', () => {
     expect(loadConfig({ DEV_OTP_SINK: 'true' }).DEV_OTP_SINK).toBe(true);
   });
 
+  it('D-QA-06: the sample clinic switch is refused anywhere but local development', () => {
+    const staging = { APP_ENV: 'staging', DATABASE_URL: 'postgres://u:p@db.example/x' };
+    expect(() => loadConfig({ ...staging, DEV_SAMPLE_CLINIC: 'true' })).toThrow(/DEV_SAMPLE_CLINIC/);
+    expect(loadConfig({ DEV_SAMPLE_CLINIC: 'true' }).DEV_SAMPLE_CLINIC).toBe(true);
+  });
+
   it('never echoes values in error messages', () => {
     expect(() => loadConfig({ DATABASE_URL: 'not a url but secret-ish' })).toThrow(/^(?!.*secret-ish)/s);
   });
@@ -169,5 +176,22 @@ describe('dev integrations', () => {
     expect(integrations.fresha.handoffUrl()).toBeNull();
     expect(await integrations.fresha.readVisits('c1')).toEqual({ status: 'not_connected' });
     expect(await integrations.legacy.findByPhone('+16045550100')).toEqual({ status: 'not_connected' });
+  });
+});
+
+describe('development sample clinic (D-QA-06)', () => {
+  it('fills a 555 phone and weekly hours marked Sample, and never overwrites what the clinic set', async () => {
+    const { app, db } = await setup();
+    close = () => app.close();
+    await db.query(`UPDATE app_settings SET clinic = clinic - 'phone', settings = settings - 'clinicHours' WHERE id = 1`);
+    expect(await applyDevSampleClinic(db)).toBe(true);
+    const boot = settingsBootstrapSchema.parse((await app.inject('/v1/settings')).json());
+    expect(boot.clinic.phone).toMatch(/555/);
+    expect(boot.settings.clinicHours?.weekly.length).toBeGreaterThan(0);
+    expect(boot.settings.sample).toBe(true);
+    expect(await applyDevSampleClinic(db)).toBe(false); // already there
+    await db.query(`UPDATE app_settings SET clinic = jsonb_set(clinic, '{phone}', '"(604) 123-4567"') WHERE id = 1`);
+    await applyDevSampleClinic(db);
+    expect(settingsBootstrapSchema.parse((await app.inject('/v1/settings')).json()).clinic.phone).toBe('(604) 123-4567');
   });
 });

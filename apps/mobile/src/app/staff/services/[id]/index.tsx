@@ -8,11 +8,13 @@ import { priceLabel } from '../../../../booking/summary';
 import { t } from '../../../../i18n';
 import { useStaffQuery } from '../../../../staff/api';
 import { EditorActions, EditorBanners } from '../../../../staff/EditorChrome';
+import { ListTextField, splitCommas } from '../../../../staff/ListTextField';
+import { MoneyField } from '../../../../staff/MoneyField';
 import { StaffScreen } from '../../../../staff/StaffScreen';
 import { useServiceEditor } from '../../../../staff/useServiceEditor';
 
 const KINDS: Price['kind'][] = ['fixed', 'from', 'range', 'perUnit', 'consultation'];
-const num = (v: string) => (v.trim() === '' ? undefined : Number(v.replace(/[$,\s]/g, '')));
+const num = (v: number | null) => v ?? undefined;
 
 /** `/staff/services/[id]` — STF-03 (draft, conflict, offline, savefailed) with the tablet two-column layout (TAB-01). */
 export default function ServiceEdit() {
@@ -89,11 +91,14 @@ export default function ServiceEdit() {
             </Chip>
           ))}
       </View>
-      <TextField
+      <ListTextField
+        key={`a${s.version}`}
         label={t('svc.search')}
         helper={t('svc.searchHelp')}
-        value={f.aliases.join(', ')}
-        onChangeText={(v) => editor.setForm({ aliases: v.split(',').map((a) => a.trim()).filter(Boolean) })}
+        items={f.aliases}
+        onItems={(aliases) => editor.setForm({ aliases })}
+        split={splitCommas}
+        join={(i) => i.join(', ')}
         disabled={ro}
         autoCapitalize="none"
       />
@@ -109,16 +114,16 @@ export default function ServiceEdit() {
       {price.kind === 'range' ? (
         <View style={styles.row}>
           <View style={styles.flex}>
-            <TextField label={t('svc.min')} value={price.min?.toString() ?? ''} onChangeText={(v) => setPrice({ min: num(v) })} keyboardType="decimal-pad" disabled={ro} />
+            <MoneyField label={t('svc.min')} dollars={price.min} onDollars={(v) => setPrice({ min: num(v) })} disabled={ro} />
           </View>
           <View style={styles.flex}>
-            <TextField label={t('svc.max')} value={price.max?.toString() ?? ''} onChangeText={(v) => setPrice({ max: num(v) })} keyboardType="decimal-pad" disabled={ro} />
+            <MoneyField label={t('svc.max')} dollars={price.max} onDollars={(v) => setPrice({ max: num(v) })} disabled={ro} />
           </View>
         </View>
       ) : price.kind !== 'consultation' ? (
         <View style={styles.row}>
           <View style={styles.flex}>
-            <TextField label={t('svc.price')} value={price.amount?.toString() ?? ''} onChangeText={(v) => setPrice({ amount: num(v) })} keyboardType="decimal-pad" disabled={ro} />
+            <MoneyField label={t('svc.price')} dollars={price.amount} onDollars={(v) => setPrice({ amount: num(v) })} disabled={ro} />
           </View>
           {price.kind === 'perUnit' ? (
             <View style={styles.flex}>

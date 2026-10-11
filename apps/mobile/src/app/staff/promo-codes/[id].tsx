@@ -8,6 +8,7 @@ import { t } from '../../../i18n';
 import { useSettings } from '../../../settings/useSettings';
 import { useStaffQuery } from '../../../staff/api';
 import { EntityEditScreen, PreviewCard } from '../../../staff/EntityEditScreen';
+import { MoneyField } from '../../../staff/MoneyField';
 import { useEntityEditor } from '../../../staff/useEntityEditor';
 import { WallTimeField } from '../../../staff/WallTimeField';
 
@@ -42,17 +43,18 @@ export default function PromoEdit() {
             value={f.discount.type === 'percent' ? t('promo.percent') : t('promo.amount')}
             onChange={(x) => !ro && editor.setForm({ discount: { ...f.discount, type: x === t('promo.percent') ? 'percent' : 'amount' } })}
           />
-          <TextField
-            label={t('promo.value')}
-            value={f.discount.type === 'amount' ? String(f.discount.value / 100) : String(f.discount.value)}
-            // Percent is a whole percent; an amount is entered in dollars and stored in cents.
-            onChangeText={(x) => {
-              const n = Number(x.replace(/[^0-9.]/g, '')) || 0;
-              editor.setForm({ discount: { ...f.discount, value: f.discount.type === 'amount' ? Math.round(n * 100) : Math.round(n) } });
-            }}
-            keyboardType="decimal-pad"
-            disabled={ro}
-          />
+          {/* Percent is a whole percent; an amount is typed in dollars with cents (ST-13) and stored in cents. */}
+          {f.discount.type === 'amount' ? (
+            <MoneyField key={`m${v}`} label={t('promo.value')} dollars={f.discount.value / 100} onDollars={(x) => editor.setForm({ discount: { ...f.discount, value: Math.round((x ?? 0) * 100) } })} disabled={ro} />
+          ) : (
+            <TextField
+              label={t('promo.value')}
+              value={String(f.discount.value)}
+              onChangeText={(x) => editor.setForm({ discount: { ...f.discount, value: Number.parseInt(x.replace(/[^0-9]/g, ''), 10) || 0 } })}
+              keyboardType="number-pad"
+              disabled={ro}
+            />
+          )}
           <TextField label={t('promo.appliesTo')} value={f.appliesTo} onChangeText={(x) => editor.setForm({ appliesTo: x })} autoCapitalize="none" disabled={ro} />
           <TextField label={t('promo.appliesLabel')} value={f.appliesLabel} onChangeText={(x) => editor.setForm({ appliesLabel: x })} disabled={ro} />
           <WallTimeField key={`s${v}`} label={t('ent.startsAt')} iso={f.startsAt} tz={tz} disabled={ro} onChange={(x) => editor.setForm({ startsAt: x })} />
@@ -65,10 +67,10 @@ export default function PromoEdit() {
               <TextField label={t('promo.perPerson')} value={String(f.perPerson)} onChangeText={(x) => editor.setForm({ perPerson: int(x) ?? 1 })} keyboardType="number-pad" disabled={ro} />
             </View>
           </View>
-          <Text variant="label">{t('stf.campaigns')}</Text>
+          <Text variant="label">{t('promo.campaign')}</Text>
           <View style={styles.chips}>
             <Chip selected={!f.campaignId} onPress={() => !ro && editor.setForm({ campaignId: null })}>
-              {t('svc.photoNone')}
+              {t('promo.noCampaign')}
             </Chip>
             {(campaigns.data ?? []).map((c) => (
               <Chip key={c.id} selected={f.campaignId === c.id} onPress={() => !ro && editor.setForm({ campaignId: c.id })}>

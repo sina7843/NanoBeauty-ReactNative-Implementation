@@ -11,7 +11,8 @@ import {
 } from '@nano/contracts';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { authenticate, type AuthContext } from '../auth/session';
+import { assertOnboarded, authenticate, type AuthContext } from '../auth/session';
+import { formatWhen } from '../notifications/templates';
 import type { Queryable } from '../db';
 import { toAreas } from '../content/routes';
 import { HttpError } from '../errors';
@@ -36,12 +37,18 @@ const TRANSITIONS: Record<string, readonly string[]> = {
   declined: [],
   done: [],
 };
-/** Customer is told about these outcomes (BOOK 18); NTF-03 covers an approved change. */
+/**
+ * Customer is told about these outcomes (BOOK 18); NTF-03 covers an approved change (in hand-off mode only once it is
+ * done, see the transition route). "Call" (call_needed) is the clinic's own to-do: it changes the queue, not what the
+ * customer is told (ST-6).
+ */
 const CUSTOMER_TEMPLATE: Record<string, string> = {
   approved: 'NTF-03.visit_request_approved',
   declined: 'visit_request_declined',
-  call_needed: 'visit_request_call_needed',
 };
+
+/** Hand-off mode (ST-6): approval tells the customer nothing; "done" (moved in Fresha) carries the approved notice. */
+const HANDOFF_OUTCOME: Record<string, string | null> = { approved: null, done: 'approved' };
 
 type VisitRow = {
   id: string;
@@ -94,6 +101,11 @@ const toVisit = (v: VisitRow, open: RequestRow | undefined): Visit => ({
   depositCAD: v.deposit_cad === null ? null : Number(v.deposit_cad),
   openRequest: open ? toRequest(open) : null,
 });
+
+export async function clinicTz(db: Queryable): Promise<string> {
+  const [s] = await db.query<{ clinic: { timezone?: string } }>('SELECT clinic FROM app_settings WHERE id = 1');
+  return s?.clinic.timezone ?? 'America/Vancouver';
+}
 
 /** Notification hook (spec 3): written to the outbox in the same transaction; NANO-09 delivers. */
 export async function notify(
@@ -166,7 +178,7 @@ export function registerVisitRoutes(app: FastifyInstance, { now }: { now: () => 
     const [after] = await tx.query<{ id: string; starts_at: Date }>('SELECT id, starts_at FROM visits WHERE customer_id = $1 AND external_ref = $2', [customerId, v.ref]);
     const startsAt = after!.starts_at.getTime();
     if (startsAt <= now()) return;
-    const when = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Vancouver', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(after!.starts_at);
+    const when = formatWhen(after!.starts_at, await clinicTz(tx));
     const data = { visitId: after!.id, service: v.serviceName, when };
     const queue = (template: string, key: string) =>
       tx.query(
@@ -212,6 +224,7 @@ export function registerVisitRoutes(app: FastifyInstance, { now }: { now: () => 
   // BKG-08. Records the intent only; the booking itself happens in Fresha. Idempotent per key.
   app.post('/v1/bookings/handoffs', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (request) => {
     const ctx = await auth(request.headers.authorization);
+    await assertOnboarded(db, ctx.customerId);
     const body = handoffRequestSchema.parse(request.body);
     const [settings] = await db.query<{ settings: { bookingMode: BookingMode } }>('SELECT settings FROM app_settings WHERE id = 1');
     if (!settings || effectiveBookingMode(settings.settings.bookingMode, integrations) !== 'handoff') throw new HttpError(409, 'conflict', 'Booking hand-off is not in use.');
@@ -289,6 +302,7 @@ export function registerVisitRoutes(app: FastifyInstance, { now }: { now: () => 
   // VIS-06 → clinic queue (BOOK 18). One open request per visit; retries return the same request.
   app.post('/v1/visits/:id/requests', { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (request) => {
     const ctx = await auth(request.headers.authorization);
+    await assertOnboarded(db, ctx.customerId);
     const { id } = z.object({ id: z.uuid() }).parse(request.params);
     const body = visitRequestCreateSchema.parse(request.body);
     const t = now();
@@ -315,8 +329,11 @@ export function registerVisitRoutes(app: FastifyInstance, { now }: { now: () => 
          VALUES ($1, $2, $3, $4, $5, 'submitted', $6, $7, $7) RETURNING *`,
         [reference, visit.id, ctx.customerId, body.type, body.message, body.idempotencyKey, iso(t)],
       );
-      // NTF-11 to staff who can handle requests; acknowledgement to the customer.
-      await notify(tx, { audience: 'staff', permission: 'requests.manage', template: 'NTF-11.request_needs_you', data: { requestId: row!.id, reference }, now: t });
+      // NTF-11 to staff who can handle requests ("Jenna T. wants to move Thu 16 Oct, 2:30 pm"); acknowledgement to the customer.
+      const [c] = await tx.query<{ first_name: string | null; last_name: string | null }>('SELECT first_name, last_name FROM customers WHERE id = $1', [ctx.customerId]);
+      const who = [c?.first_name, c?.last_name ? `${c.last_name[0]}.` : null].filter(Boolean).join(' ');
+      const what = body.type === 'cancel' ? 'cancel' : 'move';
+      await notify(tx, { audience: 'staff', permission: 'requests.manage', template: 'NTF-11.request_needs_you', data: { requestId: row!.id, reference, who, what, when: formatWhen(visit.starts_at, await clinicTz(tx)) }, now: t });
       await notify(tx, { audience: 'customer', customerId: ctx.customerId, template: 'visit_request_submitted', data: { requestId: row!.id, reference, visitId: visit.id }, now: t });
       return toRequest(row!);
     });
@@ -359,7 +376,12 @@ export function registerVisitRoutes(app: FastifyInstance, { now }: { now: () => 
          VALUES ($1, $2, $3, 'status', $4, $5, $6, $7, $8)`,
         [ctx.customerId, ctx.roles.join(','), `visit_request:${id}`, r.status, body.to, body.reason ?? body.note ?? null, String(request.headers['user-agent'] ?? ''), iso(t)],
       );
-      const template = CUSTOMER_TEMPLATE[body.to];
+      // ST-6: in hand-off mode "approved" only means the clinic agreed; nothing has moved in Fresha yet. Staff move it
+      // there and then mark the request done: that is when the customer hears it, never before.
+      const [s] = await tx.query<{ settings: { bookingMode: BookingMode } }>('SELECT settings FROM app_settings WHERE id = 1');
+      const handoff = !s || effectiveBookingMode(s.settings.bookingMode, integrations) === 'handoff';
+      const outcome = handoff && body.to in HANDOFF_OUTCOME ? HANDOFF_OUTCOME[body.to] : body.to;
+      const template = outcome && CUSTOMER_TEMPLATE[outcome];
       if (template) {
         await notify(tx, {
           audience: 'customer',

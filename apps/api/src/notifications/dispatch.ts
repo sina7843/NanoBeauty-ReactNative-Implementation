@@ -1,7 +1,7 @@
 import type { Channel, Settings } from '@nano/contracts';
 import type { Db, Queryable } from '../db';
 import type { Integrations } from '../integrations';
-import { APP_LINK_BASE, DELIVERY, render, type DeliverySpec } from './templates';
+import { APP_LINK_BASE, DELIVERY, formatWhen, render, type DeliverySpec } from './templates';
 
 const iso = (ms: number) => new Date(ms).toISOString();
 const HOUR = 3600_000;
@@ -160,7 +160,7 @@ export async function queueReminders(db: Db, now: number): Promise<number> {
   let queued = 0;
   for (const v of visits) {
     const h = hours.find((x) => v.starts_at.getTime() - now <= x * HOUR)!;
-    const when = new Intl.DateTimeFormat('en-CA', { timeZone: ctx.tz, weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(v.starts_at);
+    const when = formatWhen(v.starts_at, ctx.tz);
     const rows = await db.query(
       `INSERT INTO notifications (audience, customer_id, template, data, created_at, dedupe_key) VALUES ('customer', $1, 'NTF-02.reminder', $2, $3, $4)
        ON CONFLICT (dedupe_key) DO NOTHING RETURNING id`,

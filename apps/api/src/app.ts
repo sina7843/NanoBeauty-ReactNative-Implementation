@@ -130,7 +130,9 @@ export function buildApp({ config, db, integrations, auth = {} }: AppDeps) {
     if (err.validation) return sendError(request, reply, 400, 'validation_failed', 'Request validation failed.');
     const status = err.statusCode ?? 500;
     if (status < 500) {
-      return sendError(request, reply, status, STATUS_CODES[status] ?? 'bad_request', err.message ?? 'Bad request.');
+      // The per-address limiter sets the retry-after header; the body carries the same wait (API-9).
+      const wait = status === 429 ? Math.ceil(Number(reply.getHeader('retry-after'))) : 0;
+      return sendError(request, reply, status, STATUS_CODES[status] ?? 'bad_request', err.message ?? 'Bad request.', wait > 0 ? { retryAfterSeconds: wait } : {});
     }
     request.log.error({ err: error }, 'unhandled error');
     // Crash/error telemetry: message redacted (no contact details, codes or tokens), traced by request ID.

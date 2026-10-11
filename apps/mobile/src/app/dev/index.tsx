@@ -72,7 +72,7 @@ function Gallery({ scheme, onScheme }: { scheme: string; onScheme: (v: string) =
     <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={styles.page}>
       <SegmentedControl label="Theme" options={[...SCHEMES]} value={scheme} onChange={onScheme} />
       <Text variant="caption" tone="inkMuted">
-        Brand fonts loaded: {fonts.size ? [...fonts].join(', ') : 'none (system fallback)'}
+        Brand fonts loaded: {fonts.size ? [...fonts].join(', ') : 'none'}
       </Text>
 
       <Section title="Typography">

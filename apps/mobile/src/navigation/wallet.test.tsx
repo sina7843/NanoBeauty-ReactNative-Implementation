@@ -106,6 +106,8 @@ function scriptApi(extra: Record<string, (body: Record<string, unknown>) => Repl
     return new Response(r.body === undefined ? null : JSON.stringify(r.body), { status: r.status, headers: { 'content-type': 'application/json' } });
   }) as unknown as typeof fetch;
 }
+// WP-18: the app asks for its own platform's methods (jest-expo runs as iOS).
+const METHODS = `GET /v1/orders/${ORDER_ID}/methods?platform=ios`;
 const methods = (list: MethodOption[] = [{ method: 'card', available: true, note: null }]) => ({ status: 200, body: { order: order(), methods: list } });
 
 async function signIn() {
@@ -140,6 +142,15 @@ describe('Wallet (WAL-01…06)', () => {
     expect(screen.getByText(/^Sends /)).toBeTruthy();
   });
 
+  it('WP-3: a gift whose text failed is not titled "Sent to"', async () => {
+    await signIn();
+    const failed = { ...sentGift, gift: { ...sentGift.gift!, delivery: 'failed' as const, sendAt: null } };
+    scriptApi({ 'GET /v1/wallet': () => ({ status: 200, body: { instruments: [failed], asOf: '2026-10-06T17:00:00.000Z' } }) });
+    renderRouter(APP_DIR, { initialUrl: '/wallet' });
+    expect(await screen.findByText('Couldn’t text Sara')).toBeTruthy();
+    expect(screen.queryByText('Sent to Sara')).toBeNull();
+  });
+
   it('empty wallet', async () => {
     await signIn();
     scriptApi({ 'GET /v1/wallet': () => ({ status: 200, body: { instruments: [], asOf: '2026-10-06T17:00:00.000Z' } }) });
@@ -165,7 +176,7 @@ describe('payment (PAY-01…09)', () => {
         body: [{ id: 'pkg_sqt_4', name: 'SQT Bio-Microneedling · 4 sessions', serviceId: 'svc_sqt', sessions: 4, priceCents: 120000, regularCents: 140000, validityMonths: 12, status: 'live', terms: ['Each visit uses one session.'], sample: true }],
       }),
       'POST /v1/orders': () => ({ status: 200, body: order() }),
-      [`GET /v1/orders/${ORDER_ID}/methods`]: () => methods(),
+      [METHODS]: () => methods(),
       [`POST /v1/orders/${ORDER_ID}/attempts`]: () => ({ status: 200, body: attempt('requires_action') }),
       [`POST /v1/payments/attempts/${ATTEMPT_ID}/confirm`]: (b) => {
         confirmed = b.paymentToken === 'tok_visa';
@@ -174,7 +185,7 @@ describe('payment (PAY-01…09)', () => {
       [`GET /v1/payments/attempts/${ATTEMPT_ID}`]: () => ({ status: 200, body: attempt(confirmed ? 'succeeded' : 'requires_action') }),
       [`GET /v1/receipts/${ORDER_ID}`]: () => ({
         status: 200,
-        body: { orderId: ORDER_ID, reference: 'PAY-88213', status: 'paid', lines: [{ label: 'SQT Bio-Microneedling · 4 sessions', amountCents: 120000 }], taxIncludedCents: 5714, totalCents: 120000, methodLabel: 'Visa •••• 4242', paidAt: '2026-10-06T17:00:00.000Z', refunds: [], sample: true },
+        body: { orderId: ORDER_ID, reference: 'PAY-88213', orderReference: 'NB-O-1A2B3C', status: 'paid', lines: [{ label: 'SQT Bio-Microneedling · 4 sessions', amountCents: 120000 }], taxIncludedCents: 5714, totalCents: 120000, methodLabel: 'Visa •••• 4242', paidAt: '2026-10-06T17:00:00.000Z', refunds: [], sample: true },
       }),
     });
     const router = renderRouter(APP_DIR, { initialUrl: '/wallet/buy-package' });
@@ -198,12 +209,14 @@ describe('payment (PAY-01…09)', () => {
     expect(await screen.findByText('GST included')).toBeTruthy();
     expect(screen.getByText('$57.14')).toBeTruthy();
     expect(screen.getByText('PAY-88213')).toBeTruthy();
+    // WP-21: the receipt also carries the order reference Receipts and history shows.
+    expect(screen.getByText('NB-O-1A2B3C')).toBeTruthy();
   });
 
   it('declined: nothing charged, another method can be chosen', async () => {
     await signIn();
     scriptApi({
-      [`GET /v1/orders/${ORDER_ID}/methods`]: () => methods(),
+      [METHODS]: () => methods(),
       [`POST /v1/orders/${ORDER_ID}/attempts`]: () => ({ status: 200, body: attempt('requires_action') }),
       [`POST /v1/payments/attempts/${ATTEMPT_ID}/confirm`]: () => ({ status: 200, body: attempt('declined') }),
       [`GET /v1/payments/attempts/${ATTEMPT_ID}`]: () => ({ status: 200, body: attempt('declined') }),
@@ -222,7 +235,7 @@ describe('payment (PAY-01…09)', () => {
 
   it('no method switched on: says so and offers the clinic instead', async () => {
     await signIn();
-    scriptApi({ [`GET /v1/orders/${ORDER_ID}/methods`]: () => methods([]) });
+    scriptApi({ [METHODS]: () => methods([]) });
     renderRouter(APP_DIR, { initialUrl: `/pay/method?order=${ORDER_ID}` });
     expect(await screen.findByText('Online payment isn’t available right now')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Call the clinic' })).toBeTruthy();
@@ -231,7 +244,7 @@ describe('payment (PAY-01…09)', () => {
   it('financing that isn’t offered for the amount is shown but can’t be chosen, with a neutral note', async () => {
     await signIn();
     scriptApi({
-      [`GET /v1/orders/${ORDER_ID}/methods`]: () =>
+      [METHODS]: () =>
         methods([
           { method: 'card', available: true, note: null },
           { method: 'klarna', available: false, note: 'Not offered for this amount' },
@@ -240,6 +253,46 @@ describe('payment (PAY-01…09)', () => {
     renderRouter(APP_DIR, { initialUrl: `/pay/method?order=${ORDER_ID}` });
     const klarna = await screen.findByRole('radio', { name: 'Klarna, Not offered for this amount' });
     expect(klarna.props.accessibilityState).toMatchObject({ disabled: true });
+  });
+
+  it('WP-18: on iOS only Apple Pay is offered, as the wallet button, never Google Pay', async () => {
+    await signIn();
+    scriptApi({
+      [METHODS]: () =>
+        methods([
+          { method: 'apple_pay', available: true, note: null },
+          { method: 'google_pay', available: true, note: null },
+          { method: 'card', available: true, note: null },
+        ]),
+    });
+    renderRouter(APP_DIR, { initialUrl: `/pay/method?order=${ORDER_ID}` });
+    expect(await screen.findByRole('button', { name: 'Apple Pay' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Google Pay' })).toBeNull();
+    expect(screen.queryByRole('radio', { name: /Google Pay/ })).toBeNull();
+    expect(screen.getByText('Or pay with')).toBeTruthy();
+  });
+
+  it('WP-1: opening the card form saves no relaunch marker', async () => {
+    await signIn();
+    scriptApi({
+      [METHODS]: () => methods(),
+      [`POST /v1/orders/${ORDER_ID}/attempts`]: () => ({ status: 200, body: attempt('requires_action') }),
+    });
+    const router = renderRouter(APP_DIR, { initialUrl: `/pay/method?order=${ORDER_ID}` });
+    fireEvent.press(await screen.findByRole('button', { name: 'Continue' }));
+    await waitFor(() => expect(router.getPathname()).toBe('/pay/card'));
+    expect(await AsyncStorage.getItem('nano.private.payment')).toBeNull();
+  });
+
+  it('WP-1: a relaunch drops a marker the server no longer reports as processing', async () => {
+    await signIn();
+    await AsyncStorage.setItem('nano.entry.primerSeen.v1', '1');
+    await AsyncStorage.setItem('nano.private.payment', JSON.stringify({ attemptId: ATTEMPT_ID, orderId: ORDER_ID, startedAt: Date.now() - 60_000 }));
+    scriptApi({ [`GET /v1/payments/attempts/${ATTEMPT_ID}`]: () => ({ status: 200, body: attempt('requires_action') }) });
+    const router = renderRouter(APP_DIR, { initialUrl: '/' });
+    await waitFor(() => expect(router.getPathname()).toBe('/home'), { timeout: 8000 });
+    await waitFor(async () => expect(await AsyncStorage.getItem('nano.private.payment')).toBeNull());
+    expect(router.getPathname()).toBe('/home');
   });
 
   it('relaunch mid-payment checks with the provider instead of forgetting (PAY 07)', async () => {
@@ -262,13 +315,13 @@ describe('gift cards (WAL-13, 08–11)', () => {
         sent = b;
         return { status: 200, body: order({ kind: 'gift', title: 'Gift card for Sara', amountCents: 15000 }) };
       },
-      [`GET /v1/orders/${ORDER_ID}/methods`]: () => methods(),
+      [METHODS]: () => methods(),
     });
     const router = renderRouter(APP_DIR, { initialUrl: '/wallet/gift/design' });
     fireEvent.press(await screen.findByRole('radio', { name: 'Birthday' }));
     fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
     await waitFor(() => expect(router.getPathname()).toBe('/wallet/gift/value'));
-    fireEvent.press(screen.getByRole('togglebutton', { name: '$150' }));
+    fireEvent.press(screen.getByRole('radio', { name: '$150' }));
     fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
     await waitFor(() => expect(router.getPathname()).toBe('/wallet/gift/recipient'));
     fireEvent.changeText(screen.getByLabelText('Their name'), 'Sara');
@@ -309,9 +362,29 @@ describe('gift cards (WAL-13, 08–11)', () => {
     renderRouter(APP_DIR, { initialUrl: '/wallet/claim?code=ABCDEFGH4821' });
     fireEvent.press(await screen.findByRole('button', { name: 'Check code' }));
     expect(await screen.findByText('“Treat yourself.”')).toBeTruthy();
-    expect(screen.getByText('From Leila')).toBeTruthy();
+    expect(screen.getByText('For you, from Leila')).toBeTruthy();
     fireEvent.press(screen.getByRole('button', { name: 'Add to my Wallet' }));
     expect(await screen.findByText('Added to your Wallet')).toBeTruthy();
+  });
+
+  it('WP-12: a cleared custom amount leaves nothing chosen', async () => {
+    giftDraft.set({ design: 'love' });
+    renderRouter(APP_DIR, { initialUrl: '/wallet/gift/value' });
+    const field = await screen.findByLabelText('Or choose an amount');
+    fireEvent.changeText(field, '75');
+    expect(giftDraft.get().amountCents).toBeNull();
+    fireEvent.changeText(field, '');
+    expect(screen.getByRole('button', { name: 'Continue' }).props.accessibilityState).toMatchObject({ disabled: true });
+  });
+
+  it('WP-14: a short code is a field error, not "not found"', async () => {
+    await signIn();
+    scriptApi();
+    renderRouter(APP_DIR, { initialUrl: '/wallet/claim' });
+    fireEvent.changeText(await screen.findByLabelText('Gift code'), 'NB-7Q4K');
+    fireEvent.press(screen.getByRole('button', { name: 'Check code' }));
+    expect(await screen.findByText('That code is too short. Codes have 12 letters and numbers.')).toBeTruthy();
+    expect(calls.some((c) => c.key === 'POST /v1/gifts/lookup')).toBe(false);
   });
 
   it('claim: not found shows support with a reference', async () => {

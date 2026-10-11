@@ -343,6 +343,9 @@ export function registerStaffRoutes(app: FastifyInstance, { now }: { now: () => 
 
   async function openApproval(tx: Queryable, request: FastifyRequest, row: ServiceRow, submittedBy: string, fields: string[], why: string) {
     const d = row.draft ?? liveOf(row);
+    // ST-3: the same completeness rule as publish, so an Owner is never handed an item they can't approve.
+    const missing = await missingFor(tx, d);
+    if (missing.length) throw new HttpError(409, 'conflict', `${missing.length} thing${missing.length > 1 ? 's' : ''} missing: ${missing.join(', ')}.`);
     const live = row.published_at ? liveOf(row) : null;
     const summary = fields.includes('price') && live ? `Price: ${priceText(live.price)} → ${priceText(d.price)}` : live ? 'Content changes' : 'New service';
     await tx.query(
@@ -352,7 +355,8 @@ export function registerStaffRoutes(app: FastifyInstance, { now }: { now: () => 
     );
     await tx.query('UPDATE services SET in_review = true, version = version + 1, updated_at = $2 WHERE id = $1', [row.id, iso(now())]);
     await audit(tx, request, `service:${row.id}`, 'state', stateOf(row), 'review', why);
-    await notify(tx, { audience: 'staff', permission: 'content.publish', template: 'NTF-12.approval_needed', data: { item: d.name }, now: now() });
+    const [who] = await tx.query<{ first_name: string | null }>('SELECT first_name FROM customers WHERE id = $1', [submittedBy]);
+    await notify(tx, { audience: 'staff', permission: 'content.publish', template: 'NTF-12.approval_needed', data: { item: d.name, who: who?.first_name ?? '' }, now: now() });
   }
 
   // Editor: Submit → the Owner reviews (D35). Customers keep the live version meanwhile.
@@ -764,7 +768,14 @@ export function registerStaffRoutes(app: FastifyInstance, { now }: { now: () => 
 
   type MediaRow = { id: string; filename: string; alt_text: string | null; rights_confirmed: boolean; status: Media['status']; width: number | null; height: number | null; size_bytes: number; version: number; created_at: Date };
   async function mediaView(tx: Queryable, m: MediaRow): Promise<Media> {
-    const [{ n }] = (await tx.query<{ n: string }>(`SELECT COUNT(*)::text AS n FROM services WHERE photo = $1 OR draft->>'photo' = $1`, [`media:${m.id}`])) as [{ n: string }];
+    // Services, campaigns, professionals (live or in a draft) and category photos all count (ST-9).
+    const [{ n }] = (await tx.query<{ n: string }>(
+      `SELECT ((SELECT COUNT(*) FROM services WHERE photo = $1 OR draft->>'photo' = $1)
+             + (SELECT COUNT(*) FROM campaigns WHERE photo = $1 OR draft->>'photo' = $1)
+             + (SELECT COUNT(*) FROM professionals WHERE photo = $1 OR draft->>'photo' = $1)
+             + (SELECT COUNT(*) FROM categories WHERE photo = $1))::text AS n`,
+      [`media:${m.id}`],
+    )) as [{ n: string }];
     return {
       id: m.id,
       filename: m.filename,
@@ -849,7 +860,7 @@ export function registerStaffRoutes(app: FastifyInstance, { now }: { now: () => 
           return { deleted: true };
         }
         if (to === 'archived') {
-          if (view.inUse) throw new HttpError(409, 'conflict', `Used by ${view.inUse} service${view.inUse > 1 ? 's' : ''}: choose another photo there first.`);
+          if (view.inUse) throw new HttpError(409, 'conflict', `Used by ${view.inUse} item${view.inUse > 1 ? 's' : ''} (treatments, offers or team): choose another photo there first.`);
           const [u] = await tx.query<MediaRow>(`UPDATE media SET status = 'archived', version = version + 1 WHERE id = $1 RETURNING ${MEDIA_COLUMNS}`, [id]);
           await audit(tx, request, `media:${id}`, 'state', m.status, 'archived', 'archived');
           return mediaView(tx, u!);

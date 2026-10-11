@@ -1,6 +1,7 @@
 import { instrumentSchema, lookupResponseSchema, type Instrument } from '@nano/contracts';
 import { space } from '@nano/design-tokens';
-import { useState } from 'react';
+import { router, type Href } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useAuth } from '../auth/AuthProvider';
 import { newIdempotencyKey } from '../booking/visits';
@@ -8,7 +9,8 @@ import { Banner, Button, Card, Dialog, EmptyState, ListGroup, ListRow, Text, Tex
 import { t } from '../i18n';
 import { money } from '../i18n/format';
 import { ApiError } from '../api/client';
-import { problemOf } from './api';
+import { problemOf, problemText } from './api';
+import { humanize } from './readable';
 
 const valueOf = (i: Instrument) => (i.sessions ? t('redeem.left', { left: `${i.sessions.remaining}/${i.sessions.total}` }) : money((i.balanceCents ?? 0) / 100));
 
@@ -16,10 +18,11 @@ const valueOf = (i: Instrument) => (i.sessions ? t('redeem.left', { left: `${i.s
  * STF-11 lookup and STF-25 counter redemption. Nothing is subtracted on the phone: the staff member confirms, the
  * server writes the ledger entry, and the receipt shows the balance the server returned (no optimistic decrement).
  */
-export function ValueFinder({ redeem }: { redeem: boolean }) {
-  const { session } = useAuth();
+export function ValueFinder({ redeem, initialQuery }: { redeem: boolean; /** Lookup → "Redeem at the desk" carries the search over. */ initialQuery?: string }) {
+  const { session, me } = useAuth();
+  const can = (p: string) => !!me?.permissions.includes(p as never);
   const toast = useToast();
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState(initialQuery ?? '');
   const [result, setResult] = useState<ReturnType<typeof lookupResponseSchema.parse> | null>(null);
   const [searching, setSearching] = useState(false);
   const [picked, setPicked] = useState<Instrument | null>(null);
@@ -29,6 +32,11 @@ export function ValueFinder({ redeem }: { redeem: boolean }) {
   const [busy, setBusy] = useState(false);
   const [key, setKey] = useState(newIdempotencyKey);
   const [receipt, setReceipt] = useState<{ used: string; after: Instrument } | null>(null);
+
+  useEffect(() => {
+    if (initialQuery) find();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function find() {
     const term = q.trim();
@@ -40,8 +48,7 @@ export function ValueFinder({ redeem }: { redeem: boolean }) {
       const param = /^[0-9+()\s-]{7,}$/.test(term) ? `phone=${encodeURIComponent(term)}` : `code=${encodeURIComponent(term)}`;
       setResult(lookupResponseSchema.parse((await session.authed(`/v1/staff/lookup?${param}`)).body));
     } catch (e) {
-      problemOf(e);
-      toast({ tone: 'warning', message: t('error.body') });
+      toast({ tone: 'danger', message: problemText(e) });
     } finally {
       setSearching(false);
     }
@@ -66,7 +73,7 @@ export function ValueFinder({ redeem }: { redeem: boolean }) {
     } catch (e) {
       // Same key on retry: a lost response can't redeem twice.
       if (e instanceof ApiError && e.code === 'forbidden') toast({ tone: 'warning', message: t('redeem.self') });
-      else toast({ tone: 'warning', message: problemOf(e).kind === 'conflict' ? t('redeem.conflict') : t('error.body') });
+      else toast({ tone: 'danger', message: problemOf(e).kind === 'conflict' ? t('redeem.conflict') : problemText(e) });
     } finally {
       setBusy(false);
       setConfirming(false);
@@ -88,22 +95,46 @@ export function ValueFinder({ redeem }: { redeem: boolean }) {
           <Text variant="body">{`−${receipt.used} · ${valueOf(receipt.after)}`}</Text>
         </Card>
       ) : null}
-      {result ? (
-        result.instruments.length ? (
-          <ListGroup header={result.customer ? `${result.customer.name ?? '—'} · ${result.customer.phoneMasked}` : undefined}>
-            {result.instruments.map((i) => (
+      {result && !result.customer && !result.instruments.length ? (
+        // ST-15: not found is not the same as "found, nothing to redeem".
+        <EmptyState icon="magnifying-glass" title={t('lookup.notFound')}>
+          {t('lookup.notFoundBody')}
+        </EmptyState>
+      ) : null}
+      {result?.customer ? (
+        <ListGroup header={t('lookup.customer')}>
+          <ListRow
+            icon="user-circle"
+            title={result.customer.name ?? '—'}
+            subtitle={result.customer.phoneMasked}
+            chevron={can('customers.view')}
+            onPress={can('customers.view') ? () => router.push(`/staff/customers/${result.customer!.id}` as Href) : undefined}
+          />
+        </ListGroup>
+      ) : null}
+      {result && (result.customer || result.instruments.length) ? (
+        <ListGroup header={t('lookup.value')} footer={result.instruments.length ? undefined : t('lookup.noValue')}>
+          {result.instruments.map((i) => {
+            const giftLink = !redeem && i.kind === 'gift_card' && can('giftcard.actions');
+            const pick = redeem && i.status === 'active';
+            return (
               <ListRow
                 key={i.id}
+                icon={i.kind === 'gift_card' ? 'gift' : i.sessions ? 'package' : 'wallet'}
                 title={i.label}
-                subtitle={[valueOf(i), i.status !== 'active' ? i.status : null, i.last4 ? `GC-${i.last4}` : null].filter(Boolean).join(' · ')}
-                chevron={redeem && i.status === 'active'}
-                onPress={redeem && i.status === 'active' ? () => setPicked(i) : undefined}
+                subtitle={[valueOf(i), i.status !== 'active' ? humanize(i.status) : null, i.last4 ? `GC-${i.last4}` : null].filter(Boolean).join(' · ')}
+                value={giftLink ? t('lookup.actions') : undefined}
+                chevron={pick || giftLink}
+                onPress={pick ? () => setPicked(i) : giftLink ? () => router.push(`/staff/gift-cards/${i.id}` as Href) : undefined}
               />
-            ))}
-          </ListGroup>
-        ) : (
-          <EmptyState title={t('redeem.none')} />
-        )
+            );
+          })}
+        </ListGroup>
+      ) : null}
+      {!redeem && result?.instruments.some((i) => i.status === 'active') && can('value.redeem') ? (
+        <Button variant="secondary" icon="wallet" fullWidth onPress={() => router.push({ pathname: '/staff/redeem', params: { q: q.trim() } })}>
+          {t('lookup.redeem')}
+        </Button>
       ) : null}
       {redeem && picked ? (
         <Card>

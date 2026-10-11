@@ -38,6 +38,7 @@ services:
       DEV_OTP_SINK: 'true'
       DEV_SAMPLE_LEGACY: 'true'
       DEV_SAMPLE_FRESHA: 'true'
+      DEV_SAMPLE_CLINIC: 'true'
     ports:
       - '4000:4000'
     restart: unless-stopped

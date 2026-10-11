@@ -2,11 +2,17 @@ import { customerProfileSchema } from '@nano/contracts';
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useAuth } from '../../../../auth/AuthProvider';
 import { Badge, Banner, ListGroup, ListRow, Skeleton, Text } from '../../../../components';
-import { t } from '../../../../i18n';
+import { en } from '../../../../i18n/en';
+import { t, type StringKey } from '../../../../i18n';
 import { calendarDate, clinicDate } from '../../../../i18n/format';
 import { useSettings } from '../../../../settings/useSettings';
 import { useStaffQuery } from '../../../../staff/api';
+import { humanize } from '../../../../staff/readable';
+
 import { StaffScreen } from '../../../../staff/StaffScreen';
+
+/** Visit status in words ("Completed", not "completed"); unknown values are humanized, never shown raw (ST-19). */
+const statusWord = (s: string) => (`status.${s}` in en ? t(`status.${s}` as StringKey) : humanize(s));
 
 /** `/staff/customers/[id]` — STF-27: visits, Wallet value from the ledger, offers consent, open account check. */
 export default function CustomerProfile() {
@@ -18,7 +24,7 @@ export default function CustomerProfile() {
   const profile = useStaffQuery(['customer', id], `/v1/staff/customers/${id}`, customerProfileSchema, !!id);
   const p = profile.data;
   return (
-    <StaffScreen title={t('stf.customers')} back={{ to: '/staff/customers', label: t('stf.customers') }}>
+    <StaffScreen title={t('cust.title')} back={{ to: '/staff/customers', label: t('stf.customers') }}>
       {p ? (
         <>
           <Text variant="titleLg">{p.name ?? p.phone}</Text>
@@ -36,14 +42,21 @@ export default function CustomerProfile() {
               <ListRow key={v.id} title={v.label} value={v.value} chevron={false} />
             ))}
           </ListGroup>
-          <ListGroup header={t('cust.visits')} footer={p.visits.length ? undefined : t('today.noVisits')}>
+          <ListGroup header={t('cust.visits')} footer={p.visits.length ? undefined : t('cust.noVisits')}>
             {p.visits.map((v) => (
-              <ListRow key={v.ref} title={v.service} subtitle={[clinicDate(v.at, tz), v.professional, v.status].filter(Boolean).join(' · ')} chevron={false} />
+              <ListRow key={v.ref} title={v.service} subtitle={[clinicDate(v.at, tz), v.professional, statusWord(v.status)].filter(Boolean).join(' · ')} chevron={false} />
             ))}
           </ListGroup>
           {p.lastMessage ? (
-            <ListGroup header={t('cust.lastMessage')}>
-              <ListRow title={p.lastMessage} chevron={false} />
+            <ListGroup>
+              {/* STF-30 needs a thread id the profile doesn't carry, so Messages opens the Inbox (D-N12-C5). */}
+              <ListRow
+                icon="chat-circle-text"
+                title={t('cust.messages')}
+                subtitle={t('cust.lastMessageSub', { text: p.lastMessage })}
+                onPress={me?.permissions.includes('inbox.manage') ? () => router.push('/staff/inbox') : undefined}
+                chevron={!!me?.permissions.includes('inbox.manage')}
+              />
             </ListGroup>
           ) : null}
         </>

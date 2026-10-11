@@ -1,4 +1,4 @@
-import { space } from '@nano/design-tokens';
+import { radius, space } from '@nano/design-tokens';
 import { Redirect, Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { Badge, Button, PhotoFrame, Screen, Skeleton, Text } from '../../components';
@@ -39,10 +39,13 @@ export default function ProfessionalProfile() {
                 </Button>
               }
             >
-              <PhotoFrame source={imageFor(pro.profile.photo)} alt={pro.name} ratio="4 / 3" />
+              {/* TRT-06: a 300 px crop from the top of the portrait. */}
+              <View style={styles.photo}>
+                <PhotoFrame source={imageFor(pro.profile.photo)} alt={pro.name} ratio="1 / 1" rounded={false} />
+              </View>
               <View style={styles.heading}>
                 {pro.sample ? <Badge tone="sample">{t('badge.sample')}</Badge> : null}
-                <Text variant="displayMd" accessibilityRole="header">
+                <Text variant="titleLg" accessibilityRole="header">
                   {pro.name}
                 </Text>
                 {pro.profile.title ? (
@@ -75,6 +78,7 @@ export default function ProfessionalProfile() {
 }
 
 const styles = StyleSheet.create({
+  photo: { height: 300, borderRadius: radius.lg, overflow: 'hidden' },
   heading: { gap: space['2'] },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: space['2'] },
 });

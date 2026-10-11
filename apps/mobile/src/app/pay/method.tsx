@@ -2,11 +2,11 @@ import { attemptSchema, type Attempt, type MethodOption } from '@nano/contracts'
 import { radius, space } from '@nano/design-tokens';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { ApiError } from '../../api/client';
 import { useAuth } from '../../auth/AuthProvider';
 import { SignInGate } from '../../auth/SignInGate';
-import { Badge, Banner, Button, Icon, Screen, Skeleton, Text } from '../../components';
+import { Banner, Button, Icon, PaymentMethodRow, Screen, Skeleton, Text, WalletPayButton } from '../../components';
 import { newIdempotencyKey } from '../../booking/visits';
 import { t } from '../../i18n';
 import { analytics } from '../../lib/analytics';
@@ -38,7 +38,7 @@ function Choose({ orderId }: { orderId: string | undefined }) {
   const phone = useSettings().data?.data.clinic.phone ?? null;
   const methods = useMethods(orderId);
   const [chosen, setChosen] = useState<MethodOption['method'] | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<MethodOption['method'] | null>(null);
   const [failed, setFailed] = useState(false);
   // A fresh key per tap: `busy` stops double taps, and the server settles or cancels any earlier open attempt
   // before starting a new one, so a retry after a cancelled sheet or hosted page can never charge twice.
@@ -56,9 +56,13 @@ function Choose({ orderId }: { orderId: string | undefined }) {
       </Screen>
     );
   }
-  const { order, methods: list } = methods.data;
+  const { order } = methods.data;
+  // WP-18: Apple Pay only on iOS, Google Pay only on Android; both show as the wallet button, not a radio row.
+  const list = methods.data.methods.filter((m) => !(m.method === 'apple_pay' && Platform.OS !== 'ios') && !(m.method === 'google_pay' && Platform.OS !== 'android'));
+  const wallet = list.find((m) => m.method === 'apple_pay' || m.method === 'google_pay');
+  const rows = list.filter((m) => m !== wallet);
   const available = list.filter((m) => m.available);
-  const selected = chosen ?? available[0]?.method ?? null;
+  const selected = chosen ?? rows.find((m) => m.available)?.method ?? null;
 
   if (order.status !== 'pending') {
     return (
@@ -69,25 +73,30 @@ function Choose({ orderId }: { orderId: string | undefined }) {
     );
   }
 
-  async function go() {
-    if (!selected) return;
-    setBusy(true);
+  async function go(method: MethodOption['method'] | null) {
+    if (!method) return;
+    setBusy(method);
     setFailed(false);
     try {
-      const res = await session.authed(`/v1/orders/${order.id}/attempts`, { method: 'POST', body: { method: selected, idempotencyKey: newIdempotencyKey() } });
+      const res = await session.authed(`/v1/orders/${order.id}/attempts`, { method: 'POST', body: { method, idempotencyKey: newIdempotencyKey() } });
       const attempt: Attempt = attemptSchema.parse(res.body);
-      await savePendingPayment({ attemptId: attempt.id, orderId: order.id, startedAt: Date.now() });
-      analytics.track('payment_started', { context: order.kind, method: selected });
+      analytics.track('payment_started', { context: order.kind, method });
       const params = { attempt: attempt.id, order: order.id };
-      if (attempt.status !== 'requires_action') router.replace({ pathname: '/pay/status', params });
-      else if (selected === 'card') router.push({ pathname: '/pay/card', params });
-      else if (selected === 'klarna' || selected === 'affirm') router.push({ pathname: '/pay/provider', params: { ...params, method: selected } });
+      // WP-1: the relaunch marker is saved only once a payment is actually submitted (card confirm on PAY-02,
+      // the provider page opened on PAY-03, or a wallet token below), never for a form or sheet left unpaid.
+      const submitted = () => savePendingPayment({ attemptId: attempt.id, orderId: order.id, startedAt: Date.now() });
+      if (attempt.status !== 'requires_action') {
+        await submitted();
+        router.replace({ pathname: '/pay/status', params });
+      } else if (method === 'card') router.push({ pathname: '/pay/card', params });
+      else if (method === 'klarna' || method === 'affirm') router.push({ pathname: '/pay/provider', params: { ...params, method } });
       else {
-        const token = await presentWalletPay(selected);
+        const token = await presentWalletPay(method);
         if (!token) {
           await session.authed(`/v1/payments/attempts/${attempt.id}/cancel`, { method: 'POST', body: {} }).catch(() => undefined);
           return;
         }
+        await submitted();
         await session.authed(`/v1/payments/attempts/${attempt.id}/confirm`, { method: 'POST', body: { paymentToken: token } });
         router.replace({ pathname: '/pay/status', params });
       }
@@ -95,17 +104,18 @@ function Choose({ orderId }: { orderId: string | undefined }) {
       if (e instanceof ApiError && e.code === 'conflict') methods.refetch();
       setFailed(true);
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 
   const digits = phone?.replace(/[^\d+]/g, '');
+  const offline = online === false;
   return (
     <Screen
       topInset={false}
       footer={
-        available.length ? (
-          <Button size="lg" fullWidth loading={busy} disabled={!selected || online === false} onPress={go}>
+        rows.some((m) => m.available) ? (
+          <Button size="lg" fullWidth loading={busy !== null && busy === selected} disabled={!selected || offline || busy !== null} onPress={() => go(selected)}>
             {t('pay.continue')}
           </Button>
         ) : undefined
@@ -128,46 +138,39 @@ function Choose({ orderId }: { orderId: string | undefined }) {
               {t('pay.callClinic')}
             </Button>
           ) : null}
-          <Button variant="tertiary" onPress={() => methods.refetch()}>
+          <Button variant="tertiary" icon="arrow-clockwise" onPress={() => methods.refetch()}>
             {t('pay.tryAgain')}
           </Button>
         </>
       ) : (
-        <View style={styles.list} accessibilityRole="radiogroup" accessibilityLabel={t('pay.payWith')}>
-          <Text variant="label">{t('pay.payWith')}</Text>
-          {list.map((m) => {
-            const on = selected === m.method;
-            return (
-              <Pressable
-                key={m.method}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: on, disabled: !m.available }}
-                accessibilityLabel={[t(`pay.method.${m.method}`), m.note].filter(Boolean).join(', ')}
-                disabled={!m.available}
-                onPress={() => setChosen(m.method)}
-                style={[styles.row, { borderColor: on ? colors.primary : colors.lineStrong, borderWidth: on ? 2 : 1, opacity: m.available ? 1 : 0.5 }]}
-              >
-                <Icon name={on ? 'check-circle' : 'credit-card'} size={22} tone={on ? 'primary' : 'inkMuted'} fill={on} />
-                <View style={styles.flex}>
-                  <Text variant="body" strong>
-                    {t(`pay.method.${m.method}`)}
-                  </Text>
-                  {m.method === 'card' ? (
-                    <Text variant="caption" tone="inkMuted">
-                      {t('pay.method.cardSub')}
-                    </Text>
-                  ) : m.note ? (
-                    <Text variant="caption" tone="inkMuted">
-                      {m.note}
-                    </Text>
-                  ) : null}
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
+        <>
+          {wallet ? (
+            <WalletPayButton
+              type={wallet.method === 'apple_pay' ? 'apple' : 'google'}
+              state={wallet.available && !offline ? 'available' : 'unavailable'}
+              loading={busy === wallet.method}
+              onPress={busy === null ? () => go(wallet.method) : undefined}
+            />
+          ) : null}
+          {rows.length ? (
+            <View style={styles.list} accessibilityRole="radiogroup" accessibilityLabel={wallet ? t('pay.orPayWith') : t('pay.payWith')}>
+              <Text variant="label">{wallet ? t('pay.orPayWith') : t('pay.payWith')}</Text>
+              {rows.map((m) => (
+                <PaymentMethodRow
+                  key={m.method}
+                  method={m.method}
+                  label={t(`pay.method.${m.method}`)}
+                  detail={m.method === 'card' ? t('pay.method.cardSub') : m.note}
+                  state={m.available ? 'available' : 'unavailable'}
+                  selected={selected === m.method}
+                  onPress={() => setChosen(m.method)}
+                />
+              ))}
+            </View>
+          ) : null}
+        </>
       )}
-      {online === false ? (
+      {offline ? (
         <Banner tone="offline" title={t('offline.title')}>
           {t('offline.banner')}
         </Banner>
@@ -183,7 +186,6 @@ function Choose({ orderId }: { orderId: string | undefined }) {
           {t('pay.secure')}
         </Text>
       </View>
-      <Badge tone="sample">{t('badge.sample')}</Badge>
     </Screen>
   );
 }
@@ -192,6 +194,5 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   summary: { gap: space['1'], padding: space['4'], borderRadius: radius.lg },
   list: { gap: space['2'] },
-  row: { flexDirection: 'row', alignItems: 'center', gap: space['3'], minHeight: 64, paddingHorizontal: space['4'], paddingVertical: space['3'], borderRadius: radius.md },
   secure: { flexDirection: 'row', gap: space['2'], alignItems: 'flex-start' },
 });

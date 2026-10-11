@@ -7,6 +7,7 @@ import { useInboxItem } from '../../../account/queries';
 import { Banner, Button, Screen, Skeleton, Text } from '../../../components';
 import { t } from '../../../i18n';
 import { clinicDateTime } from '../../../i18n/format';
+import { inboxIcon } from '../../../account/inbox';
 import { OLD_LINK_HREF } from '../../../navigation/routes';
 import { useSettings } from '../../../settings/useSettings';
 
@@ -51,12 +52,12 @@ function Detail({ id }: { id: string | undefined }) {
       <Text variant="caption" tone="inkMuted">
         {clinicDateTime(m.createdAt, zone)}
       </Text>
-      <Text variant="displayMd" accessibilityRole="header">
+      <Text variant="titleLg" accessibilityRole="header">
         {m.title}
       </Text>
       <Text variant="bodyLg">{m.body}</Text>
       {m.href && m.hrefLabel ? (
-        <Button variant="secondary" iconAfter="caret-right" onPress={() => router.push(m.href as Href)}>
+        <Button variant="secondary" icon={inboxIcon(m.href)} fullWidth onPress={() => router.push(m.href as Href)}>
           {m.hrefLabel}
         </Button>
       ) : null}

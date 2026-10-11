@@ -8,6 +8,10 @@ export const errorCodeSchema = z.enum([
   'not_found',
   'conflict',
   'rate_limited',
+  /** A customer write while sign-up is unfinished; `nextStep` says where to send the person (consents or profile). */
+  'onboarding_required',
+  /** POST /v1/orders: the idempotency key was already used for a different order. */
+  'idempotency_mismatch',
   /** AUT-02: wrong code; `attemptsLeft` says how many tries remain. */
   'code_wrong',
   /** AUT-02: code expired or already used; request a new one. */
@@ -32,6 +36,8 @@ export const errorEnvelopeSchema = z.object({
     retryAfterSeconds: z.number().int().nonnegative().optional(),
     /** With `code_wrong`. */
     attemptsLeft: z.number().int().nonnegative().optional(),
+    /** With `onboarding_required`: the sign-up step still to do. */
+    nextStep: z.enum(['consents', 'profile']).optional(),
     /** With `forbidden`: the permission the caller lacks. */
     missingPermission: z.string().optional(),
   }),

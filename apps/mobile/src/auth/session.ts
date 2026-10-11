@@ -13,6 +13,12 @@ export class SessionManager {
   private session: TokenPair | null = null;
   private refreshing: Promise<TokenPair | null> | null = null;
   private signingOut = false;
+  /** FE-1: the server refused a customer write because sign-up isn't finished (`onboarding_required`). */
+  private onOnboardingRequired: ((nextStep: 'consents' | 'profile' | undefined) => void) | null = null;
+
+  setOnboardingHandler(handler: ((nextStep: 'consents' | 'profile' | undefined) => void) | null) {
+    this.onOnboardingRequired = handler;
+  }
 
   constructor(
     private readonly store: SessionStore,
@@ -48,6 +54,7 @@ export class SessionManager {
         return this.request(path, { ...init, token: renewed.accessToken });
       }
       if (error.code === 'session_expired' || error.code === 'unauthorized') await this.expire();
+      if (error.code === 'onboarding_required') this.onOnboardingRequired?.(error.info.nextStep);
       throw error;
     }
   }

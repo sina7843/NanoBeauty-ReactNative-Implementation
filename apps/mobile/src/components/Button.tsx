@@ -94,13 +94,19 @@ export interface IconButtonProps {
   /** A violet "new" dot; never an unread-marketing count. */
   badge?: boolean;
   disabled?: boolean;
+  /** Compact visuals with a 16 dp icon; the 48 dp touch target is kept through hitSlop. `sm` 32 dp (Banner dismiss,
+   * DS-19), `search` 36 dp (`.nb-search__clear`, DS-9). */
+  size?: 'md' | 'sm' | 'search';
   onPress?: () => void;
 }
 
-export function IconButton({ icon, label, variant = 'plain', badge, disabled, onPress }: IconButtonProps) {
+const COMPACT = { sm: 32, search: 36 } as const;
+
+export function IconButton({ icon, label, variant = 'plain', badge, disabled, size = 'md', onPress }: IconButtonProps) {
   const { colors } = useTheme();
   const base = [
     styles.iconButton,
+    size !== 'md' && { width: COMPACT[size], height: COMPACT[size] },
     variant === 'tonal' && { backgroundColor: colors.surfaceMuted },
     variant === 'outline' && { borderWidth: 1.5, borderColor: colors.lineStrong },
   ];
@@ -110,10 +116,11 @@ export function IconButton({ icon, label, variant = 'plain', badge, disabled, on
       accessibilityLabel={label}
       accessibilityState={{ disabled: !!disabled }}
       disabled={disabled}
+      hitSlop={size === 'md' ? undefined : (sizes.touchMin - COMPACT[size]) / 2}
       onPress={onPress}
       {...pressFeedback(base, { pressedColor: colors.surfacePressed, rippleColor: colors.surfacePressed, borderless: true })}
     >
-      <Icon name={icon} size={22} color={disabled ? colors.inkDisabled : colors.ink} />
+      <Icon name={icon} size={size === 'md' ? 22 : 16} color={disabled ? colors.inkDisabled : colors.ink} />
       {badge ? <View style={[styles.dot, { backgroundColor: colors.primary, borderColor: colors.bg }]} /> : null}
     </Pressable>
   );

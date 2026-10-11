@@ -3,9 +3,9 @@ import { space } from '@nano/design-tokens';
 import { Redirect, Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
-import { Button, Screen, SegmentedControl, Text, TextField } from '../../../components';
+import { BookingStepper, Button, Screen, SegmentedControl, Text, TextField } from '../../../components';
 import { t } from '../../../i18n';
-import { giftDraft, useGiftDraft } from '../../../payments/giftDraft';
+import { GIFT_STEPS, giftDraft, useGiftDraft } from '../../../payments/giftDraft';
 import { SendTimePicker } from '../../../payments/SendTimePicker';
 import { useSettings } from '../../../settings/useSettings';
 
@@ -35,7 +35,7 @@ export default function GiftRecipient() {
 
   return (
     <>
-      <Stack.Screen options={{ title: t('gift.title') }} />
+      <Stack.Screen options={{ title: t('gift.title'), headerBackTitle: t('gift.step.value') }} />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <Screen
           topInset={false}
@@ -45,20 +45,24 @@ export default function GiftRecipient() {
             </Button>
           }
         >
+          <BookingStepper steps={GIFT_STEPS.map((step) => t(step))} current={2} />
           <View style={styles.group}>
             <TextField label={t('gift.name')} value={draft.recipientName} onChangeText={(v) => giftDraft.set({ recipientName: v })} error={errors.name} maxLength={60} autoComplete="off" />
+            {/* WP-13: field order per WAL-09 — name, send it by, number, message, when. Text is the only channel. */}
+            <Text variant="label">{t('gift.sendBy')}</Text>
+            <Text variant="body">{t('gift.text')}</Text>
             <TextField
               label={t('gift.phone')}
               value={draft.recipientPhone}
               onChangeText={(v) => giftDraft.set({ recipientPhone: v })}
               error={errors.phone}
+              icon="phone"
               keyboardType="phone-pad"
               maxLength={20}
               autoComplete="off"
             />
             <TextField label={t('gift.message')} value={draft.message} onChangeText={(v) => giftDraft.set({ message: v })} maxLength={200} multiline optional />
-            <Text variant="label">{t('gift.sendBy')}</Text>
-            <Text variant="body">{t('gift.text')}</Text>
+            <Text variant="label">{t('gift.when')}</Text>
             <SegmentedControl label={t('gift.when')} options={[t('gift.now'), t('gift.later')]} value={later ? t('gift.later') : t('gift.now')} onChange={(v) => setLater(v === t('gift.later'))} />
             {later ? <SendTimePicker label={t('gift.sendOn')} value={when} onChange={setWhen} zone={zone} /> : null}
             {errors.time ? (

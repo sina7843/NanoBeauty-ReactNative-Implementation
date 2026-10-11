@@ -233,7 +233,7 @@ describe('gift cards (STF-18)', () => {
 
 describe('settings change behaviour without a rebuild (STF-32)', () => {
   it('rules save with the settings version; a stale copy shows the conflict state', async () => {
-    scriptApi({ 'PUT /v1/staff/settings/rules': () => ({ status: 409, body: envelope('conflict') }) });
+    scriptApi({ 'PUT /v1/staff/settings/rules': () => ({ status: 409, body: envelope('conflict', { message: 'Someone else changed this. Load the latest version to continue.' }) }) });
     renderRouter(APP_DIR, { initialUrl: '/staff/settings/rules' });
     expect(await screen.findByText('In-app booking needs a booking connection that doesn’t exist yet.')).toBeTruthy();
     fireEvent.changeText(screen.getByLabelText('Free change window (hours)'), '24');

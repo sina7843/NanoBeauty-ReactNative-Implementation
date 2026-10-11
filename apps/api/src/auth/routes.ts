@@ -21,6 +21,7 @@ import { HttpError } from '../errors';
 import { acceptStaffInvite } from '../staff/routes';
 import type { LegacyRecord } from '../integrations';
 import {
+  assertOnboarded,
   authenticate,
   CONSENT_VERSIONS,
   issueSession,
@@ -48,6 +49,8 @@ const seconds = (ms: number) => Math.max(1, Math.ceil(ms / 1000));
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Allowed answers per AUT-05…07 state; anything else is rejected rather than guessed. */
+type OtpPurpose = 'signin' | 'phone_change' | 'deletion' | 'gift_claim';
+
 const DECISIONS: Record<MatchResult['state'], readonly string[]> = {
   matched: ['looks_right', 'something_missing'],
   mismatch: ['ask_clinic', 'new_client'],
@@ -71,6 +74,10 @@ export function registerAuthRoutes(app: FastifyInstance, { now, devOtpSink }: Au
         throw new HttpError(403, 'forbidden', 'Your role can’t do this.', { missingPermission: permission });
       }
     };
+  const requireOnboarded: preHandlerHookHandler = async (request) => {
+    request.auth = await authenticate(db, request.headers.authorization, now());
+    await assertOnboarded(db, request.auth.customerId);
+  };
   const auth = (request: FastifyRequest) => request.auth as AuthContext;
   // Per-IP throttle on the unauthenticated endpoints, on top of the per-number limits below.
   const throttled = { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } };
@@ -92,11 +99,11 @@ export function registerAuthRoutes(app: FastifyInstance, { now, devOtpSink }: Au
   // AUT-01. Same response whether or not the number has an account (no enumeration).
   app.post('/v1/auth/otp/start', throttled, async (request): Promise<OtpStartResponse> => {
     const { phone: raw } = otpStartRequestSchema.parse(request.body);
-    return startCode(raw);
+    return startCode(raw, 'signin');
   });
 
   /** Sends a code to a number, with the per-number limits. Also used for phone change and deletion (NANO-05). */
-  async function startCode(raw: string): Promise<OtpStartResponse> {
+  async function startCode(raw: string, purpose: OtpPurpose): Promise<OtpStartResponse> {
     const phone = normalizePhone(raw);
     if (!phone) throw new HttpError(400, 'validation_failed', 'Enter a 10-digit Canadian mobile number');
     const t = now();
@@ -125,9 +132,9 @@ export function registerAuthRoutes(app: FastifyInstance, { now, devOtpSink }: Au
       const expiresAt = iso(t + LIMITS.codeTtlMs);
       const resendAvailableAt = iso(t + LIMITS.resendCooldownMs);
       const [row] = await tx.query<{ id: string }>(
-        `INSERT INTO otp_challenges (phone_e164, provider_ref, created_at, expires_at, resend_available_at)
-         VALUES ($1, 'pending', $2, $3, $4) RETURNING id`,
-        [phone, iso(t), expiresAt, resendAvailableAt],
+        `INSERT INTO otp_challenges (phone_e164, provider_ref, created_at, expires_at, resend_available_at, purpose)
+         VALUES ($1, 'pending', $2, $3, $4, $5) RETURNING id`,
+        [phone, iso(t), expiresAt, resendAvailableAt, purpose],
       );
       const { providerRef } = await integrations.otp.send(phone);
       await tx.query('UPDATE otp_challenges SET provider_ref = $2 WHERE id = $1', [row!.id, providerRef]);
@@ -138,7 +145,7 @@ export function registerAuthRoutes(app: FastifyInstance, { now, devOtpSink }: Au
   // AUT-02.
   app.post('/v1/auth/otp/verify', throttled, async (request): Promise<OtpVerifyResponse> => {
     const { challengeId, code } = otpVerifyRequestSchema.parse(request.body);
-    const phone = await checkCode(challengeId, code);
+    const phone = await checkCode(challengeId, code, 'signin');
     const t = now();
     const [customer] = await db.query<{ id: string }>(
       `INSERT INTO customers (phone_e164) VALUES ($1)
@@ -155,15 +162,16 @@ export function registerAuthRoutes(app: FastifyInstance, { now, devOtpSink }: Au
    * Checks and consumes a code; returns the verified number. Attempts are counted before the provider is asked,
    * so parallel guesses can't exceed the limit.
    */
-  async function checkCode(challengeId: string, code: string): Promise<string> {
+  async function checkCode(challengeId: string, code: string, purpose: OtpPurpose): Promise<string> {
     const expired = new HttpError(400, 'code_expired', 'This code has expired.');
     if (!UUID.test(challengeId)) throw expired;
     const t = now();
-    const [challenge] = await db.query<{ phone_e164: string; provider_ref: string; expires_at: Date; consumed_at: Date | null }>(
-      'SELECT phone_e164, provider_ref, expires_at, consumed_at FROM otp_challenges WHERE id = $1',
+    const [challenge] = await db.query<{ phone_e164: string; provider_ref: string; expires_at: Date; consumed_at: Date | null; purpose: OtpPurpose }>(
+      'SELECT phone_e164, provider_ref, expires_at, consumed_at, purpose FROM otp_challenges WHERE id = $1',
       [challengeId],
     );
-    if (!challenge) throw expired;
+    // A code asked for one thing can't be used for another (API-15); looks like any other dead code.
+    if (!challenge || challenge.purpose !== purpose) throw expired;
     const wait = await lockedFor(challenge.phone_e164);
     if (wait > 0) throw limited(wait);
     // A used code can't be replayed; an old one can't be revived.
@@ -381,7 +389,7 @@ export function registerAuthRoutes(app: FastifyInstance, { now, devOtpSink }: Au
     });
   }
 
-  return { startCode, checkCode, me, requireAuth };
+  return { startCode, checkCode, me, requireAuth, requireOnboarded };
 }
 
 export type AuthKit = ReturnType<typeof registerAuthRoutes>;

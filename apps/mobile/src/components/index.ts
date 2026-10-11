@@ -1,12 +1,15 @@
 export { AccountMatch, ConsentRow, OTPInput } from './Auth';
 export { Badge, RoleBadge, SampleBadge, type StaffRole, type Tone } from './Badge';
 export { Banner, type BannerTone } from './Banner';
-export { AppointmentPass, AreaPicker, ServiceBasket, type Area, type BasketItem } from './Booking';
+export { AppointmentPass, AreaPicker, BookingStepper, ServiceBasket, type Area, type BasketItem } from './Booking';
 export { Button, IconButton } from './Button';
 export { Card, ListGroup, ListRow } from './Card';
 export { CareTimeline, FAQBlock, OfferCard, RatingSummary, SearchField, ServiceCard, SupportContext, UrgentLine } from './Discovery';
 export { NotBuiltYet, Screen, TabBar, TABS } from './Chrome';
-export { Chip, SegmentedControl, Switch, TextField } from './Field';
+export { Chip, SegmentedControl, Switch, TextField, type TextFieldProps } from './Field';
+export { GIFT_TONES, GiftDesignPicker, type GiftDesignOption } from './Gift';
+export { PaymentMethodRow, WalletPayButton } from './Payment';
+export { CreditRow, GiftCard, MemberStatus, PackageBalance, type GiftCardStatus } from './Wallet';
 export { Icon, type IconName } from './Icon';
 export { Logo } from './Logo';
 export { ConfirmDialog, Dialog, Sheet, ToastProvider, useToast } from './Overlay';

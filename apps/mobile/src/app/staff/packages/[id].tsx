@@ -8,10 +8,12 @@ import { money } from '../../../i18n/format';
 import { t } from '../../../i18n';
 import { useStaffQuery } from '../../../staff/api';
 import { EntityEditScreen, PreviewCard } from '../../../staff/EntityEditScreen';
+import { ListTextField, splitLines } from '../../../staff/ListTextField';
+import { MoneyField } from '../../../staff/MoneyField';
 import { useEntityEditor } from '../../../staff/useEntityEditor';
 
-const dollars = (cents: number | null) => (cents === null ? '' : String(cents / 100));
-const cents = (v: string) => (v.trim() === '' ? null : Math.round(Number(v.replace(/[$,\s]/g, '')) * 100));
+const dollars = (cents: number | null) => (cents === null ? null : cents / 100);
+const cents = (v: number | null) => (v === null ? null : Math.round(v * 100));
 const int = (v: string) => (v.trim() === '' ? null : Number.parseInt(v, 10) || null);
 
 /** `/staff/packages/[id]` — STF-16. Price and session changes are high-risk (D35); owners keep using what they bought. */
@@ -51,13 +53,13 @@ export default function PackageEdit() {
           </View>
           <View style={styles.row}>
             <View style={styles.flex}>
-              <TextField label={t('pkg.price')} value={dollars(f.priceCents)} onChangeText={(v) => editor.setForm({ priceCents: cents(v) ?? 0 })} keyboardType="decimal-pad" disabled={ro} />
+              <MoneyField label={t('pkg.price')} dollars={dollars(f.priceCents)} onDollars={(v) => editor.setForm({ priceCents: cents(v) ?? 0 })} disabled={ro} />
             </View>
             <View style={styles.flex}>
-              <TextField label={t('pkg.regular')} value={dollars(f.regularCents)} onChangeText={(v) => editor.setForm({ regularCents: cents(v) })} keyboardType="decimal-pad" disabled={ro} />
+              <MoneyField label={t('pkg.regular')} dollars={dollars(f.regularCents)} onDollars={(v) => editor.setForm({ regularCents: cents(v) })} disabled={ro} />
             </View>
           </View>
-          <TextField label={t('ent.terms')} value={f.terms.join('\n')} onChangeText={(v) => editor.setForm({ terms: v.split('\n').map((l) => l.trim()).filter(Boolean) })} multiline disabled={ro} />
+          <ListTextField key={`t${editor.service?.version}`} label={t('ent.terms')} items={f.terms} onItems={(terms) => editor.setForm({ terms })} split={splitLines} join={(i) => i.join('\n')} multiline disabled={ro} />
           <Switch label={t('pkg.sellable')} detail={t('pkg.sellableSub')} value={f.visibility === 'live'} disabled={ro} onValueChange={(v) => editor.setForm({ visibility: v ? 'live' : 'unavailable' })} />
         </>
       ) : null}

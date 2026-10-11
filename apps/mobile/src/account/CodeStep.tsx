@@ -1,24 +1,31 @@
-import { otpStartResponseSchema, type OtpStartResponse } from '@nano/contracts';
+import { OTP_LENGTH, otpStartResponseSchema, type OtpStartResponse } from '@nano/contracts';
+import { space } from '@nano/design-tokens';
 import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { ApiError, type ApiResponse } from '../api/client';
-import { OTPInput } from '../components';
+import { Button, OTPInput } from '../components';
+import type { ButtonProps } from '../components/Button';
 import { t } from '../i18n';
 
 /**
  * Code entry for an identity check inside the app (ACC-02 new number, ACC-09 deletion). Same rules as sign-in:
  * wrong → tries left, expired → new code, too many → wait. `confirm` throws ApiError; other codes go to
  * `describe` (e.g. 'that number has an account').
+ * With `submit`, the 6th digit does not send: the person presses the button (ACC-09, WP-23).
  */
 export function CodeStep({
   initial,
   resend,
   confirm,
   describe,
+  submit,
 }: {
   initial: OtpStartResponse;
   resend: () => Promise<ApiResponse>;
   confirm: (challengeId: string, code: string) => Promise<void>;
   describe?: (error: ApiError) => string | undefined;
+  /** Explicit confirm button instead of auto-submit on the last digit. */
+  submit?: { label: string; variant?: ButtonProps['variant'] };
 }) {
   const [challenge, setChallenge] = useState(initial);
   const [code, setCode] = useState('');
@@ -59,7 +66,7 @@ export function CodeStep({
     }
   }
 
-  async function submit(value: string) {
+  async function send(value: string) {
     if (busy) return;
     setBusy(true);
     try {
@@ -73,14 +80,14 @@ export function CodeStep({
     }
   }
 
-  return (
+  const input = (
     <OTPInput
       value={code}
       onChange={(next) => {
         setCode(next);
         if (error) setError(undefined);
       }}
-      onComplete={submit}
+      onComplete={submit ? undefined : send}
       error={error}
       sentTo={challenge.sentTo}
       resendIn={resendIn}
@@ -88,4 +95,22 @@ export function CodeStep({
       disabled={busy}
     />
   );
+  if (!submit) return input;
+  return (
+    <View style={styles.stack}>
+      {input}
+      <Button
+        variant={submit.variant ?? 'primary'}
+        size="lg"
+        fullWidth
+        loading={busy}
+        disabled={code.length !== OTP_LENGTH}
+        onPress={() => send(code)}
+      >
+        {submit.label}
+      </Button>
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({ stack: { gap: space['4'] } });

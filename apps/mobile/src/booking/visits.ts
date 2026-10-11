@@ -1,11 +1,11 @@
-import { visitsResponseSchema, type LateOutcome, type Settings, type Visit } from '@nano/contracts';
+import { visitsResponseSchema, type LateOutcome, type Settings, type Visit, type VisitStatus, type VisitsResponse } from '@nano/contracts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 import { loadCached, type Cached } from '../content/cache';
 import { t } from '../i18n';
-import { money } from '../i18n/format';
+import { clinicDay, clinicTime, money } from '../i18n/format';
 import { PRIVATE_PREFIX } from '../lib/private-cache';
 import { addToCalendar, type CalendarResult } from '../platform/calendar';
 
@@ -59,5 +59,54 @@ export function addVisitToCalendar(visit: Visit, address: string): Promise<Calen
     end: new Date(start.getTime() + (visit.durationMin ?? 60) * 60_000),
     location: address,
     notes: `${visit.detail ?? ''}${visit.detail ? ' · ' : ''}${visit.ref}`,
+  });
+}
+
+/** BV-2: an open request to the clinic shows as "Change requested" until the clinic acts; ended visits keep their status. */
+export function passStatus(visit: Pick<Visit, 'status' | 'openRequest'>): VisitStatus {
+  return visit.openRequest && (visit.status === 'confirmed' || visit.status === 'pending') ? 'changed' : visit.status;
+}
+
+/**
+ * BV-7: the "Synced from Fresha" note, from the server's own `syncedAt`. Nothing when the list is a saved copy
+ * (offline) or Fresha was never read; a sync older than 10 minutes names its time instead of "a few minutes ago".
+ */
+export function syncNote(data: Pick<VisitsResponse, 'syncedAt' | 'serverTime'>, fromCache: boolean, zone: string): string | null {
+  if (fromCache || !data.syncedAt) return null;
+  const age = Date.parse(data.serverTime) - Date.parse(data.syncedAt);
+  if (age < 10 * 60_000) return t('vis.syncNote');
+  const day = clinicDay(data.syncedAt, zone, Date.parse(data.serverTime));
+  const time = day === clinicDay(data.serverTime, zone, Date.parse(data.serverTime)) ? clinicTime(data.syncedAt, zone) : `${day}, ${clinicTime(data.syncedAt, zone)}`;
+  return t('vis.syncNoteAt', { time });
+}
+
+type CarePhase = 'before' | 'day' | 'after';
+// ponytail: phase read from the clinic's "when" wording ("2 days before", "Day of visit", anything else = after);
+// add a structured offset to careStepSchema if the clinic writes steps that don't follow that wording.
+const carePhase = (when: string): CarePhase => (/before/i.test(when) ? 'before' : /day of/i.test(when) ? 'day' : 'after');
+const ORDER: CarePhase[] = ['before', 'day', 'after'];
+
+/** BV-6: care steps that happen before or on the day of the visit ("2 steps before your visit"). */
+export const careBeforeCount = (steps: { when: string }[]) => steps.filter((s) => carePhase(s.when) !== 'after').length;
+
+const ymd = (ms: number, timeZone: string) => new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ms));
+
+/**
+ * BV-17: done / now progress for CAR-01. Steps from earlier phases (before → day of visit → after, by clinic-zone
+ * calendar day) are done; the first step of the current phase is "now".
+ */
+export function careProgress<S extends { when: string }>(steps: S[], startsAt: string, timeZone: string, now: number): (S & { state?: 'done' | 'now' })[] {
+  const today = ymd(now, timeZone);
+  const visitDay = ymd(Date.parse(startsAt), timeZone);
+  const current = ORDER.indexOf(today < visitDay ? 'before' : today === visitDay ? 'day' : 'after');
+  let nowGiven = false;
+  return steps.map((s) => {
+    const phase = ORDER.indexOf(carePhase(s.when));
+    if (phase < current) return { ...s, state: 'done' as const };
+    if (phase === current && !nowGiven) {
+      nowGiven = true;
+      return { ...s, state: 'now' as const };
+    }
+    return s;
   });
 }

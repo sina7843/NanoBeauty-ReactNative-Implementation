@@ -93,7 +93,10 @@ export const attemptConfirmSchema = z.object({ paymentToken: z.string().min(3).m
 
 export const receiptSchema = z.object({
   orderId: z.string(),
+  /** Payment reference (PAY-…). */
   reference: z.string(),
+  /** Order reference (NB-O-…), the one purchase history shows. */
+  orderReference: z.string(),
   status: z.enum(['paid', 'refunded', 'partially_refunded']),
   lines: z.array(z.object({ label: z.string(), amountCents: cents })),
   /** GST included in the total (Sample until the clinic's accountant confirms). */
@@ -146,6 +149,8 @@ export const instrumentSchema = z.object({
       sendAt: isoTime.nullable(),
       sentAt: isoTime.nullable(),
       claimedAt: isoTime.nullable(),
+      /** The buyer's order (WAL-04 sent → PAY-09 receipt); sent to the buyer only. */
+      orderId: z.string().nullable().optional(),
     })
     .nullable(),
 });

@@ -1,9 +1,9 @@
 import type { Catalog } from '@nano/contracts';
 import { radius, space } from '@nano/design-tokens';
 import { Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Button, Icon, SampleBadge, Screen, ServiceBasket, Skeleton, Text } from '../../components';
+import { Badge, Button, Icon, Screen, SearchField, ServiceBasket, Skeleton, Text } from '../../components';
 import { basket, useBasket } from '../../booking/basket';
 import { MAX_VISIT_MINUTES, priceLabel, summarize } from '../../booking/summary';
 import { ContentGate } from '../../content/ContentGate';
@@ -24,6 +24,8 @@ export default function BookService() {
   const catalog = useCatalog();
   const settings = useSettings().data?.data.settings;
   const consultation = settings?.consultation.priceCAD ?? null;
+  const credited = settings?.consultation.credited ?? false;
+  const [query, setQuery] = useState('');
   const mode = settings?.bookingMode ?? 'handoff';
 
   useEffect(() => {
@@ -41,7 +43,17 @@ export default function BookService() {
 
   return (
     <>
-      <Stack.Screen options={{ title: t('bkg.title') }} />
+      <Stack.Screen
+        options={{
+          title: t('bkg.title'),
+          // BKG-01 opens the booking modal: Close leaves it (back label "Close" on the board).
+          headerLeft: () => (
+            <Button variant="tertiary" size="sm" onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))}>
+              {t('common.close')}
+            </Button>
+          ),
+        }}
+      />
       <Screen
         topInset={false}
         footer={
@@ -60,11 +72,12 @@ export default function BookService() {
           </Button>
         }
       >
-        <Text variant="body" tone="inkMuted">
+        <SearchField value={query} onChangeText={setQuery} placeholder={t('bkg.search')} />
+        <Text variant="caption" tone="inkMuted">
           {t('bkg.pickHint')}
         </Text>
         <ContentGate query={catalog} skeleton={<Skeleton lines={4} media={false} />}>
-          {(data) => <Picker catalog={data} consultation={consultation} />}
+          {(data) => <Picker catalog={data} consultation={consultation} credited={credited} query={query} />}
         </ContentGate>
         {summary?.lines.length ? (
           <ServiceBasket
@@ -80,23 +93,31 @@ export default function BookService() {
   );
 }
 
-function Picker({ catalog, consultation }: { catalog: Catalog; consultation: number | null }) {
+function Picker({ catalog, consultation, credited, query }: { catalog: Catalog; consultation: number | null; credited: boolean; query: string }) {
   const router = useRouter();
   const { colors } = useTheme();
   const items = useBasket();
-  const live = catalog.services.filter((s) => s.status === 'live');
+  const q = query.trim().toLowerCase();
+  // Picked treatments stay listed while searching so they can still be unticked.
+  const live = catalog.services.filter(
+    (s) => s.status === 'live' && (!q || items.some((it) => it.serviceId === s.id) || [s.name, ...s.aliases].some((n) => n.toLowerCase().includes(q))),
+  );
   return (
     <View style={styles.group} accessibilityLabel={t('bkg.legend')}>
       <View style={styles.legend}>
         <Text variant="label" style={styles.flex}>
           {t('bkg.legend')}
         </Text>
-        {live.some((s) => s.sample) ? <SampleBadge /> : null}
+        {live.some((s) => s.sample) ? <Badge tone="sample">{t('bkg.samplePrices')}</Badge> : null}
       </View>
       <View style={[styles.box, { backgroundColor: colors.surface, borderColor: colors.line }]}>
         {live.map((s, i) => {
           const on = items.some((it) => it.serviceId === s.id);
-          const sub = s.perArea ? t('bkg.chooseAreasNext') : s.durationLabel;
+          const sub = s.perArea
+            ? t('bkg.chooseAreasNext')
+            : s.price.kind === 'consultation' && credited
+              ? [s.durationLabel, t('bkg.credited')].filter(Boolean).join(' · ')
+              : s.durationLabel;
           return (
             <Pressable
               key={s.id}
@@ -107,7 +128,6 @@ function Picker({ catalog, consultation }: { catalog: Catalog; consultation: num
               android_ripple={{ color: colors.surfacePressed }}
               style={[styles.row, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line }]}
             >
-              <Icon name={on ? 'check-square' : 'square'} fill={on} size={24} tone={on ? 'primary' : 'inkMuted'} />
               <View style={styles.flex}>
                 <Text variant="body" strong>
                   {s.name}
@@ -118,9 +138,13 @@ function Picker({ catalog, consultation }: { catalog: Catalog; consultation: num
                   </Text>
                 ) : null}
               </View>
-              <Text variant="body" style={styles.tabular}>
+              <Text variant="caption" tone="inkMuted" style={styles.tabular}>
                 {priceLabel(s.price, consultation)}
               </Text>
+              {/* Right-hand circular check (BKG-01). */}
+              <View style={[styles.check, on ? { backgroundColor: colors.primary, borderColor: colors.primary } : { borderColor: colors.lineStrong }]}>
+                {on ? <Icon name="check" size={16} color={colors.onPrimary} /> : null}
+              </View>
             </Pressable>
           );
         })}
@@ -138,5 +162,6 @@ const styles = StyleSheet.create({
   group: { gap: space['2'] },
   legend: { flexDirection: 'row', alignItems: 'center', gap: space['2'] },
   box: { borderRadius: radius.md, borderWidth: 1, overflow: 'hidden' },
+  check: { width: 26, height: 26, borderRadius: radius.full, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: space['3'], minHeight: 64, paddingHorizontal: space['4'], paddingVertical: space['3'] },
 });

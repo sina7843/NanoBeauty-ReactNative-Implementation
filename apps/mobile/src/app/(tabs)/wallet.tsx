@@ -1,10 +1,12 @@
+import { space } from '@nano/design-tokens';
 import { useRouter, type Href } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useAuth } from '../../auth/AuthProvider';
 import { setReturnTo } from '../../auth/flow';
-import { Banner, Button, EmptyState, ListGroup, ListRow, Screen, Skeleton } from '../../components';
+import { Banner, Button, CreditRow, EmptyState, IconButton, ListGroup, ListRow, Screen, Skeleton, Text } from '../../components';
 import { t } from '../../i18n';
-import { clinicDate, clinicTime } from '../../i18n/format';
-import { InstrumentRow } from '../../payments/InstrumentView';
+import { clinicDate, clinicDateLong, clinicTime } from '../../i18n/format';
+import { InstrumentRow, shown } from '../../payments/InstrumentView';
 import { useWallet } from '../../payments/queries';
 import { useSettings } from '../../settings/useSettings';
 
@@ -13,7 +15,7 @@ export default function Wallet() {
   const router = useRouter();
   const { status } = useAuth();
   return (
-    <Screen tabbed title={t('wal.title')}>
+    <Screen tabbed title={t('wal.title')} trailing={status === 'signedIn' ? <IconButton icon="user-circle" label={t('nav.account')} variant="tonal" onPress={() => router.push('/account')} /> : undefined}>
       {status === 'guest' ? (
         <EmptyState
           icon="wallet"
@@ -49,11 +51,18 @@ function SignedIn() {
   const wallet = useWallet();
   const zone = useSettings().data?.data.clinic.timezone ?? 'America/Vancouver';
   const actions = (
-    <ListGroup>
-      <ListRow icon="package" title={t('wal.buyPackage')} onPress={() => router.push('/wallet/buy-package')} />
-      <ListRow icon="gift" title={t('wal.sendGift')} onPress={() => router.push('/wallet/gift/design')} />
-      <ListRow icon="ticket" title={t('wal.claim')} onPress={() => router.push('/wallet/claim')} />
-    </ListGroup>
+    <View style={styles.actions}>
+      <View style={styles.flex}>
+        <Button variant="secondary" icon="package" fullWidth onPress={() => router.push('/wallet/buy-package')}>
+          {t('wal.buyPackage')}
+        </Button>
+      </View>
+      <View style={styles.flex}>
+        <Button variant="secondary" icon="gift" fullWidth onPress={() => router.push('/wallet/gift/design')}>
+          {t('wal.sendGiftShort')}
+        </Button>
+      </View>
+    </View>
   );
   if (!wallet.data) {
     return wallet.isError ? (
@@ -69,8 +78,11 @@ function SignedIn() {
   }
   const { data, source, savedAt } = wallet.data;
   const owned = data.instruments.filter((i) => i.role === 'owner');
+  const credits = owned.filter((i) => i.kind === 'credit');
+  const others = owned.filter((i) => i.kind !== 'credit');
   const sent = data.instruments.filter((i) => i.role === 'sender');
   const open = (href: Href) => router.push(href);
+  const history = <ListRow icon="receipt" title={t('wal.history')} onPress={() => router.push('/wallet/history')} />;
   return (
     <>
       {source === 'cache' ? (
@@ -78,24 +90,49 @@ function SignedIn() {
           {t('wal.asOf', { time: `${clinicDate(savedAt, zone)}, ${clinicTime(savedAt, zone)}` })}
         </Banner>
       ) : null}
-      {owned.some((i) => i.status === 'reconciling') ? (
+      {others.some((i) => i.status === 'reconciling') ? (
         <Banner tone="info" title={t('wal.reconciling')}>
           {t('wal.reconcilingNote')}
         </Banner>
       ) : null}
+      {/* WP-7: clinic credit is the CreditRow panel (never bank-card styling); it opens WAL-02. */}
+      {credits.map((i) => (
+        <Pressable key={i.id} accessibilityRole="button" accessibilityLabel={`${t('wal.credit')}, ${shown(i)}`} onPress={() => open({ pathname: '/wallet/credit', params: { id: i.id } })}>
+          <CreditRow
+            available={(i.balanceCents ?? 0) / 100}
+            reconciling={i.status === 'reconciling' || i.balanceCents === null}
+            expires={i.expiresAt && i.status === 'active' ? clinicDateLong(i.expiresAt, zone) : undefined}
+          />
+        </Pressable>
+      ))}
       {owned.length ? (
-        <ListGroup>{owned.map((i) => <InstrumentRow key={i.id} instrument={i} zone={zone} onOpen={open} />)}</ListGroup>
+        <ListGroup>
+          {others.map((i) => (
+            <InstrumentRow key={i.id} instrument={i} zone={zone} onOpen={open} />
+          ))}
+          {history}
+        </ListGroup>
       ) : (
         <EmptyState icon="wallet" title={t('wal.empty.title')}>
           {t('wal.empty.body')}
         </EmptyState>
       )}
       {sent.length ? <ListGroup header={t('wal.sentGifts')}>{sent.map((i) => <InstrumentRow key={i.id} instrument={i} zone={zone} onOpen={open} />)}</ListGroup> : null}
+      {!owned.length ? <ListGroup>{history}</ListGroup> : null}
       {actions}
-      <ListGroup>
-        <ListRow icon="receipt" title={t('wal.history')} onPress={() => router.push('/wallet/history')} />
-        {owned.length ? <ListRow icon="question" title={t('wal.help')} onPress={() => router.push('/wallet/help')} /> : null}
-      </ListGroup>
+      {owned.length ? (
+        <Pressable accessibilityRole="link" hitSlop={12} onPress={() => router.push('/wallet/help')} style={styles.link}>
+          <Text variant="label" tone="primary">
+            {t('wal.help')}
+          </Text>
+        </Pressable>
+      ) : null}
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  actions: { flexDirection: 'row', gap: space['3'] },
+  link: { alignSelf: 'center', minHeight: 44, justifyContent: 'center' },
+});

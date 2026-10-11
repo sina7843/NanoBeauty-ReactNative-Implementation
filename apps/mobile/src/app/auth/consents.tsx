@@ -6,7 +6,8 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/AuthProvider';
 import { goToNext } from '../../auth/flow';
-import { Banner, Button, ConsentRow, Text } from '../../components';
+import { useLeaveSignUp } from '../../auth/OnboardingGate';
+import { Banner, Button, Dialog, ConsentRow, Text } from '../../components';
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -20,6 +21,7 @@ export default function ConsentsScreen() {
   const [offers, setOffers] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const leave = useLeaveSignUp();
   if (status === 'guest') return <Redirect href="/auth/phone" />;
 
   async function submit() {
@@ -70,6 +72,17 @@ export default function ConsentsScreen() {
           {t('aut.consents.continue')}
         </Button>
       </View>
+      <Dialog
+        visible={leave.asking}
+        title={t('aut.leave.title')}
+        confirmLabel={t('aut.leave.confirm')}
+        cancelLabel={t('aut.leave.stay')}
+        destructive
+        onConfirm={leave.leave}
+        onCancel={leave.stay}
+      >
+        {t('aut.leave.body')}
+      </Dialog>
     </SafeAreaView>
   );
 }

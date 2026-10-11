@@ -1,5 +1,5 @@
 import type { Catalog, Service } from '@nano/contracts';
-import { EMPTY_FILTERS, filterServices, searchCatalog } from './search';
+import { EMPTY_FILTERS, emptyCause, filterServices, searchCatalog } from './search';
 
 const svc = (over: Partial<Service>): Service => ({
   id: 'x',
@@ -93,3 +93,14 @@ describe('search budget (NFR 02)', () => {
   });
 });
 
+describe('emptyCause (FE-4)', () => {
+  it('says the list itself is empty when its category has no services, whatever the filters', () => {
+    expect(emptyCause(catalog, 'nothing-here', EMPTY_FILTERS)).toBe('scope');
+    expect(emptyCause(catalog, 'nothing-here', { ...EMPTY_FILTERS, prices: ['fixed'] })).toBe('scope');
+  });
+
+  it('blames the filters only when some are set and the category has services', () => {
+    expect(emptyCause(catalog, 'skin-tightening', { ...EMPTY_FILTERS, prices: ['consultation'] })).toBe('filters');
+    expect(emptyCause(catalog, undefined, { ...EMPTY_FILTERS, concerns: ['x'] })).toBe('filters');
+  });
+});

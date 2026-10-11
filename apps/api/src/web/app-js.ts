@@ -8,10 +8,15 @@ export const APP_JS = String.raw`(function () {
   var money = function (cents) { return new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(cents / 100).replace('CA$', '$'); };
   function api(path, payload) {
     return fetch(path, { method: payload ? 'POST' : 'GET', headers: payload ? { 'content-type': 'application/json' } : {}, body: payload ? JSON.stringify(payload) : undefined })
-      .then(function (res) { return res.json().catch(function () { return {}; }).then(function (json) { return { ok: res.ok, status: res.status, json: json }; }); });
+      .then(function (res) { return res.json().catch(function () { return {}; }).then(function (json) { return { ok: res.ok, status: res.status, json: json }; }); })
+      .catch(function () { return { ok: false, status: 0, json: {} }; });
   }
   function errorText(r) {
-    if (r.status === 429) return 'Too many tries. Wait a minute and try again.';
+    if (r.status === 0) return 'We couldn’t reach Nano Beauty. Check your connection and try again.';
+    if (r.status === 429) {
+      var wait = r.json && r.json.error && r.json.error.retryAfterSeconds;
+      return wait ? 'Too many tries. Try again in ' + (wait > 90 ? Math.ceil(wait / 60) + ' minutes.' : wait + ' seconds.') : 'Too many tries. Wait a minute and try again.';
+    }
     var m = r.json && r.json.error && r.json.error.message;
     return m || 'Something went wrong. Try again.';
   }
@@ -21,16 +26,21 @@ export const APP_JS = String.raw`(function () {
     var code = body.dataset.code, challenge = null, phoneShown = '';
     api('/v1/gifts/lookup', { code: code }).then(function (r) {
       hide('loading');
+      if (!r.ok && r.status !== 404) { $('trouble-text').textContent = errorText(r); return show('trouble'); }
       if (!r.ok || r.json.state === 'notfound') return show('gone');
       if (r.json.state === 'claimed') return show('taken');
       var g = r.json;
       $('gift-title').textContent = (g.recipientName ? g.recipientName + ', you' : 'You') + ' have a gift';
       $('gift-message').textContent = g.message ? '“' + g.message + '”' : '';
       $('gift-from').textContent = g.fromName ? 'From ' + g.fromName : '';
-      $('gift-amount').textContent = g.amountCents != null ? money(g.amountCents) + ' at Nano Beauty' : '';
+      $('gift-amount').textContent = g.amountCents != null ? money(g.amountCents) : '';
+      $('gift-ref').textContent = g.reference || '';
+      body.dataset.ref = g.reference || '';
       body.dataset.amount = g.amountCents != null ? String(g.amountCents) : '';
       show('gift');
     });
+    $('retry').addEventListener('click', function () { location.reload(); });
+    $('newcode').addEventListener('click', function () { challenge = null; $('otp').value = ''; $('gift-error').textContent = ''; hide('claim-confirm'); show('claim-start'); $('phone').focus(); });
     $('claim-start').addEventListener('submit', function (e) {
       e.preventDefault(); var f = e.target; busy(f, true); $('gift-error').textContent = '';
       api('/v1/gifts/claim/start', { code: code, phone: $('phone').value }).then(function (r) {
@@ -47,6 +57,7 @@ export const APP_JS = String.raw`(function () {
         busy(f, false);
         if (!r.ok) return ($('gift-error').textContent = errorText(r));
         var amount = body.dataset.amount ? money(Number(body.dataset.amount)) : 'Your gift card';
+        $('claimed-ref').textContent = body.dataset.ref ? 'Reference ' + body.dataset.ref : '';
         $('claimed-text').textContent = amount + ' is ready to use at Nano Beauty. Show your code at the desk or sign in to the app with ' + phoneShown + '.';
         hide('gift'); show('claimed');
         api('/v1/settings').then(function (s) {
@@ -72,11 +83,17 @@ export const APP_JS = String.raw`(function () {
         challengeId = r.json.challengeId; hide('del-start'); show('del-confirm'); $('otp').focus();
       });
     });
+    $('del-newcode').addEventListener('click', function () { $('del-error').textContent = ''; $('otp').value = ''; hide('del-confirm'); show('del-start'); $('phone').focus(); });
     $('del-confirm').addEventListener('submit', function (e) {
       e.preventDefault(); var f = e.target; busy(f, true); $('del-error').textContent = '';
       api('/v1/privacy/deletion/confirm', { challengeId: challengeId, code: $('otp').value }).then(function (r) {
         busy(f, false);
-        if (!r.ok) return ($('del-error').textContent = errorText(r));
+        if (!r.ok) {
+          $('del-error').textContent = errorText(r);
+          // No account for this number, or a dead code: back to the first step instead of a stuck form.
+          if (r.status === 404 || (r.json.error && (r.json.error.code === 'code_expired' || r.json.error.code === 'rate_limited'))) { hide('del-confirm'); show('del-start'); }
+          return;
+        }
         $('reference').textContent = 'Reference ' + r.json.reference;
         api('/v1/settings').then(function (s) {
           var days = s.ok ? s.json.settings.deletionGraceDays : null;

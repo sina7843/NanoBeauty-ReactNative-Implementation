@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '../../../auth/AuthProvider';
 import { useToast } from '../../../components';
 import { t } from '../../../i18n';
-import { problemOf } from '../../../staff/api';
+import { problemText } from '../../../staff/api';
 import { EntityList } from '../../../staff/EntityList';
 import { StaffScreen } from '../../../staff/StaffScreen';
 
@@ -21,8 +21,7 @@ export default function Packages() {
       const created = entitySchema.parse((await session.authed('/v1/staff/packages', { method: 'POST', body: { draft } })).body);
       router.push(`/staff/packages/${created.id}` as Href);
     } catch (e) {
-      problemOf(e);
-      toast({ tone: 'warning', message: t('error.body') });
+      toast({ tone: 'danger', message: problemText(e) });
     } finally {
       setCreating(false);
     }

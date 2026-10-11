@@ -1,9 +1,10 @@
 import { supportQuestionResponseSchema } from '@nano/contracts';
 import { space } from '@nano/design-tokens';
 import { Stack, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 import { useAuth } from '../../../auth/AuthProvider';
+import { setReturnTo } from '../../../auth/flow';
 import { Banner, Button, Chip, Screen, SegmentedControl, Skeleton, Text, TextField } from '../../../components';
 import { ContentGate } from '../../../content/ContentGate';
 import { useSupportHub } from '../../../content/queries';
@@ -19,6 +20,12 @@ const CHANNELS = [
 ] as const;
 type Channel = (typeof CHANNELS)[number][0];
 
+/**
+ * BV-4: a guest's question survives the sign-in detour (which dismisses this screen). Module memory only, never
+ * persisted, taken back once the screen reopens.
+ */
+let draft: { topic: string | null; channel: Channel; message: string } | null = null;
+
 /** `/support/ask` — SUP-04 (empty, filled, error, sending). Sending needs a connection and a signed-in customer. */
 export default function AskUs() {
   const router = useRouter();
@@ -26,9 +33,13 @@ export default function AskUs() {
   const { status, session } = useAuth();
   const hub = useSupportHub();
   const reply = useSettings().data?.data.clinic.supportReplyTime ?? '';
-  const [topic, setTopic] = useState<string | null>(null);
-  const [channel, setChannel] = useState<Channel>('text');
-  const [message, setMessage] = useState('');
+  const [saved] = useState(() => draft);
+  useEffect(() => {
+    draft = null;
+  }, []);
+  const [topic, setTopic] = useState<string | null>(saved?.topic ?? null);
+  const [channel, setChannel] = useState<Channel>(saved?.channel ?? 'text');
+  const [message, setMessage] = useState(saved?.message ?? '');
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -42,6 +53,8 @@ export default function AskUs() {
       return;
     }
     if (status !== 'signedIn') {
+      draft = { topic, channel, message };
+      setReturnTo('/support/ask');
       router.push('/auth/phone');
       return;
     }

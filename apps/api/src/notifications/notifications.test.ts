@@ -4,9 +4,10 @@ import { buildApp } from '../app';
 import { openDb } from '../db';
 import { createDevIntegrations } from '../integrations';
 import { migrate } from '../migrate';
+import { onboard } from '../testOnboard';
 import { notify } from '../visits/routes';
 import { deliverPushMessages, dispatchDue, queueReminders } from './dispatch';
-import { DELIVERY, render } from './templates';
+import { DELIVERY, formatWhen, render } from './templates';
 
 let close: (() => Promise<unknown>) | undefined;
 afterEach(async () => {
@@ -43,7 +44,9 @@ async function setup(options: { sampleFresha?: boolean } = {}) {
       await db.query(`INSERT INTO staff_roles (customer_id, role) SELECT id, $2 FROM customers WHERE phone_e164 = $1 ON CONFLICT DO NOTHING`, [e164, role]);
     }
     const { challengeId } = (await req('POST', '/v1/auth/otp/start', undefined, { phone })).json();
-    return otpVerifyResponseSchema.parse((await req('POST', '/v1/auth/otp/verify', undefined, { challengeId, code: dev.otpSink.get(e164)! })).json()).accessToken;
+    const token = otpVerifyResponseSchema.parse((await req('POST', '/v1/auth/otp/verify', undefined, { challengeId, code: dev.otpSink.get(e164)! })).json()).accessToken;
+    await onboard(db, e164);
+    return token;
   }
   const idOf = async (e164: string) => (await db.query<{ id: string }>('SELECT id FROM customers WHERE phone_e164 = $1', [e164]))[0]!.id;
   const deliveries = async () =>
@@ -193,6 +196,19 @@ describe('Fresha read-back triggers (NTF-01, 03, 04)', () => {
     await t.req('GET', '/v1/visits', token);
     await t.req('GET', '/v1/visits', token);
     expect(await templates()).toEqual(['NTF-01.booking_confirmed', 'NTF-01.booking_confirmed', 'NTF-03.visit_changed', 'NTF-04.visit_cancelled']);
+    // WP-28: house date style in the clinic's time zone, and no double period.
+    const [moved] = await t.db.query<{ data: { when: string } }>(`SELECT data FROM notifications WHERE template = 'NTF-03.visit_changed'`);
+    expect(moved!.data.when).toBe('Sat 17 Oct, 2:30 pm');
+    const [booked] = await t.db.query<{ data: Record<string, string> }>(`SELECT data FROM notifications WHERE template = 'NTF-01.booking_confirmed' LIMIT 1`);
+    expect(render('NTF-01.booking_confirmed', booked!.data)!.body).not.toContain('..');
+  });
+});
+
+describe('house date format (WP-28)', () => {
+  it('formats like the app: "Thu 16 Oct, 2:30 pm" in the given zone', () => {
+    expect(formatWhen(new Date('2025-10-16T21:30:00Z'), 'America/Vancouver')).toBe('Thu 16 Oct, 2:30 pm');
+    expect(formatWhen(new Date('2026-10-16T07:05:00Z'), 'America/Vancouver')).toBe('Fri 16 Oct, 12:05 am');
+    expect(formatWhen(new Date('2025-10-16T21:30:00Z'), 'America/Toronto')).toBe('Thu 16 Oct, 5:30 pm');
   });
 });
 

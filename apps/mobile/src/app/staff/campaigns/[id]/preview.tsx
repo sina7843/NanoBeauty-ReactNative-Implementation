@@ -1,7 +1,7 @@
 import { entitySchema, type Offer } from '@nano/contracts';
-import { useLocalSearchParams, type Href } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useState } from 'react';
-import { Banner, ListGroup, ListRow, OfferCard, Skeleton, Text } from '../../../../components';
+import { Banner, Button, ListGroup, ListRow, OfferCard, Skeleton, Text } from '../../../../components';
 import { t } from '../../../../i18n';
 import { useSettings } from '../../../../settings/useSettings';
 import { useStaffQuery } from '../../../../staff/api';
@@ -18,7 +18,9 @@ export default function CampaignPreview() {
   const state: Offer['state'] = !d ? 'upcoming' : Date.parse(d.endsAt) <= nowMs ? 'expired' : Date.parse(d.startsAt) > nowMs ? 'upcoming' : 'live';
   return (
     <StaffScreen title={t('cmp.preview')} back={{ to: `/staff/campaigns/${id}` as Href, label: t('cmp.edit') }}>
-      <Banner tone="info" title={t('cmp.previewNote')} />
+      <Banner tone="info" title={t('cmp.previewOnly')}>
+        {t('cmp.previewNote')}
+      </Banner>
       {d ? (
         <>
           <OfferCard offer={{ ...d, id: id ?? '', state, sample: false }} timeZone={tz} onOpen={() => undefined} onTerms={() => undefined} />
@@ -32,6 +34,9 @@ export default function CampaignPreview() {
       ) : (
         <Skeleton lines={4} />
       )}
+      <Button variant="secondary" onPress={() => (router.canGoBack() ? router.back() : router.replace(`/staff/campaigns/${id}` as Href))}>
+        {t('cmp.backToEdit')}
+      </Button>
     </StaffScreen>
   );
 }

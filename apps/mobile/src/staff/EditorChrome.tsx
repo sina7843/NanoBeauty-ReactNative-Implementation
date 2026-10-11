@@ -7,7 +7,9 @@ import type { Permission } from '@nano/contracts';
 /** What the shared chrome needs from an editor: services (useServiceEditor) and NANO-08 items (useEntityEditor). */
 type Editor = {
   service: { missing: string[]; highRiskChanges: string[]; state: string } | null;
-  problem: 'conflict' | 'offline' | 'failed' | 'invalid' | null;
+  problem: 'conflict' | 'offline' | 'failed' | 'invalid' | 'refused' | null;
+  /** The server's own sentence for a refusal (completeness, self-action, business rule). */
+  message?: string | null;
   readOnly: boolean;
   restored: boolean;
   busy: string | null;
@@ -41,9 +43,14 @@ export function EditorBanners({ editor }: { editor: Editor }) {
           {t('stf.offlineBody')}
         </Banner>
       ) : null}
+      {editor.problem === 'refused' ? (
+        <Banner tone="danger" title={t('stf.refused')}>
+          {editor.message ?? t('error.body')}
+        </Banner>
+      ) : null}
       {editor.problem === 'failed' || editor.problem === 'invalid' || editor.restored ? (
-        <Banner tone="warning" title={t('stf.saveFailed')}>
-          {t('stf.saveFailedBody')}
+        <Banner tone="danger" title={t('stf.saveFailed')}>
+          {editor.problem === 'invalid' && editor.message ? editor.message : t('stf.saveFailedBody')}
         </Banner>
       ) : null}
       {s && s.missing.length ? (
@@ -108,7 +115,7 @@ export function EditorActions({
       ) : (
         <Button
           loading={editor.busy === 'submit'}
-          disabled={off || s?.state === 'review'}
+          disabled={off || s?.state === 'review' || !!s?.missing.length}
           onPress={async () => {
             if (await editor.submit()) toast({ tone: 'success', message: t('svc.submitted') });
           }}

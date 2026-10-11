@@ -3,12 +3,12 @@ import { Redirect, Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useAuth } from '../../../auth/AuthProvider';
 import { SignInGate } from '../../../auth/SignInGate';
-import { Banner, Button, ListGroup, ListRow, Screen, Text } from '../../../components';
+import { Banner, BookingStepper, Button, GiftCard, ListGroup, ListRow, Screen, Text } from '../../../components';
 import { newIdempotencyKey } from '../../../booking/visits';
 import { t } from '../../../i18n';
 import { clinicDateTime } from '../../../i18n/format';
 import { createOrder } from '../../../payments/checkout';
-import { useGiftDraft } from '../../../payments/giftDraft';
+import { GIFT_STEPS, useGiftDraft } from '../../../payments/giftDraft';
 import { cents } from '../../../payments/queries';
 import { useSettings } from '../../../settings/useSettings';
 
@@ -18,7 +18,7 @@ export default function GiftReview() {
   if (!draft.design || !draft.amountCents || !draft.recipientName) return <Redirect href="/wallet/gift/design" />;
   return (
     <>
-      <Stack.Screen options={{ title: t('gift.title') }} />
+      <Stack.Screen options={{ title: t('gift.title'), headerBackTitle: t('gift.step.recipient') }} />
       <SignInGate>
         <Review />
       </SignInGate>
@@ -68,12 +68,14 @@ function Review() {
     <Screen
       topInset={false}
       footer={
-        <Button size="lg" fullWidth loading={busy} onPress={pay}>
+        <Button size="lg" fullWidth icon="lock" loading={busy} onPress={pay}>
           {t('gift.pay', { amount: cents(draft.amountCents!) })}
         </Button>
       }
     >
-      <ListGroup header={t('gift.reviewTitle')}>
+      <BookingStepper steps={GIFT_STEPS.map((step) => t(step))} current={3} />
+      <GiftCard amount={draft.amountCents! / 100} recipient={draft.recipientName.trim()} design={draft.design!} code={t('gift.preview')} />
+      <ListGroup>
         <ListRow title={t('gc.to')} subtitle={t('gift.recipient', { name: draft.recipientName, phone: phone ? formatPhone(phone) : draft.recipientPhone })} chevron={false} />
         {draft.message.trim() ? <ListRow title={t('gift.message')} subtitle={`“${draft.message.trim()}”`} chevron={false} /> : null}
         <ListRow title={t('gc.sends')} subtitle={draft.sendAt ? t('gift.sendsLater', { date: clinicDateTime(draft.sendAt, zone) }) : t('gift.sendsNow')} chevron={false} />

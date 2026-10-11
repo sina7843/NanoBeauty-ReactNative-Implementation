@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { useAuth } from '../../../auth/AuthProvider';
 import { Badge, Banner, Button, Dialog, Skeleton, Switch, Text, useToast } from '../../../components';
 import { t } from '../../../i18n';
-import { problemOf, useStaffQuery } from '../../../staff/api';
+import { useStaffQuery, problemText } from '../../../staff/api';
 import { StaffScreen } from '../../../staff/StaffScreen';
 
 /** `/staff/team/[id]` — STF-38 (active, invited, removed). The API keeps at least one Owner. */
@@ -39,8 +39,7 @@ export default function TeamMember() {
       toast({ tone: 'success', message: done });
       return true;
     } catch (e) {
-      const p = problemOf(e);
-      setProblem(p.kind === 'conflict' ? t('stf.conflict') : t('error.body'));
+      setProblem(problemText(e));
       return false;
     } finally {
       setBusy(false);
@@ -54,7 +53,7 @@ export default function TeamMember() {
         {member.phoneMasked}
       </Text>
       {member.status !== 'active' ? <Badge tone={member.status === 'invited' ? 'info' : 'neutral'}>{member.status === 'invited' ? t('team.invited') : t('team.removed')}</Badge> : null}
-      {member.status === 'removed' ? <Banner tone="info" title={t('team.removed')}>{t('team.removedNote')}</Banner> : null}
+      {member.status === 'removed' ? <Banner tone="info" title={t('team.removed')}>{`${t('team.removedNote')} ${t('team.followUpBlocked')}`}</Banner> : null}
       {member.status === 'invited' ? <Banner tone="info" title={t('team.invited')}>{t('team.inviteNote')}</Banner> : null}
       {member.status === 'active' ? (
         <>

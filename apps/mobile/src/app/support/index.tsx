@@ -1,6 +1,5 @@
 import { radius, space } from '@nano/design-tokens';
 import { Stack, useRouter } from 'expo-router';
-import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 import { Button, Icon, ListGroup, ListRow, Screen, SearchField, Skeleton, Text, UrgentLine } from '../../components';
 import { ContentGate } from '../../content/ContentGate';
@@ -18,7 +17,6 @@ export default function SupportHub() {
   const settings = useSettings().data?.data;
   const clinic = settings?.clinic;
   const reply = clinic?.supportReplyTime ?? null;
-  const [query, setQuery] = useState('');
   const phone = clinic?.phone?.replace(/[^\d+]/g, '');
   const hours = hoursLabel(settings?.settings.clinicHours ?? null) ?? t('sup.hoursPending');
 
@@ -26,19 +24,18 @@ export default function SupportHub() {
     <>
       <Stack.Screen options={{ title: t('sup.title') }} />
       <Screen topInset={false}>
-        <SearchField value={query} onChangeText={setQuery} placeholder={t('sup.search')} />
+        {/* SUP-01: the field opens the search screen (TRT-04), it doesn't filter this list in place. */}
+        <SearchField value="" onChangeText={() => undefined} onFocus={() => router.push('/treatments/search')} placeholder={t('sup.search')} />
         <ContentGate query={hub} skeleton={<Skeleton lines={3} media={false} />}>
-          {(data) => {
-            const q = query.trim().toLowerCase();
-            const articles = q ? data.articles.filter((a) => a.title.toLowerCase().includes(q)) : data.articles;
-            return (
+          {(data) =>
+            data.articles.length ? (
               <ListGroup header={t('sup.common')}>
-                {articles.map((a) => (
+                {data.articles.map((a) => (
                   <ListRow key={a.id} title={a.title} onPress={() => router.push({ pathname: '/support/[article]', params: { article: a.id } })} />
                 ))}
               </ListGroup>
-            );
-          }}
+            ) : null
+          }
         </ContentGate>
 
         {reply ? (

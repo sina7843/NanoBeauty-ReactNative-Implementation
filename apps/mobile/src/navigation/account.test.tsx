@@ -1,5 +1,6 @@
 import type { DeletionPreview, InboxResponse } from '@nano/contracts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
 import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
 import { join } from 'node:path';
@@ -105,6 +106,27 @@ describe('account (ACC-01…07) on the real screens', () => {
     expect(screen.getByText('(604) •••-••23 · client since 2025')).toBeTruthy();
     expect(await screen.findByText('Reminders on')).toBeTruthy();
     expect(await screen.findByText('1 new')).toBeTruthy();
+    // WP-25: both policies are reachable from Account; the staff footer shows only to staff.
+    expect(screen.getByText('Terms and policies')).toBeTruthy();
+    expect(screen.getByText('Booking policy')).toBeTruthy();
+    expect(screen.queryByText('Shown only to clinic staff.')).toBeNull();
+  });
+
+  it('ACC-02 starts from the loaded account: fields filled, nothing counted as changed (WP-26)', async () => {
+    scriptApi();
+    renderRouter(APP_DIR, { initialUrl: '/account/profile' });
+    expect(await screen.findByDisplayValue('Maria')).toBeTruthy();
+    expect(screen.getByDisplayValue('Chen')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
+  });
+
+  it('a cold-start notification tap opens once the signed-in account is loaded (WP-2)', async () => {
+    scriptApi();
+    jest.mocked(Notifications.getLastNotificationResponseAsync).mockResolvedValueOnce({
+      notification: { request: { identifier: 'cold-1', content: { data: { href: '/account/inbox', recipient: 'c1' } } } },
+    } as never);
+    const router = renderRouter(APP_DIR, { initialUrl: '/home' });
+    await waitFor(() => expect(router.getPathname()).toBe('/account/inbox'));
   });
 
   it('ACC-02 a new number is saved only after its code is verified; a taken number is explained', async () => {
@@ -181,7 +203,9 @@ describe('account (ACC-01…07) on the real screens', () => {
     expect(await screen.findByDisplayValue('maria@example.com')).toBeTruthy();
     fireEvent.press(screen.getByRole('button', { name: 'Request my data' }));
     expect(await screen.findByText('Request sent')).toBeTruthy();
+    expect(screen.getAllByText(/DR-1A2B3C/)).toHaveLength(1); // WP-15: the reference once
     expect(screen.getByText('Reference DR-1A2B3C. We’ll email you when it’s ready.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Requested' })).toBeDisabled();
   });
 });
 
@@ -201,7 +225,7 @@ describe('account deletion (ACC-08…10)', () => {
       }),
     });
     renderRouter(APP_DIR, { initialUrl: '/account/delete' });
-    expect((await screen.findAllByText('Before you go')).length).toBeGreaterThan(0);
+    expect(await screen.findAllByText('Before you go')).toHaveLength(1); // WP-24: once, as the Banner title
     expect(screen.getByText(/You have 1 upcoming visit/)).toBeTruthy();
     expect(screen.getByText('Your profile, sign-in and devices')).toBeTruthy();
     expect(screen.getByText('Your customer record: name, mobile number and email removed')).toBeTruthy();
@@ -209,6 +233,9 @@ describe('account deletion (ACC-08…10)', () => {
     fireEvent.press(screen.getByRole('button', { name: 'Continue to delete' }));
     expect(await screen.findByText('We sent a code to (604) •••-••23. Deleting can’t be undone.')).toBeTruthy();
     fireEvent.changeText(screen.getByLabelText('Verification code'), '123456');
+    // WP-23: the 6th digit doesn't delete; the destructive button does.
+    expect(calls.find((c) => c.key === 'POST /v1/me/deletion')).toBeUndefined();
+    fireEvent.press(screen.getByRole('button', { name: 'Delete my account' }));
     expect(await screen.findByText('Deletion requested')).toBeTruthy();
     expect(screen.getByText(/You’re signed out. Your account will be deleted within 30 days/)).toBeTruthy();
     expect(await SecureStore.getItemAsync('nano.session.v2')).toBeNull();

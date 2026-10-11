@@ -40,24 +40,15 @@ describe.each(['light', 'dark'] as const)('%s theme contrast', (scheme) => {
   });
 });
 
-describe('typography fallback', () => {
-  it('uses the brand family when it loaded', () => {
-    const style = resolveTypography('displayLg', new Set(['Fraunces-Light']));
+describe('typography', () => {
+  it('always uses the brand family, with no raw weight on it', () => {
+    const style = resolveTypography('displayLg');
     expect(style).toMatchObject({ fontFamily: 'Fraunces-Light', fontSize: 40, lineHeight: 44 });
     expect(style.fontWeight).toBeUndefined();
-  });
-
-  it('falls back to a system face with the same size and weight when the file is missing', () => {
-    const serif = resolveTypography('titleMd', new Set());
-    expect(serif).toMatchObject({ fontSize: 21, lineHeight: 28, fontWeight: '400' });
-    expect(serif.fontFamily).not.toBe('Fraunces-Regular');
-    const sans = resolveTypography('labelLg', new Set());
-    expect(sans).toMatchObject({ fontSize: 16, fontWeight: '600' });
-    expect(sans.fontFamily).toBeUndefined();
+    expect(resolveTypography('labelLg')).toMatchObject({ fontFamily: 'Sora-SemiBold', fontSize: 16 });
   });
 
   it('emphasis never puts a raw weight on a custom family', () => {
-    expect(strongFace(new Set(['Sora-SemiBold']))).toEqual({ fontFamily: 'Sora-SemiBold', fontWeight: undefined });
-    expect(strongFace(new Set())).toEqual({ fontWeight: '600' });
+    expect(strongFace()).toEqual({ fontFamily: 'Sora-SemiBold', fontWeight: undefined });
   });
 });

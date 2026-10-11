@@ -271,7 +271,10 @@ export type StaffGift = z.infer<typeof staffGiftSchema>;
 export const pushCreateSchema = z.object({
   text: z.string().trim().min(5).max(110),
   opens: z.string().startsWith('/').max(200),
+  /** null = send now. */
   sendAt: isoTime.nullable(),
+  /** ST-4: true when staff chose "Schedule"; the server then refuses a missing or past `sendAt` instead of sending now. */
+  scheduled: z.boolean().optional(),
   idempotencyKey: z.string().min(8).max(64),
 });
 export const pushMessageSchema = z.object({ id: z.string(), text: z.string(), opens: z.string(), sendAt: isoTime, audienceCount: z.number().int(), status: z.enum(['scheduled', 'cancelled', 'sent']), version });

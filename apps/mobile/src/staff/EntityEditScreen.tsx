@@ -7,7 +7,7 @@ import { Banner, Card, ListGroup, ListRow, Skeleton, Text } from '../components'
 import { t } from '../i18n';
 import { useStaffQuery } from './api';
 import { EditorActions, EditorBanners } from './EditorChrome';
-import { stateBadge } from './EntityList';
+import { PublishState } from './Governance';
 import { StaffScreen } from './StaffScreen';
 import type { useEntityEditor } from './useEntityEditor';
 
@@ -70,7 +70,7 @@ export function EntityEditScreen({
       }
     >
       <View style={styles.head}>
-        {stateBadge(s.state)}
+        <PublishState state={s.state} />
         {s.updatedAt ? (
           <Text variant="caption" tone="inkMuted">
             {t('svc.savedAgo', { time: new Date(s.updatedAt).toLocaleString('en-CA', { dateStyle: 'medium', timeStyle: 'short' }) })}

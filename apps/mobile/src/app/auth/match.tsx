@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../auth/AuthProvider';
+import { goToNext, setReturnTo } from '../../auth/flow';
 import { AccountMatch, Banner, Button, Text } from '../../components';
 import { t } from '../../i18n';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -33,7 +34,7 @@ export default function MatchScreen() {
       session.authed('/v1/me/legacy-match', { method: 'POST', body: {} }).then(
         (res) => {
           const parsed = matchResultSchema.parse(res.body);
-          if (parsed.state === 'unavailable') router.dismissTo('/home');
+          if (parsed.state === 'unavailable') goToNext('done');
           else setResult(parsed);
         },
         () => setFailed(true),
@@ -57,7 +58,11 @@ export default function MatchScreen() {
       await refreshMe();
       // AUT-05 'Looks right' → Home (HOM-02); the clinic confirms before any value appears. Other cases need the
       // clinic, so the customer continues to support with the case reference (SUP 04).
-      router.dismissTo(reference && decision !== 'looks_right' ? { pathname: '/support/contact', params: { reference } } : '/home');
+      // A stored return point (AUTH 11) is followed after Home, never left to fire after a later sign-in (FE-15).
+      if (reference && decision !== 'looks_right') {
+        setReturnTo(null);
+        router.dismissTo({ pathname: '/support/contact', params: { reference } });
+      } else goToNext('done');
     } catch {
       setFailed(true);
     } finally {

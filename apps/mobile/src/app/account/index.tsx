@@ -11,6 +11,7 @@ import { isStaff } from '../../staff/api';
 import { Banner, Button, ListGroup, ListRow, Screen, Text } from '../../components';
 import { t } from '../../i18n';
 import { clinicDate } from '../../i18n/format';
+import { useSettings } from '../../settings/useSettings';
 import { useTheme } from '../../theme/ThemeProvider';
 
 /** `/account` — ACC-01. Every account and privacy screen starts here. */
@@ -28,6 +29,7 @@ function Hub() {
   const { me, signOut, session, refreshMe } = useAuth();
   const { colors } = useTheme();
   const queryClient = useQueryClient();
+  const zone = useSettings().data?.data.clinic.timezone ?? 'America/Vancouver';
   const prefs = usePreferences().data;
   const unread = useInbox().data?.unread ?? 0;
   const [keeping, setKeeping] = useState(false);
@@ -52,13 +54,13 @@ function Hub() {
   return (
     <>
       <View style={styles.header} accessible accessibilityLabel={name || t('acc.title')}>
-        <View style={[styles.avatar, { backgroundColor: colors.surfaceTint }]}>
-          <Text variant="headline" tone="onTint">
+        <View style={[styles.avatar, { backgroundColor: colors.surfaceBrand }]}>
+          <Text variant="headline" tone="onBrand">
             {initials || '·'}
           </Text>
         </View>
         <View style={styles.flex}>
-          {name ? <Text variant="titleLg">{name}</Text> : null}
+          {name ? <Text variant="headline">{name}</Text> : null}
           {c ? (
             <Text variant="caption" tone="inkMuted">
               {year ? t('acc.since', { phone: maskPhone(c.phone), year }) : maskPhone(c.phone)}
@@ -76,7 +78,7 @@ function Hub() {
             </Button>
           }
         >
-          {t('acc.pending.body', { date: clinicDate(me.deletion.dueAt, 'America/Vancouver') })}
+          {t('acc.pending.body', { date: clinicDate(me.deletion.dueAt, zone) })}
         </Banner>
       ) : null}
       <ListGroup>
@@ -88,25 +90,28 @@ function Hub() {
           onPress={() => router.push('/account/notifications')}
         />
         <ListRow
-          icon="chat-circle-text"
+          icon="envelope-simple"
           title={t('acc.messages')}
           value={unread ? t('acc.newCount', { count: unread }) : undefined}
           onPress={() => router.push('/account/inbox')}
         />
-        <ListRow icon="lock" title={t('acc.privacy')} onPress={() => router.push('/account/privacy')} />
+      </ListGroup>
+      <ListGroup>
+        <ListRow icon="question" title={t('acc.help')} onPress={() => router.push('/support')} />
+        <ListRow icon="shield-check" title={t('acc.privacy')} onPress={() => router.push('/account/privacy')} />
+        <ListRow icon="receipt" title={t('acc.legal')} onPress={() => router.push('/legal/terms')} />
+        {/* ACC-11 booking policy has its own row so both policies are reachable (D-N12-G1). */}
+        <ListRow icon="calendar-check" title={t('acc.bookingPolicy')} onPress={() => router.push({ pathname: '/legal/[doc]', params: { doc: 'booking' } })} />
       </ListGroup>
       {isStaff(me?.permissions) ? (
         // Only when the server session carries a staff permission (D34); customers never see it.
-        <ListGroup>
+        <ListGroup footer={t('acc.staffFooter')}>
           <ListRow icon="user-gear" title={t('acc.staff')} value={me?.roles.join(' + ')} onPress={() => router.push('/staff')} />
         </ListGroup>
       ) : null}
       <ListGroup>
-        <ListRow icon="question" title={t('acc.help')} onPress={() => router.push('/support')} />
-        <ListRow icon="receipt" title={t('acc.legal')} onPress={() => router.push('/legal/terms')} />
-      </ListGroup>
-      <ListGroup>
         <ListRow
+          icon="sign-out"
           title={t('account.signOut')}
           chevron={false}
           onPress={async () => {

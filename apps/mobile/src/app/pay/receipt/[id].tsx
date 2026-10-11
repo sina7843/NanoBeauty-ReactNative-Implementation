@@ -3,7 +3,8 @@ import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Share, StyleSheet, View } from 'react-native';
 import { ApiError } from '../../../api/client';
 import { SignInGate } from '../../../auth/SignInGate';
-import { Badge, Banner, Button, ListGroup, ListRow, Screen, Skeleton, Text } from '../../../components';
+import { Badge, Banner, Button, Card, ListGroup, ListRow, Logo, Screen, Skeleton, Text } from '../../../components';
+import { useTheme } from '../../../theme/ThemeProvider';
 import { t } from '../../../i18n';
 import { clinicDateTime } from '../../../i18n/format';
 import { OLD_LINK_HREF } from '../../../navigation/routes';
@@ -49,23 +50,42 @@ function Receipt({ orderId }: { orderId: string | undefined }) {
     `${t('rcpt.gst')} ${cents(r.taxIncludedCents)}`,
     `${t('rcpt.total')} ${cents(r.totalCents)}`,
     `${t('rcpt.reference')} ${r.reference}`,
+    `${t('rcpt.order')} ${r.orderReference}`,
   ].join('\n');
+  const row = (label: string, value: string, strong?: boolean) => (
+    <View key={label} style={styles.line} accessible accessibilityLabel={`${label}, ${value}`}>
+      <Text variant={strong ? 'headline' : 'body'} tone={strong ? 'ink' : 'inkMuted'} style={styles.flex}>
+        {label}
+      </Text>
+      <Text variant={strong ? 'amount' : 'body'}>{value}</Text>
+    </View>
+  );
   return (
     <>
-      <Badge tone={r.status === 'paid' ? 'success' : 'info'}>{statusLabel}</Badge>
-      <Text variant="caption" tone="inkMuted">
-        {clinic ? `${clinic.name} · ${clinic.address}` : ''}
-      </Text>
-      <ListGroup>
-        {r.lines.map((l) => (
-          <ListRow key={l.label} title={l.label} value={cents(l.amountCents)} chevron={false} />
-        ))}
-        <ListRow title={t('rcpt.gst')} value={cents(r.taxIncludedCents)} chevron={false} />
-        <ListRow title={t('rcpt.total')} value={cents(r.totalCents)} chevron={false} />
-        {r.methodLabel ? <ListRow title={t('rcpt.method')} value={r.methodLabel} chevron={false} /> : null}
-        <ListRow title={t('rcpt.date')} value={clinicDateTime(r.paidAt, zone)} chevron={false} />
-        <ListRow title={t('rcpt.reference')} value={r.reference} chevron={false} />
-      </ListGroup>
+      <Card>
+        <View style={styles.head}>
+          <Logo height={26} />
+          <Badge tone={r.status === 'paid' ? 'success' : 'info'} icon={r.status === 'paid' ? 'check' : undefined}>
+            {statusLabel}
+          </Badge>
+        </View>
+        {clinic ? (
+          <Text variant="caption" tone="inkMuted">
+            {`${clinic.name} · ${clinic.address}`}
+          </Text>
+        ) : null}
+        <Divider />
+        {r.lines.map((l) => row(l.label, cents(l.amountCents)))}
+        {row(t('rcpt.gst'), cents(r.taxIncludedCents))}
+        <Divider />
+        {row(t('rcpt.total'), cents(r.totalCents), true)}
+        <Divider />
+        {r.methodLabel ? row(t('rcpt.method'), r.methodLabel) : null}
+        {row(t('rcpt.date'), clinicDateTime(r.paidAt, zone, true))}
+        {row(t('rcpt.reference'), r.reference)}
+        {/* WP-21: the order reference is the one Receipts and history shows, so both screens match. */}
+        {row(t('rcpt.order'), r.orderReference)}
+      </Card>
       {r.refunds.length ? (
         <ListGroup>
           {r.refunds.map((f) => (
@@ -81,17 +101,25 @@ function Receipt({ orderId }: { orderId: string | undefined }) {
           </Text>
         </View>
       ) : null}
-      <Button variant="secondary" icon="receipt" onPress={() => Share.share({ message: text }).catch(() => undefined)}>
+      <Button variant="secondary" icon="arrow-square-out" fullWidth onPress={() => Share.share({ message: text }).catch(() => undefined)}>
         {t('rcpt.share')}
       </Button>
-      <Button variant="tertiary" onPress={() => router.push({ pathname: '/support/contact', params: { reference: r.reference, topic: t('pay.topic') } })}>
+      <Button variant="tertiary" fullWidth onPress={() => router.push({ pathname: '/support/contact', params: { reference: r.reference, topic: t('pay.topic') } })}>
         {t('rcpt.wrong')}
       </Button>
     </>
   );
 }
 
+function Divider() {
+  const { colors } = useTheme();
+  return <View style={[styles.divider, { backgroundColor: colors.line }]} />;
+}
+
 const styles = StyleSheet.create({
+  head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  line: { flexDirection: 'row', alignItems: 'baseline', gap: space['3'], paddingVertical: space['1'] },
+  divider: { height: StyleSheet.hairlineWidth, marginVertical: space['1'] },
   flex: { flex: 1 },
   inline: { flexDirection: 'row', alignItems: 'center', gap: space['2'] },
 });
